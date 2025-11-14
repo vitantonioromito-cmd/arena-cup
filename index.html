@@ -793,7 +793,7 @@
                                 
                                 <div 
                                     ref={chatContainerRef}
-                                    style={{ 
+                                                                        style={{ 
                                         flex: 1, 
                                         overflowY: "auto", 
                                         background: "rgba(255,255,255,0.05)", 
@@ -807,13 +807,13 @@
                                             Nessun messaggio ancora. Inizia la conversazione!
                                         </p>
                                     ) : (
-                                        messaggi.map(msg => {messaggi.map(msg => {
+                                        messaggi.map(msg => {
     const mittenteVisualizzato = msg.mittente_visualizzato 
         ? msg.mittente_visualizzato 
         : (msg.mittente === "admin" ? "Vitantonio" : msg.mittente);
                                             const isOwnMessage = msg.mittente === username;
                                             const isAdminMessage = msg.mittente === "admin";
-                                            
+                                                                
                                             return (
                                                 <div key={msg.id} className={`message-bubble ${isOwnMessage ? "own-message" : ""} ${isAdminMessage ? "admin-message" : ""}`}>
                                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
