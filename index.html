@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Arena Cup</title>
     
-<meta name="theme-color" content="#1a1a2e"/>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+    <meta name="theme-color" content="#1a1a2e"/>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
     
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -31,8 +31,22 @@
         .message-bubble { margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; border-left: 4px solid #2196F3; }
         .own-message { background: rgba(76, 175, 80, 0.2); border-left: 4px solid #4CAF50; }
         
-        .tab-button { padding: 12px 20px; background: transparent; color: white; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; }
+        .tab-button { padding: 12px 20px; background: transparent; color: white; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; position: relative; }
         .tab-button.active { background: #4CAF50; border-bottom: 2px solid #4CAF50; }
+        .tab-button.notification::after { 
+            content: "🔴"; 
+            position: absolute; 
+            top: 5px; 
+            right: 5px; 
+            font-size: 10px; 
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
         
         input, button { padding: 10px; border-radius: 5px; border: none; margin: 5px; }
         button { cursor: pointer; font-weight: bold; }
@@ -48,7 +62,7 @@
     <div id="root"></div>
     
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
         const firebaseConfig = {
             apiKey: "AIzaSyB5SnZlEKD-LO4i2wfgh_oawW5Pgn6mnQI",
@@ -73,6 +87,10 @@
             const [partite, setPartite] = useState([]);
             const [form, setForm] = useState({ nome: "", gol: 0, assist: 0, voto: "" });
             const [nuovoMessaggio, setNuovoMessaggio] = useState("");
+            const [ultimoMessaggioVisto, setUltimoMessaggioVisto] = useState(0);
+            const [haNuoviMessaggi, setHaNuoviMessaggi] = useState(false);
+
+            const chatContainerRef = useRef(null);
 
             useEffect(() => {
                 if (!isLogged) return;
@@ -84,14 +102,36 @@
 
                 database.ref('messaggi').on('value', (snapshot) => {
                     const data = snapshot.val();
-                    setMessaggi(data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : []);
+                    const messaggiArray = data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : [];
+                    setMessaggi(messaggiArray);
+
+                    // CONTROLLO NUOVI MESSAGGI
+                    if (messaggiArray.length > 0) {
+                        const ultimoTimestamp = Math.max(...messaggiArray.map(m => m.timestamp));
+                        
+                        if (activeTab !== "chat" && ultimoTimestamp > ultimoMessaggioVisto) {
+                            setHaNuoviMessaggi(true);
+                        }
+                        
+                        if (activeTab === "chat") {
+                            setUltimoMessaggioVisto(ultimoTimestamp);
+                            setHaNuoviMessaggi(false);
+                        }
+                    }
                 });
 
                 database.ref('partite').on('value', (snapshot) => {
                     const data = snapshot.val();
                     setPartite(data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : []);
                 });
-            }, [isLogged]);
+            }, [isLogged, activeTab, ultimoMessaggioVisto]);
+
+            // SCROLL AUTOMATICO CHAT
+            useEffect(() => {
+                if (activeTab === "chat" && chatContainerRef.current) {
+                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                }
+            }, [messaggi, activeTab]);
 
             const handleLogin = () => {
                 if (!username.trim()) return alert("Inserisci un nome!");
@@ -148,7 +188,8 @@
                 const giocatore = giocatori.find(g => g.id === id);
                 if (!giocatore) return;
                 
-                const quantita = prompt(`Quanti ${tipo === 'gol' ? 'gol' : 'assist'} vuoi aggiungere?`, "1");
+                const inputElement = document.getElementById(`${tipo}-${id}`);
+                const quantita = inputElement.value;
                 if (!quantita || isNaN(quantita) || parseInt(quantita) <= 0) return;
                 
                 const nuovoValore = (giocatore[tipo] || 0) + parseInt(quantita);
@@ -157,6 +198,7 @@
                     [tipo]: nuovoValore
                 }).then(() => {
                     alert(`${tipo === 'gol' ? '⚽' : '🎯'} ${quantita} ${tipo === 'gol' ? 'gol' : 'assist'} aggiunti!`);
+                    inputElement.value = "";
                 });
             };
 
@@ -248,6 +290,14 @@
             const eliminaMessaggio = (id) => {
                 if (!confirm("Eliminare questo messaggio?")) return;
                 database.ref(`messaggi/${id}`).remove();
+            };
+
+            const rispondiAMessaggio = (msg) => {
+                setNuovoMessaggio(`@${msg.mittente} `);
+                setTimeout(() => {
+                    const input = document.querySelector('input[placeholder*="messaggio"]');
+                    if (input) input.focus();
+                }, 100);
             };
 
             const calcolaMedia = (voti) => {
@@ -393,22 +443,25 @@
 
                     <div style={{ display: "flex", borderBottom: "1px solid #333", padding: "0 20px", flexWrap: "wrap" }}>
                         <button
-                            className={`tab-button ${activeTab === "statistiche" ? "active" : ""}`}
+                            className={`tab-button ${activeTab === "statistiche" ? "active" : ""} ${haNuoviMessaggi && activeTab !== "chat" ? "notification" : ""}`}
                             onClick={() => setActiveTab("statistiche")}
                         >
                             📊 Statistiche
                         </button>
                         <button
-                            className={`tab-button ${activeTab === "calendario" ? "active" : ""}`}
+                            className={`tab-button ${activeTab === "calendario" ? "active" : ""} ${haNuoviMessaggi && activeTab !== "chat" ? "notification" : ""}`}
                             onClick={() => setActiveTab("calendario")}
                         >
                             🗓️ Calendario
                         </button>
                         <button
-                            className={`tab-button ${activeTab === "chat" ? "active" : ""}`}
-                            onClick={() => setActiveTab("chat")}
+                            className={`tab-button ${activeTab === "chat" ? "active" : ""} ${haNuoviMessaggi && activeTab !== "chat" ? "notification" : ""}`}
+                            onClick={() => {
+                                setActiveTab("chat");
+                                setHaNuoviMessaggi(false);
+                            }}
                         >
-                            💬 Chat
+                            💬 Chat {haNuoviMessaggi && activeTab !== "chat" && "🔴"}
                         </button>
                     </div>
 
@@ -547,7 +600,7 @@
                                                                 style={{ padding: "8px", width: "80px", borderRadius: "5px", border: "none" }}
                                                             />
                                                             <button 
-                                                                onClick={() => addGolAssist(giocatore.id, 'gol', document.getElementById(`gol-${giocatore.id}`).value)}
+                                                                onClick={() => addGolAssist(giocatore.id, 'gol')}
                                                                 style={{ 
                                                                     padding: "8px 15px", 
                                                                     background: "#FFD700",
@@ -565,7 +618,7 @@
                                                                 style={{ padding: "8px", width: "80px", borderRadius: "5px", border: "none" }}
                                                             />
                                                             <button 
-                                                                onClick={() => addGolAssist(giocatore.id, 'assist', document.getElementById(`assist-${giocatore.id}`).value)}
+                                                                onClick={() => addGolAssist(giocatore.id, 'assist')}
                                                                 style={{ 
                                                                     padding: "8px 15px", 
                                                                     background: "#4CAF50",
@@ -730,16 +783,19 @@
 
                         {activeTab === "chat" && (
                             <div style={{ display: "flex", flexDirection: "column", height: "70vh" }}>
-                                <h2>💬 Chat Gruppo</h2>
+                                <h2>💬 Chat Gruppo {haNuoviMessaggi && "🔴"}</h2>
                                 
-                                <div style={{ 
-                                    flex: 1, 
-                                    overflowY: "auto", 
-                                    background: "rgba(255,255,255,0.05)", 
-                                    borderRadius: "10px", 
-                                    padding: "15px",
-                                    marginBottom: "15px"
-                                }}>
+                                <div 
+                                    ref={chatContainerRef}
+                                    style={{ 
+                                        flex: 1, 
+                                        overflowY: "auto", 
+                                        background: "rgba(255,255,255,0.05)", 
+                                        borderRadius: "10px", 
+                                        padding: "15px",
+                                        marginBottom: "15px"
+                                    }}
+                                >
                                     {messaggi.length === 0 ? (
                                         <p style={{ textAlign: "center", color: "#888", padding: "40px" }}>
                                             Nessun messaggio ancora. Inizia la conversazione!
@@ -758,20 +814,35 @@
                                                         </div>
                                                     </div>
                                                     
-                                                    {(username === "admin" || msg.mittente === username) && (
+                                                    <div style={{ display: "flex", gap: "5px" }}>
                                                         <button 
-                                                            onClick={() => eliminaMessaggio(msg.id)}
+                                                            onClick={() => rispondiAMessaggio(msg)}
                                                             style={{ 
                                                                 background: "transparent", 
                                                                 border: "none", 
-                                                                color: "#F44336", 
+                                                                color: "#2196F3", 
                                                                 cursor: "pointer",
                                                                 fontSize: "0.8rem"
                                                             }}
                                                         >
-                                                            ❌
+                                                            🔄
                                                         </button>
-                                                    )}
+                                                        
+                                                        {(username === "admin" || msg.mittente === username) && (
+                                                            <button 
+                                                                onClick={() => eliminaMessaggio(msg.id)}
+                                                                style={{ 
+                                                                    background: "transparent", 
+                                                                    border: "none", 
+                                                                    color: "#F44336", 
+                                                                    cursor: "pointer",
+                                                                    fontSize: "0.8rem"
+                                                                }}
+                                                            >
+                                                                ❌
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))
