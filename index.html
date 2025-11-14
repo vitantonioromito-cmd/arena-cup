@@ -25,7 +25,7 @@
         #root { min-height: 100vh; }
         
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
-        .stat-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; text-align: center; }
+        .stat-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;                            textAlign: "center",; }
         .player-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid rgba(255,255,255,0.1); }
         .match-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin: 15px 0; }
         .message-bubble { margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; border-left: 4px solid #2196F3; }
@@ -578,7 +578,7 @@
                                 <div>
                                     <h3>👥 Lista Giocatori ({giocatori.length})</h3>
                                     {giocatori.length === 0 ? (
-                                        <p style={{ textAlign: "center",, color: "#888", padding: "40px" }}>
+                                        <p style={{ textAlign: "center", color: "#888", padding: "40px" }}>
                                             Nessun giocatore ancora.
                                         </p>
                                     ) : (
