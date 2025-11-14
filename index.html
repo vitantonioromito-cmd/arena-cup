@@ -30,6 +30,7 @@
         .match-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin: 15px 0; }
         .message-bubble { margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; border-left: 4px solid #2196F3; }
         .own-message { background: rgba(76, 175, 80, 0.2); border-left: 4px solid #4CAF50; }
+        .admin-message { background: rgba(255, 193, 7, 0.2); border-left: 4px solid #FFC107; }
         
         .tab-button { padding: 12px 20px; background: transparent; color: white; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; position: relative; }
         .tab-button.active { background: #4CAF50; border-bottom: 2px solid #4CAF50; }
@@ -91,6 +92,7 @@
             const [haNuoviMessaggi, setHaNuoviMessaggi] = useState(false);
 
             const chatContainerRef = useRef(null);
+            const inputRef = useRef(null);
 
             useEffect(() => {
                 if (!isLogged) return;
@@ -279,8 +281,13 @@
 
             const inviaMessaggio = () => {
                 if (!nuovoMessaggio.trim()) return;
+                
+                // SOSTITUISCI "admin" CON "Vitantonio" NEI MESSAGGI
+                const mittenteVisualizzato = username === "admin" ? "Vitantonio" : username;
+                
                 database.ref('messaggi').push({
-                    mittente: username,
+                    mittente: username, // Salva sempre il vero username
+                    mittente_visualizzato: mittenteVisualizzato, // Salva come visualizzare
                     messaggio: nuovoMessaggio,
                     timestamp: Date.now(),
                     created_at: new Date().toLocaleString('it-IT')
@@ -293,10 +300,9 @@
             };
 
             const rispondiAMessaggio = (msg) => {
-                setNuovoMessaggio(`@${msg.mittente} `);
+                setNuovoMessaggio(`@${msg.mittente === "admin" ? "Vitantonio" : msg.mittente} `);
                 setTimeout(() => {
-                    const input = document.querySelector('input[placeholder*="messaggio"]');
-                    if (input) input.focus();
+                    if (inputRef.current) inputRef.current.focus();
                 }, 100);
             };
 
@@ -424,7 +430,7 @@
                             </p>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                            <span style={{ color: "#4CAF50" }}>👤 {username}</span>
+                            <span style={{ color: "#4CAF50" }}>👤 {username === "admin" ? "Vitantonio" : username}</span>
                             <button 
                                 onClick={handleLogout}
                                 style={{ 
@@ -497,7 +503,7 @@
                                                     flex: "1", 
                                                     minWidth: "200px",
                                                     padding: "20px", 
-                                                    textAlign: "center", 
+                                                    text-align: "center", 
                                                     background: i === 0 ? "#FFD700" : i === 1 ? "#C0C0C0" : "#CD7F32", 
                                                     color: "#000", 
                                                     borderRadius: "15px",
@@ -523,7 +529,7 @@
                                         margin: "20px 0" 
                                     }}>
                                         <h3>👑 Aggiungi Giocatore</h3>
-                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                                        <div style={{ display: "flex", gap: "10px", flex-wrap: "wrap", alignItems: "center" }}>
                                             <input 
                                                 placeholder="Nome giocatore" 
                                                 value={form.nome} 
@@ -572,13 +578,13 @@
                                 <div>
                                     <h3>👥 Lista Giocatori ({giocatori.length})</h3>
                                     {giocatori.length === 0 ? (
-                                        <p style={{ textAlign: "center", color: "#888", padding: "40px" }}>
+                                        <p style={{ text-align: "center", color: "#888", padding: "40px" }}>
                                             Nessun giocatore ancora.
                                         </p>
                                     ) : (
                                         giocatori.map(giocatore => (
                                             <div key={giocatore.id} className="player-card">
-                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flex-wrap: "wrap" }}>
                                                     <div style={{ flex: 1 }}>
                                                         <h4 style={{ margin: "0 0 5px 0", fontSize: "1.2rem" }}>
                                                             {giocatore.nome}
@@ -593,7 +599,7 @@
                                                     </div>
                                                     
                                                     {username === "admin" && (
-                                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "10px" }}>
+                                                        <div style={{ display: "flex", gap: "10px", flex-wrap: "wrap", marginTop: "10px" }}>
                                                             <input 
                                                                 id={`gol-${giocatore.id}`}
                                                                 type="number" placeholder="Gol" 
@@ -673,7 +679,7 @@
 
                         {activeTab === "calendario" && (
                             <div>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flex-wrap: "wrap" }}>
                                     <h2>🗓️ Calendario Partite</h2>
                                     {username === "admin" && (
                                         <button 
@@ -693,7 +699,7 @@
                                 </div>
 
                                 {partite.length === 0 ? (
-                                    <div style={{ textAlign: "center", color: "#888", padding: "40px" }}>
+                                    <div style={{ text-align: "center", color: "#888", padding: "40px" }}>
                                         <p>📅 Nessuna partita in programma.</p>
                                         {username === "admin" && (
                                             <p>Clicca "Genera Calendario" per creare le partite!</p>
@@ -706,7 +712,7 @@
                                         
                                         return (
                                             <div key={partita.id} className="match-card">
-                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flex-wrap: "wrap" }}>
                                                     <div style={{ flex: 1 }}>
                                                         <h3 style={{ margin: "0 0 10px 0" }}>
                                                             {formattaData(partita.data)} - {partita.ora}
@@ -797,60 +803,71 @@
                                     }}
                                 >
                                     {messaggi.length === 0 ? (
-                                        <p style={{ textAlign: "center", color: "#888", padding: "40px" }}>
+                                        <p style={{ text-align: "center", color: "#888", padding: "40px" }}>
                                             Nessun messaggio ancora. Inizia la conversazione!
                                         </p>
                                     ) : (
-                                        messaggi.map(msg => (
-                                            <div key={msg.id} className={`message-bubble ${msg.mittente === username ? "own-message" : ""}`}>
-                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                                    <div style={{ flex: 1 }}>
-                                                        <div style={{ fontWeight: "bold", color: msg.mittente === username ? "#4CAF50" : "#2196F3" }}>
-                                                            {msg.mittente}
+                                        messaggi.map(msg => {
+                                            const mittenteVisualizzato = msg.mittente === "admin" ? "Vitantonio" : msg.mittente;
+                                            const isOwnMessage = msg.mittente === username;
+                                            const isAdminMessage = msg.mittente === "admin";
+                                            
+                                            return (
+                                                <div key={msg.id} className={`message-bubble ${isOwnMessage ? "own-message" : ""} ${isAdminMessage ? "admin-message" : ""}`}>
+                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                                        <div style={{ flex: 1 }}>
+                                                            <div style={{ 
+                                                                fontWeight: "bold", 
+                                                                color: isOwnMessage ? "#4CAF50" : isAdminMessage ? "#FFC107" : "#2196F3" 
+                                                            }}>
+                                                                {mittenteVisualizzato}
+                                                                {isAdminMessage && " 👑"}
+                                                            </div>
+                                                            <div style={{ margin: "5px 0" }}>{msg.messaggio}</div>
+                                                            <div style={{ fontSize: "0.8rem", color: "#888" }}>
+                                                                {msg.created_at}
+                                                            </div>
                                                         </div>
-                                                        <div style={{ margin: "5px 0" }}>{msg.messaggio}</div>
-                                                        <div style={{ fontSize: "0.8rem", color: "#888" }}>
-                                                            {msg.created_at}
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div style={{ display: "flex", gap: "5px" }}>
-                                                        <button 
-                                                            onClick={() => rispondiAMessaggio(msg)}
-                                                            style={{ 
-                                                                background: "transparent", 
-                                                                border: "none", 
-                                                                color: "#2196F3", 
-                                                                cursor: "pointer",
-                                                                fontSize: "0.8rem"
-                                                            }}
-                                                        >
-                                                            🔄
-                                                        </button>
                                                         
-                                                        {(username === "admin" || msg.mittente === username) && (
+                                                        <div style={{ display: "flex", gap: "5px" }}>
                                                             <button 
-                                                                onClick={() => eliminaMessaggio(msg.id)}
+                                                                onClick={() => rispondiAMessaggio(msg)}
                                                                 style={{ 
                                                                     background: "transparent", 
                                                                     border: "none", 
-                                                                    color: "#F44336", 
+                                                                    color: "#2196F3", 
                                                                     cursor: "pointer",
                                                                     fontSize: "0.8rem"
                                                                 }}
                                                             >
-                                                                ❌
+                                                                🔄
                                                             </button>
-                                                        )}
+                                                            
+                                                            {(username === "admin" || msg.mittente === username) && (
+                                                                <button 
+                                                                    onClick={() => eliminaMessaggio(msg.id)}
+                                                                    style={{ 
+                                                                        background: "transparent", 
+                                                                        border: "none", 
+                                                                        color: "#F44336", 
+                                                                        cursor: "pointer",
+                                                                        fontSize: "0.8rem"
+                                                                    }}
+                                                                >
+                                                                    ❌
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))
+                                            );
+                                        })
                                     )}
                                 </div>
 
                                 <div style={{ display: "flex", gap: "10px" }}>
                                     <input 
+                                        ref={inputRef}
                                         type="text" 
                                         value={nuovoMessaggio} 
                                         onChange={e => setNuovoMessaggio(e.target.value)}
