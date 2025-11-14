@@ -133,19 +133,23 @@
             };
 
             const addGolAssist = (id, tipo) => {
-                if (username !== "admin") return alert("Solo admin può aggiornare Gol/Assist!");
-                
-                const giocatore = giocatori.find(g => g.id === id);
-                if (!giocatore) return;
-                
-                const nuovoValore = (giocatore[tipo] || 0) + 1;
-                
-                database.ref(`giocatori/${id}`).update({
-                    [tipo]: nuovoValore
-                }).then(() => {
-                    alert(tipo === 'gol' ? "⚽ Gol aggiunto!" : "🎯 Assist aggiunto!");
-                });
-            };
+    if (username !== "admin") return alert("Solo admin può aggiornare Gol/Assist!");
+    
+    const giocatore = giocatori.find(g => g.id === id);
+    if (!giocatore) return;
+    
+    // CHIEDI QUANTI AGGIUNGERE
+    const quantita = prompt(`Quanti ${tipo === 'gol' ? 'gol' : 'assist'} vuoi aggiungere?`, "1");
+    if (!quantita || isNaN(quantita) || parseInt(quantita) <= 0) return;
+    
+    const nuovoValore = (giocatore[tipo] || 0) + parseInt(quantita);
+    
+    database.ref(`giocatori/${id}`).update({
+        [tipo]: nuovoValore
+    }).then(() => {
+        alert(`${tipo === 'gol' ? '⚽' : '🎯'} ${quantita} ${tipo === 'gol' ? 'gol' : 'assist'} aggiunti!`);
+    });
+};
 
             const eliminaGiocatore = (id, nome) => {
                 if (username !== "admin") return alert("Solo admin può eliminare giocatori!");
