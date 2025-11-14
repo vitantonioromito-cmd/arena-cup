@@ -807,8 +807,10 @@
                                             Nessun messaggio ancora. Inizia la conversazione!
                                         </p>
                                     ) : (
-                                        messaggi.map(msg => {
-                                            const mittenteVisualizzato = msg.mittente === "admin" ? "Vitantonio" : msg.mittente;
+                                        messaggi.map(msg => {messaggi.map(msg => {
+    const mittenteVisualizzato = msg.mittente_visualizzato 
+        ? msg.mittente_visualizzato 
+        : (msg.mittente === "admin" ? "Vitantonio" : msg.mittente);
                                             const isOwnMessage = msg.mittente === username;
                                             const isAdminMessage = msg.mittente === "admin";
                                             
