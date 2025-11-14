@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arena Cup</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: linear-gradient(135deg, #121212 0%, #1a1a2e 100%); 
+            min-height: 100vh; 
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #root { min-height: 100vh; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; text-align: center; }
+        .player-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid rgba(255,255,255,0.1); }
+        .match-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin: 15px 0; }
+        .message-bubble { margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; border-left: 4px solid #2196F3; }
+        .own-message { background: rgba(76, 175, 80, 0.2); border-left: 4px solid #4CAF50; }
+        
+        .tab-button { padding: 12px 20px; background: transparent; color: white; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; }
+        .tab-button.active { background: #4CAF50; border-bottom: 2px solid #4CAF50; }
+        
+        input, button { padding: 10px; border-radius: 5px; border: none; margin: 5px; }
+        button { cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB5SnZlEKD-LO4i2wfgh_oawW5Pgn6mnQI",
+            authDomain: "arenacup-18302.firebaseapp.com",
+            databaseURL: "https://arenacup-18302-default-rtdb.firebaseio.com",
+            projectId: "arenacup-18302",
+            storageBucket: "arenacup-18302.firebasestorage.app",
+            messagingSenderId: "801433859154",
+            appId: "1:801433859154:web:7d1f76129a59b3521c5b8b"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        function App() {
+            const [username, setUsername] = useState(localStorage.getItem("username") || "");
+            const [isLogged, setIsLogged] = useState(!!localStorage.getItem("username"));
+            const [activeTab, setActiveTab] = useState("statistiche");
+            
+            const [giocatori, setGiocatori] = useState([]);
+            const [messaggi, setMessaggi] = useState([]);
+            const [partite, setPartite] = useState([]);
+            const [form, setForm] = useState({ nome: "", gol: 0, assist: 0, voto: "" });
+            const [nuovoMessaggio, setNuovoMessaggio] = useState("");
+
+            useEffect(() => {
+                if (!isLogged) return;
+
+                database.ref('giocatori').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    setGiocatori(data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : []);
+                });
+
+                database.ref('messaggi').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    setMessaggi(data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : []);
+                });
+
+                database.ref('partite').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    setPartite(data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : []);
+                });
+            }, [isLogged]);
+
+            const handleLogin = () => {
+                if (!username.trim()) return alert("Inserisci un nome!");
+                localStorage.setItem("username", username);
+                setIsLogged(true);
+            };
+
+            const handleLogout = () => {
+                localStorage.removeItem("username");
+                setIsLogged(false);
+                setUsername("");
+            };
+
+            const addGiocatore = () => {
+                if (username !== "admin") return alert("Solo admin può aggiungere giocatori!");
+                if (!form.nome.trim()) return alert("Inserisci un nome!");
+                
+                database.ref('giocatori').push({
+                    nome: form.nome,
+                    gol: parseInt(form.gol) || 0,
+                    assist: parseInt(form.assist) || 0,
+                    voti: form.voto ? [parseFloat(form.voto)] : [],
+                    media_calcolata: form.voto ? parseFloat(form.voto) : 0,
+                    timestamp: Date.now()
+                }).then(() => {
+                    setForm({ nome: "", gol: 0, assist: 0, voto: "" });
+                    alert("✅ Giocatore aggiunto!");
+                });
+            };
+
+            const addVoto = (id, votoInput) => {
+                if (username !== "admin") return alert("Solo admin può aggiungere voti!");
+                const voto = parseFloat(votoInput);
+                if (voto < 1 || voto > 10) return alert("Voto deve essere tra 1 e 10!");
+                
+                const giocatore = giocatori.find(g => g.id === id);
+                if (!giocatore) return;
+                
+                const nuoviVoti = [...(giocatore.voti || []), voto];
+                const nuovaMedia = nuoviVoti.reduce((a, b) => a + b, 0) / nuoviVoti.length;
+                
+                database.ref(`giocatori/${id}`).update({
+                    voti: nuoviVoti,
+                    media_calcolata: nuovaMedia
+                }).then(() => {
+                    alert("⭐ Voto aggiunto!");
+                    document.getElementById(`voto-${id}`).value = "";
+                });
+            };
+
+            const addGolAssist = (id, tipo) => {
+                if (username !== "admin") return alert("Solo admin può aggiornare Gol/Assist!");
+                
+                const giocatore = giocatori.find(g => g.id === id);
+                if (!giocatore) return;
+                
+                const nuovoValore = (giocatore[tipo] || 0) + 1;
+                
+                database.ref(`giocatori/${id}`).update({
+                    [tipo]: nuovoValore
+                }).then(() => {
+                    alert(tipo === 'gol' ? "⚽ Gol aggiunto!" : "🎯 Assist aggiunto!");
+                });
+            };
+
+            const eliminaGiocatore = (id, nome) => {
+                if (username !== "admin") return alert("Solo admin può eliminare giocatori!");
+                if (!confirm(`Sei sicuro di voler eliminare ${nome}?`)) return;
+                database.ref(`giocatori/${id}`).remove();
+            };
+
+            const generaCalendario = () => {
+                if (username !== "admin") return alert("Solo admin può generare il calendario!");
+                
+                const oggi = new Date();
+                let nextTuesday = new Date(oggi);
+                const giorniFinoMartedi = (2 - oggi.getDay() + 7) % 7;
+                nextTuesday.setDate(oggi.getDate() + (giorniFinoMartedi === 0 ? 7 : giorniFinoMartedi));
+                
+                if (nextTuesday <= oggi) {
+                    nextTuesday.setDate(nextTuesday.getDate() + 7);
+                }
+                
+                database.ref('partite').remove().then(() => {
+                    for (let i = 0; i < 4; i++) {
+                        const dataPartita = new Date(nextTuesday);
+                        dataPartita.setDate(nextTuesday.getDate() + (i * 7));
+                        
+                        database.ref('partite').push({
+                            data: dataPartita.toISOString().split('T')[0],
+                            ora: "21:00",
+                            luogo: "Campo Calcetto",
+                            confermati: [],
+                            risultato: null,
+                            triangolare: false,
+                            timestamp: Date.now() + i
+                        });
+                    }
+                    alert("🗓️ Calendario generato!");
+                });
+            };
+
+            const togglePrenotazionePartita = (partitaId) => {
+                const partita = partite.find(p => p.id === partitaId);
+                if (!partita || !partita.confermati) return;
+
+                const limite = partita.triangolare ? 15 : 10;
+                const giaConfermato = partita.confermati.includes(username);
+                
+                if (!giaConfermato && partita.confermati.length >= limite) {
+                    alert(`Partita al completo! ${limite} giocatori confermati.`);
+                    return;
+                }
+
+                const nuoviConfermati = giaConfermato 
+                    ? partita.confermati.filter(name => name !== username)
+                    : [...partita.confermati, username];
+
+                database.ref(`partite/${partitaId}`).update({
+                    confermati: nuoviConfermati
+                }).then(() => {
+                    if (!giaConfermato) alert("✅ Prenotazione confermata!");
+                });
+            };
+
+            const attivaTriangolare = (partitaId) => {
+                if (username !== "admin") return alert("Solo admin può attivare il triangolare!");
+                database.ref(`partite/${partitaId}`).update({ triangolare: true })
+                .then(() => alert("🏆 Triangolare attivato!"));
+            };
+
+            const inviaMessaggio = () => {
+                if (!nuovoMessaggio.trim()) return;
+                database.ref('messaggi').push({
+                    mittente: username,
+                    messaggio: nuovoMessaggio,
+                    timestamp: Date.now(),
+                    created_at: new Date().toISOString()
+                }).then(() => setNuovoMessaggio(""));
+            };
+
+            const eliminaMessaggio = (id) => {
+                if (!confirm("Eliminare questo messaggio?")) return;
+                database.ref(`messaggi/${id}`).remove();
+            };
+
+            const calcolaMedia = (voti) => {
+                if (!voti || voti.length === 0) return 0;
+                return voti.reduce((a, b) => a + b, 0) / voti.length;
+            };
+
+            const giocatoriConMedia = giocatori.map(g => ({
+                ...g,
+                media_calcolata: calcolaMedia(g.voti)
+            }));
+
+            const stats = {
+                totaleGol: giocatoriConMedia.reduce((sum, g) => sum + (g.gol || 0), 0),
+                totaleAssist: giocatoriConMedia.reduce((sum, g) => sum + (g.assist || 0), 0),
+                totaleGiocatori: giocatoriConMedia.length,
+                mediaGenerale: giocatoriConMedia.length > 0 ? 
+                    giocatoriConMedia.reduce((sum, g) => sum + (g.media_calcolata || 0), 0) / giocatoriConMedia.length : 0
+            };
+
+            const top3 = [...giocatoriConMedia]
+                .sort((a, b) => (b.media_calcolata || 0) - (a.media_calcolata || 0))
+                .slice(0, 3);
+
+            const formattaData = (dataString) => {
+                const data = new Date(dataString);
+                return data.toLocaleDateString('it-IT', { 
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                });
+            };
+
+            const getStatoPartita = (partita) => {
+                if (!partita || !partita.confermati) {
+                    return { testo: "🔴 NON DISPONIBILE", colore: "#F44336" };
+                }
+                
+                const limite = partita.triangolare ? 15 : 10;
+                const confermati = partita.confermati.length;
+                if (confermati >= limite) return { testo: "🟢 COMPLETO", colore: "#4CAF50" };
+                if (confermati >= 8) return { testo: "🟡 QUASI COMPLETO", colore: "#FFD700" };
+                if (confermati >= 5) return { testo: "🟠 IN CORSO", colore: "#FF9800" };
+                return { testo: "🔴 POCHI", colore: "#F44336" };
+            };
+
+            if (!isLogged) {
+                return (
+                    <div style={{ 
+                        background: "linear-gradient(135deg, #121212 0%, #1a1a2e 100%)", 
+                        minHeight: "100vh", 
+                        color: "#fff", 
+                        padding: 20, 
+                        display: "flex", 
+                        justifyContent: "center", 
+                        alignItems: "center" 
+                    }}>
+                        <div style={{ 
+                            textAlign: "center", 
+                            background: "rgba(255,255,255,0.1)", 
+                            padding: "40px", 
+                            borderRadius: "15px",
+                            maxWidth: "400px",
+                            width: "90%"
+                        }}>
+                            <h1 style={{ fontSize: "2.5rem", marginBottom: "30px" }}>🏆 Arena Cup</h1>
+                            <input 
+                                placeholder="Nome giocatore" 
+                                value={username} 
+                                onChange={e => setUsername(e.target.value)}
+                                onKeyPress={e => e.key === 'Enter' && handleLogin()}
+                                style={{ 
+                                    padding: "15px", 
+                                    fontSize: "16px", 
+                                    marginBottom: "15px", 
+                                    width: "100%",
+                                    borderRadius: "8px",
+                                    border: "none",
+                                    background: "rgba(255,255,255,0.9)"
+                                }}
+                            />
+                            <button 
+                                onClick={handleLogin}
+                                style={{ 
+                                    padding: "15px 30px", 
+                                    fontSize: "16px", 
+                                    background: "#4CAF50",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                    fontWeight: "bold",
+                                    width: "100%"
+                                }}
+                            >
+                                Accedi 🚀
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div style={{ 
+                    background: "linear-gradient(135deg, #121212 0%, #1a1a2e 100%)", 
+                    minHeight: "100vh", 
+                    color: "#fff",
+                    fontFamily: "Arial, sans-serif"
+                }}>
+                    <div style={{ 
+                        display: "flex", 
+                        justifyContent: "space-between", 
+                        alignItems: "center", 
+                        padding: "20px",
+                        borderBottom: "1px solid rgba(255,255,255,0.1)",
+                        flexWrap: "wrap"
+                    }}>
+                        <div>
+                            <h1 style={{ margin: 0, fontSize: "1.8rem" }}>🏆 Arena Cup</h1>
+                            <p style={{ margin: "5px 0 0 0", color: "#ccc", fontSize: "0.9rem" }}>
+                                {activeTab === "statistiche" ? "Statistiche" : 
+                                 activeTab === "calendario" ? "Calendario" : "Chat"} | 
+                                {stats.totaleGiocatori} giocatori
+                            </p>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                            <span style={{ color: "#4CAF50" }}>👤 {username}</span>
+                            <button 
+                                onClick={handleLogout}
+                                style={{ 
+                                    background: "#F44336", 
+                                    color: "#fff", 
+                                    border: "none", 
+                                    padding: "8px 15px", 
+                                    borderRadius: "5px", 
+                                    cursor: "pointer"
+                                }}
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style={{ display: "flex", borderBottom: "1px solid #333", padding: "0 20px", flexWrap: "wrap" }}>
+                        <button
+                            className={`tab-button ${activeTab === "statistiche" ? "active" : ""}`}
+                            onClick={() => setActiveTab("statistiche")}
+                        >
+                            📊 Statistiche
+                        </button>
+                        <button
+                            className={`tab-button ${activeTab === "calendario" ? "active" : ""}`}
+                            onClick={() => setActiveTab("calendario")}
+                        >
+                            🗓️ Calendario
+                        </button>
+                        <button
+                            className={`tab-button ${activeTab === "chat" ? "active" : ""}`}
+                            onClick={() => setActiveTab("chat")}
+                        >
+                            💬 Chat
+                        </button>
+                    </div>
+
+                    <div style={{ padding: "20px" }}>
+                        {activeTab === "statistiche" && (
+                            <div>
+                                <h2>📊 Statistiche</h2>
+                                <div className="stats-grid">
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#FFD700", margin: "0 0 10px 0" }}>⚽ Gol</h3>
+                                        <p style={{ margin: 0, fontSize: "2rem", fontWeight: "bold" }}>{stats.totaleGol}</p>
+                                    </div>
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#4CAF50", margin: "0 0 10px 0" }}>🎯 Assist</h3>
+                                        <p style={{ margin: 0, fontSize: "2rem", fontWeight: "bold" }}>{stats.totaleAssist}</p>
+                                    </div>
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#2196F3", margin: "0 0 10px 0" }}>⭐ Media</h3>
+                                        <p style={{ margin: 0, fontSize: "2rem", fontWeight: "bold" }}>{stats.mediaGenerale.toFixed(2)}</p>
+                                    </div>
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#FF6B6B", margin: "0 0 10px 0" }}>👥 Giocatori</h3>
+                                        <p style={{ margin: 0, fontSize: "2rem", fontWeight: "bold" }}>{stats.totaleGiocatori}</p>
+                                    </div>
+                                </div>
+
+                                {top3.length > 0 && (
+                                    <div style={{ margin: "30px 0" }}>
+                                        <h3>🏆 Top 3</h3>
+                                        <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
+                                            {top3.map((g, i) => (
+                                                <div key={g.id} style={{ 
+                                                    flex: "1", 
+                                                    minWidth: "200px",
+                                                    padding: "20px", 
+                                                    textAlign: "center", 
+                                                    background: i === 0 ? "#FFD700" : i === 1 ? "#C0C0C0" : "#CD7F32", 
+                                                    color: "#000", 
+                                                    borderRadius: "15px",
+                                                    fontWeight: "bold"
+                                                }}>
+                                                    <div style={{ fontSize: "2rem" }}>
+                                                        {i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}
+                                                    </div>
+                                                    <h3 style={{ margin: "10px 0" }}>{g.nome}</h3>
+                                                    <p>⭐ {g.media_calcolata.toFixed(2)}</p>
+                                                    <p>⚽ {g.gol || 0} 🎯 {g.assist || 0}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {username === "admin" && (
+                                    <div style={{ 
+                                        background: "rgba(255,255,255,0.1)", 
+                                        padding: "20px", 
+                                        borderRadius: "10px", 
+                                        margin: "20px 0" 
+                                    }}>
+                                        <h3>👑 Aggiungi Giocatore</h3>
+                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                                            <input 
+                                                placeholder="Nome giocatore" 
+                                                value={form.nome} 
+                                                onChange={e => setForm({...form, nome: e.target.value})}
+                                                style={{ padding: "10px", borderRadius: "5px", border: "none", flex: 1 }}
+                                            />
+                                            <input 
+                                                type="number" 
+                                                placeholder="Gol" 
+                                                value={form.gol} 
+                                                onChange={e => setForm({...form, gol: e.target.value})}
+                                                style={{ padding: "10px", borderRadius: "5px", border: "none", width: "80px" }}
+                                            />
+                                            <input 
+                                                type="number" 
+                                                placeholder="Assist" 
+                                                value={form.assist} 
+                                                onChange={e => setForm({...form, assist: e.target.value})}
+                                                style={{ padding: "10px", borderRadius: "5px", border: "none", width: "80px" }}
+                                            />
+                                            <input 
+                                                type="number" 
+                                                placeholder="Voto" 
+                                                value={form.voto} 
+                                                onChange={e => setForm({...form, voto: e.target.value})}
+                                                min="1" max="10" step="0.1"
+                                                style={{ padding: "10px", borderRadius: "5px", border: "none", width: "80px" }}
+                                            />
+                                            <button 
+                                                onClick={addGiocatore}
+                                                style={{ 
+                                                    padding: "10px 20px", 
+                                                    background: "#4CAF50",
+                                                    color: "white",
+                                                    border: "none",
+                                                    borderRadius: "5px",
+                                                    cursor: "pointer"
+                                                }}
+                                            >
+                                                ➕ Aggiungi
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <h3>👥 Lista Giocatori ({giocatori.length})</h3>
+                                    {giocatori.length === 0 ? (
+                                        <p style={{ textAlign: "center", color: "#888", padding: "40px" }}>
+                                            Nessun giocatore ancora.
+                                        </p>
+                                    ) : (
+                                        giocatori.map(giocatore => (
+                                            <div key={giocatore.id} className="player-card">
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <h4 style={{ margin: "0 0 5px 0", fontSize: "1.2rem" }}>
+                                                            {giocatore.nome}
+                                                        </h4>
+                                                        <div style={{ color: "#ccc", fontSize: "0.9rem" }}>
+                                                            ⚽ {giocatore.gol || 0} gol • 🎯 {giocatore.assist || 0} assist • 
+                                                            <span style={{ color: giocatore.media_calcolata >= 7 ? "#4CAF50" : "#FFD700" }}>
+                                                                {" "}⭐ {giocatore.media_calcolata?.toFixed(2) || "0.00"}
+                                                            </span>
+                                                            {giocatore.voti && ` (${giocatore.voti.length} voti)`}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {username === "admin" && (
+                                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "10px" }}>
+                                                            <button 
+                                                                onClick={() => addGolAssist(giocatore.id, 'gol')}
+                                                                style={{ 
+                                                                    padding: "8px 15px", 
+                                                                    background: "#FFD700",
+                                                                    color: "black",
+                                                                    border: "none",
+                                                                    borderRadius: "5px",
+                                                                    cursor: "pointer"
+                                                                }}
+                                                            >
+                                                                +⚽ Gol
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => addGolAssist(giocatore.id, 'assist')}
+                                                                style={{ 
+                                                                    padding: "8px 15px", 
+                                                                    background: "#4CAF50",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "5px",
+                                                                    cursor: "pointer"
+                                                                }}
+                                                            >
+                                                                +🎯 Assist
+                                                            </button>
+                                                            <input 
+                                                                id={`voto-${giocatore.id}`}
+                                                                type="number" placeholder="Voto" min="1" max="10" step="0.1"
+                                                                style={{ padding: "8px", width: "80px", borderRadius: "5px", border: "none" }}
+                                                            />
+                                                            <button 
+                                                                onClick={() => addVoto(giocatore.id, document.getElementById(`voto-${giocatore.id}`).value)}
+                                                                style={{ 
+                                                                    padding: "8px 15px", 
+                                                                    background: "#2196F3",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "5px",
+                                                                    cursor: "pointer"
+                                                                }}
+                                                            >
+                                                                +⭐ Voto
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => eliminaGiocatore(giocatore.id, giocatore.nome)}
+                                                                style={{ 
+                                                                    padding: "8px 15px", 
+                                                                    background: "#F44336",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "5px",
+                                                                    cursor: "pointer"
+                                                                }}
+                                                            >
+                                                                ❌ Elimina
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "calendario" && (
+                            <div>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap" }}>
+                                    <h2>🗓️ Calendario Partite</h2>
+                                    {username === "admin" && (
+                                        <button 
+                                            onClick={generaCalendario}
+                                            style={{ 
+                                                padding: "10px 20px", 
+                                                background: "#2196F3",
+                                                color: "white",
+                                                border: "none",
+                                                borderRadius: "5px",
+                                                cursor: "pointer"
+                                            }}
+                                        >
+                                            🔄 Genera Calendario
+                                        </button>
+                                    )}
+                                </div>
+
+                                {partite.length === 0 ? (
+                                    <div style={{ textAlign: "center", color: "#888", padding: "40px" }}>
+                                        <p>📅 Nessuna partita in programma.</p>
+                                        {username === "admin" && (
+                                            <p>Clicca "Genera Calendario" per creare le partite!</p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    partite.map(partita => {
+                                        const stato = getStatoPartita(partita);
+                                        const isConfermato = partita.confermati && partita.confermati.includes(username);
+                                        
+                                        return (
+                                            <div key={partita.id} className="match-card">
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <h3 style={{ margin: "0 0 10px 0" }}>
+                                                            {formattaData(partita.data)} - {partita.ora}
+                                                        </h3>
+                                                        <p style={{ margin: "5px 0", color: "#ccc" }}>
+                                                            📍 {partita.luogo}
+                                                            {partita.triangolare && (
+                                                                <span style={{ 
+                                                                    background: "#FFD700", color: "#000", padding: "2px 8px", 
+                                                                    borderRadius: "10px", fontSize: "0.8rem", marginLeft: "10px", fontWeight: "bold"
+                                                                }}>
+                                                                    🏆 TRIANGOLARE
+                                                                </span>
+                                                            )}
+                                                        </p>
+                                                        
+                                                        <div style={{ 
+                                                            display: "inline-block", 
+                                                            background: stato.colore, color: "#000",
+                                                            padding: "5px 10px", borderRadius: "15px", fontSize: "0.8rem",
+                                                            fontWeight: "bold", margin: "10px 0"
+                                                        }}>
+                                                            {stato.testo} ({partita.confermati ? partita.confermati.length : 0}/{partita.triangolare ? 15 : 10})
+                                                        </div>
+
+                                                        {partita.confermati && partita.confermati.length > 0 && (
+                                                            <div style={{ marginTop: "10px" }}>
+                                                                <p style={{ margin: "5px 0", fontSize: "0.9rem" }}>
+                                                                    <strong>Confermati:</strong> {partita.confermati.join(", ")}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                                                        <button 
+                                                            onClick={() => togglePrenotazionePartita(partita.id)}
+                                                            style={{ 
+                                                                padding: "10px 20px", 
+                                                                background: isConfermato ? "#F44336" : "#4CAF50",
+                                                                color: "white",
+                                                                border: "none",
+                                                                borderRadius: "5px",
+                                                                cursor: "pointer"
+                                                            }}
+                                                        >
+                                                            {isConfermato ? "❌ Annulla" : "✅ Conferma"}
+                                                        </button>
+
+                                                        {username === "admin" && !partita.triangolare && (
+                                                            <button 
+                                                                onClick={() => attivaTriangolare(partita.id)}
+                                                                style={{ 
+                                                                    padding: "8px 15px", 
+                                                                    background: "#FFD700",
+                                                                    color: "#000",
+                                                                    border: "none",
+                                                                    borderRadius: "5px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "0.8rem"
+                                                                }}
+                                                            >
+                                                                🏆 Triangolare
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === "chat" && (
+                            <div style={{ display: "flex", flexDirection: "column", height: "70vh" }}>
+                                <h2>💬 Chat Gruppo</h2>
+                                
+                                <div style={{ 
+                                    flex: 1, 
+                                    overflowY: "auto", 
+                                    background: "rgba(255,255,255,0.05)", 
+                                    borderRadius: "10px", 
+                                    padding: "15px",
+                                    marginBottom: "15px"
+                                }}>
+                                    {messaggi.length === 0 ? (
+                                        <p style={{ textAlign: "center", color: "#888", padding: "40px" }}>
+                                            Nessun messaggio ancora. Inizia la conversazione!
+                                        </p>
+                                    ) : (
+                                        messaggi.map(msg => (
+                                            <div key={msg.id} className={`message-bubble ${msg.mittente === username ? "own-message" : ""}`}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ fontWeight: "bold", color: msg.mittente === username ? "#4CAF50" : "#2196F3" }}>
+                                                            {msg.mittente}
+                                                        </div>
+                                                        <div style={{ margin: "5px 0" }}>{msg.messaggio}</div>
+                                                        <div style={{ fontSize: "0.8rem", color: "#888" }}>
+                                                            {new Date(msg.created_at).toLocaleString('it-IT')}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {(username === "admin" || msg.mittente === username) && (
+                                                        <button 
+                                                            onClick={() => eliminaMessaggio(msg.id)}
+                                                            style={{ 
+                                                                background: "transparent", 
+                                                                border: "none", 
+                                                                color: "#F44336", 
+                                                                cursor: "pointer",
+                                                                fontSize: "0.8rem"
+                                                            }}
+                                                        >
+                                                            ❌
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                <div style={{ display: "flex", gap: "10px" }}>
+                                    <input 
+                                        type="text" 
+                                        value={nuovoMessaggio} 
+                                        onChange={e => setNuovoMessaggio(e.target.value)}
+                                        onKeyPress={e => e.key === 'Enter' && inviaMessaggio()}
+                                        placeholder="Scrivi un messaggio..."
+                                        style={{ 
+                                            flex: 1, 
+                                            padding: "12px", 
+                                            borderRadius: "5px", 
+                                            border: "none",
+                                            background: "rgba(255,255,255,0.9)",
+                                            color: "#000"
+                                        }}
+                                    />
+                                    <button 
+                                        onClick={inviaMessaggio}
+                                        disabled={!nuovoMessaggio.trim()}
+                                        style={{ 
+                                            padding: "12px 20px", 
+                                            background: nuovoMessaggio.trim() ? "#4CAF50" : "#666",
+                                            color: "white",
+                                            border: "none",
+                                            borderRadius: "5px",
+                                            cursor: nuovoMessaggio.trim() ? "pointer" : "not-allowed"
+                                        }}
+                                    >
+                                        Invia
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
