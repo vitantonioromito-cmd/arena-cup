@@ -503,7 +503,7 @@
                                                     flex: "1", 
                                                     minWidth: "200px",
                                                     padding: "20px", 
-                                                    text-align: "center", 
+                                                    textAlign: "center",, 
                                                     background: i === 0 ? "#FFD700" : i === 1 ? "#C0C0C0" : "#CD7F32", 
                                                     color: "#000", 
                                                     borderRadius: "15px",
@@ -529,7 +529,7 @@
                                         margin: "20px 0" 
                                     }}>
                                         <h3>👑 Aggiungi Giocatore</h3>
-                                        <div style={{ display: "flex", gap: "10px", flex-wrap: "wrap", alignItems: "center" }}>
+                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap",, alignItems: "center" }}>
                                             <input 
                                                 placeholder="Nome giocatore" 
                                                 value={form.nome} 
@@ -578,7 +578,7 @@
                                 <div>
                                     <h3>👥 Lista Giocatori ({giocatori.length})</h3>
                                     {giocatori.length === 0 ? (
-                                        <p style={{ text-align: "center", color: "#888", padding: "40px" }}>
+                                        <p style={{ textAlign: "center",, color: "#888", padding: "40px" }}>
                                             Nessun giocatore ancora.
                                         </p>
                                     ) : (
@@ -599,7 +599,7 @@
                                                     </div>
                                                     
                                                     {username === "admin" && (
-                                                        <div style={{ display: "flex", gap: "10px", flex-wrap: "wrap", marginTop: "10px" }}>
+                                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap",, marginTop: "10px" }}>
                                                             <input 
                                                                 id={`gol-${giocatore.id}`}
                                                                 type="number" placeholder="Gol" 
@@ -699,7 +699,7 @@
                                 </div>
 
                                 {partite.length === 0 ? (
-                                    <div style={{ text-align: "center", color: "#888", padding: "40px" }}>
+                                    <div style={{ textAlign: "center",, color: "#888", padding: "40px" }}>
                                         <p>📅 Nessuna partita in programma.</p>
                                         {username === "admin" && (
                                             <p>Clicca "Genera Calendario" per creare le partite!</p>
@@ -803,7 +803,7 @@
                                     }}
                                 >
                                     {messaggi.length === 0 ? (
-                                        <p style={{ text-align: "center", color: "#888", padding: "40px" }}>
+                                        <p style={{ textAlign: "center",, color: "#888", padding: "40px" }}>
                                             Nessun messaggio ancora. Inizia la conversazione!
                                         </p>
                                     ) : (
