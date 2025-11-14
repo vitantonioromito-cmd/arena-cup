@@ -584,7 +584,7 @@
                                     ) : (
                                         giocatori.map(giocatore => (
                                             <div key={giocatore.id} className="player-card">
-                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flex-wrap: "wrap" }}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
                                                     <div style={{ flex: 1 }}>
                                                         <h4 style={{ margin: "0 0 5px 0", fontSize: "1.2rem" }}>
                                                             {giocatore.nome}
@@ -679,7 +679,7 @@
 
                         {activeTab === "calendario" && (
                             <div>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flex-wrap: "wrap" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap" }}>
                                     <h2>🗓️ Calendario Partite</h2>
                                     {username === "admin" && (
                                         <button 
@@ -712,7 +712,7 @@
                                         
                                         return (
                                             <div key={partita.id} className="match-card">
-                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flex-wrap: "wrap" }}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
                                                     <div style={{ flex: 1 }}>
                                                         <h3 style={{ margin: "0 0 10px 0" }}>
                                                             {formattaData(partita.data)} - {partita.ora}
