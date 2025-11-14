@@ -4,7 +4,36 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Arena Cup</title>
+    
+    <!-- PWA CONFIGURATION -->
+    <meta name="theme-color" content="#1a1a2e"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ArenaCup">
+    <link rel="manifest" href="data:application/manifest+json,{
+      \"name\": \"Arena Cup\",
+      \"short_name\": \"ArenaCup\", 
+      \"description\": \"Gestione torneo calcetto\",
+      \"start_url\": \"./\",
+      \"display\": \"standalone\",
+      \"background_color\": \"#121212\",
+      \"theme_color\": \"#1a1a2e\",
+      \"orientation\": \"portrait\",
+      \"icons\": [
+        {
+          \"src\": \"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%234CAF50'><path d='M256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48zm0 384c-97.2 0-176-78.8-176-176S158.8 80 256 80s176 78.8 176 176-78.8 176-176 176zm80-176c0 44.2-35.8 80-80 80s-80-35.8-80-80 35.8-80 80-80 80 35.8 80 80z'/></svg>\",
+          \"sizes\": \"192x192\",
+          \"type\": \"image/svg+xml\"
+        },
+        {
+          \"src\": \"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%234CAF50'><path d='M256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48zm0 384c-97.2 0-176-78.8-176-176S158.8 80 256 80s176 78.8 176 176-78.8 176-176 176zm80-176c0 44.2-35.8 80-80 80s-80-35.8-80-80 35.8-80 80-80 80 35.8 80 80z'/></svg>\",
+          \"sizes\": \"512x512\", 
+          \"type\": \"image/svg+xml\"
+        }
+      ]
+    }"/>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+    
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -17,6 +46,7 @@
             min-height: 100vh; 
             color: white;
             font-family: Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
         #root { min-height: 100vh; }
         
@@ -32,6 +62,12 @@
         
         input, button { padding: 10px; border-radius: 5px; border: none; margin: 5px; }
         button { cursor: pointer; font-weight: bold; }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .tab-button { padding: 10px 15px; font-size: 14px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
@@ -138,7 +174,6 @@
                 const giocatore = giocatori.find(g => g.id === id);
                 if (!giocatore) return;
                 
-                // CHIEDI QUANTI AGGIUNGERE
                 const quantita = prompt(`Quanti ${tipo === 'gol' ? 'gol' : 'assist'} vuoi aggiungere?`, "1");
                 if (!quantita || isNaN(quantita) || parseInt(quantita) <= 0) return;
                 
@@ -190,19 +225,20 @@
 
             const togglePrenotazionePartita = (partitaId) => {
                 const partita = partite.find(p => p.id === partitaId);
-                if (!partita || !partita.confermati) return;
-
-                const limite = partita.triangolare ? 15 : 10;
-                const giaConfermato = partita.confermati.includes(username);
+                if (!partita) return;
                 
-                if (!giaConfermato && partita.confermati.length >= limite) {
+                const confermati = partita.confermati || [];
+                const limite = partita.triangolare ? 15 : 10;
+                const giaConfermato = confermati.includes(username);
+                
+                if (!giaConfermato && confermati.length >= limite) {
                     alert(`Partita al completo! ${limite} giocatori confermati.`);
                     return;
                 }
 
                 const nuoviConfermati = giaConfermato 
-                    ? partita.confermati.filter(name => name !== username)
-                    : [...partita.confermati, username];
+                    ? confermati.filter(name => name !== username)
+                    : [...confermati, username];
 
                 database.ref(`partite/${partitaId}`).update({
                     confermati: nuoviConfermati
@@ -215,6 +251,14 @@
                 if (username !== "admin") return alert("Solo admin può attivare il triangolare!");
                 database.ref(`partite/${partitaId}`).update({ triangolare: true })
                 .then(() => alert("🏆 Triangolare attivato!"));
+            };
+
+            const disattivaTriangolare = (partitaId) => {
+                if (username !== "admin") return alert("Solo admin può disattivare il triangolare!");
+                database.ref(`partite/${partitaId}`).update({ 
+                    triangolare: false,
+                    confermati: []
+                }).then(() => alert("🔁 Triangolare disattivato!"));
             };
 
             const inviaMessaggio = () => {
@@ -262,15 +306,17 @@
             };
 
             const getStatoPartita = (partita) => {
-                if (!partita || !partita.confermati) {
+                if (!partita) {
                     return { testo: "🔴 NON DISPONIBILE", colore: "#F44336" };
                 }
                 
+                const confermati = partita.confermati || [];
                 const limite = partita.triangolare ? 15 : 10;
-                const confermati = partita.confermati.length;
-                if (confermati >= limite) return { testo: "🟢 COMPLETO", colore: "#4CAF50" };
-                if (confermati >= 8) return { testo: "🟡 QUASI COMPLETO", colore: "#FFD700" };
-                if (confermati >= 5) return { testo: "🟠 IN CORSO", colore: "#FF9800" };
+                const numConfermati = confermati.length;
+                
+                if (numConfermati >= limite) return { testo: "🟢 COMPLETO", colore: "#4CAF50" };
+                if (numConfermati >= 8) return { testo: "🟡 QUASI COMPLETO", colore: "#FFD700" };
+                if (numConfermati >= 5) return { testo: "🟠 IN CORSO", colore: "#FF9800" };
                 return { testo: "🔴 POCHI", colore: "#F44336" };
             };
 
@@ -521,8 +567,13 @@
                                                     
                                                     {username === "admin" && (
                                                         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "10px" }}>
+                                                            <input 
+                                                                id={`gol-${giocatore.id}`}
+                                                                type="number" placeholder="Gol" 
+                                                                style={{ padding: "8px", width: "80px", borderRadius: "5px", border: "none" }}
+                                                            />
                                                             <button 
-                                                                onClick={() => addGolAssist(giocatore.id, 'gol')}
+                                                                onClick={() => addGolAssist(giocatore.id, 'gol', document.getElementById(`gol-${giocatore.id}`).value)}
                                                                 style={{ 
                                                                     padding: "8px 15px", 
                                                                     background: "#FFD700",
@@ -534,8 +585,13 @@
                                                             >
                                                                 +⚽ Gol
                                                             </button>
+                                                            <input 
+                                                                id={`assist-${giocatore.id}`}
+                                                                type="number" placeholder="Assist" 
+                                                                style={{ padding: "8px", width: "80px", borderRadius: "5px", border: "none" }}
+                                                            />
                                                             <button 
-                                                                onClick={() => addGolAssist(giocatore.id, 'assist')}
+                                                                onClick={() => addGolAssist(giocatore.id, 'assist', document.getElementById(`assist-${giocatore.id}`).value)}
                                                                 style={{ 
                                                                     padding: "8px 15px", 
                                                                     background: "#4CAF50",
@@ -619,7 +675,7 @@
                                 ) : (
                                     partite.map(partita => {
                                         const stato = getStatoPartita(partita);
-                                        const isConfermato = partita.confermati && partita.confermati.includes(username);
+                                        const isConfermato = (partita.confermati || []).includes(username);
                                         
                                         return (
                                             <div key={partita.id} className="match-card">
@@ -646,13 +702,13 @@
                                                             padding: "5px 10px", borderRadius: "15px", fontSize: "0.8rem",
                                                             fontWeight: "bold", margin: "10px 0"
                                                         }}>
-                                                            {stato.testo} ({partita.confermati ? partita.confermati.length : 0}/{partita.triangolare ? 15 : 10})
+                                                            {stato.testo} ({(partita.confermati || []).length}/{partita.triangolare ? 15 : 10})
                                                         </div>
 
-                                                        {partita.confermati && partita.confermati.length > 0 && (
+                                                        {(partita.confermati || []).length > 0 && (
                                                             <div style={{ marginTop: "10px" }}>
                                                                 <p style={{ margin: "5px 0", fontSize: "0.9rem" }}>
-                                                                    <strong>Confermati:</strong> {partita.confermati.join(", ")}
+                                                                    <strong>Confermati:</strong> {(partita.confermati || []).join(", ")}
                                                                 </p>
                                                             </div>
                                                         )}
@@ -673,20 +729,20 @@
                                                             {isConfermato ? "❌ Annulla" : "✅ Conferma"}
                                                         </button>
 
-                                                        {username === "admin" && !partita.triangolare && (
+                                                        {username === "admin" && (
                                                             <button 
-                                                                onClick={() => attivaTriangolare(partita.id)}
+                                                                onClick={() => partita.triangolare ? disattivaTriangolare(partita.id) : attivaTriangolare(partita.id)}
                                                                 style={{ 
                                                                     padding: "8px 15px", 
-                                                                    background: "#FFD700",
-                                                                    color: "#000",
+                                                                    background: partita.triangolare ? "#F44336" : "#FFD700",
+                                                                    color: partita.triangolare ? "white" : "#000",
                                                                     border: "none",
                                                                     borderRadius: "5px",
                                                                     cursor: "pointer",
                                                                     fontSize: "0.8rem"
                                                                 }}
                                                             >
-                                                                🏆 Triangolare
+                                                                {partita.triangolare ? "❌ Normale" : "🏆 Triangolare"}
                                                             </button>
                                                         )}
                                                     </div>
