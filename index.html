@@ -52,7 +52,7 @@
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
         .stat-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; text-align: center; }
         .player-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid rgba(255,255,255,0.1); }
-        .player-card.current-user { background: rgba(76, 175, 80, 0.2); border: 2px solid #4CAF50; }
+        .player-card.current-user { background: rgba(76, 175, 80, 0.3); border: 2px solid #4CAF50; box-shadow: 0 0 10px rgba(76, 175, 80, 0.5); }
         .match-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin: 15px 0; }
         .message-bubble { margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; border-left: 4px solid #2196F3; }
         .own-message { background: rgba(76, 175, 80, 0.2); border-left: 4px solid #4CAF50; }
@@ -113,11 +113,18 @@
         .current-user-badge {
             background: #4CAF50;
             color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
+            padding: 3px 10px;
+            border-radius: 15px;
             font-size: 0.8rem;
             margin-left: 10px;
             font-weight: bold;
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px #4CAF50; }
+            50% { box-shadow: 0 0 15px #4CAF50; }
+            100% { box-shadow: 0 0 5px #4CAF50; }
         }
 
         .confermato-list {
@@ -130,10 +137,11 @@
         }
 
         .confermato-item.current-user {
-            background: rgba(76, 175, 80, 0.2);
+            background: rgba(76, 175, 80, 0.3);
             padding: 8px;
             border-radius: 5px;
             font-weight: bold;
+            border-left: 3px solid #4CAF50;
         }
     </style>
 </head>
@@ -480,10 +488,18 @@
                 return { testo: "🔴 POCHI", colore: "#F44336" };
             };
 
-            // Funzione per verificare se un giocatore è l'utente corrente
+            // 🔥 CORREZIONE: Funzione per verificare se un giocatore è l'utente corrente
             const isCurrentUser = (nomeGiocatore) => {
-                const nomeVisualizzato = username === "admin" ? "Vitantonio" : username;
-                return nomeGiocatore === nomeVisualizzato;
+                if (username === "admin") {
+                    return nomeGiocatore === "Vitantonio";
+                } else {
+                    return nomeGiocatore === username;
+                }
+            };
+
+            // 🔥 CORREZIONE: Ottieni il nome visualizzato corrente
+            const getCurrentUserName = () => {
+                return username === "admin" ? "Vitantonio" : username;
             };
 
             if (!isLogged) {
@@ -566,7 +582,7 @@
                             </p>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                            <span style={{ color: "#4CAF50" }}>👤 {username === "admin" ? "Vitantonio" : username}</span>
+                            <span style={{ color: "#4CAF50" }}>👤 {getCurrentUserName()}</span>
                             <button 
                                 onClick={handleLogout}
                                 style={{ 
@@ -865,7 +881,7 @@
                                 ) : (
                                     partite.map(partita => {
                                         const stato = getStatoPartita(partita);
-                                        const nomeVisualizzato = username === "admin" ? "Vitantonio" : username;
+                                        const nomeVisualizzato = getCurrentUserName();
                                         const isConfermato = (partita.confermati || []).includes(nomeVisualizzato);
                                         
                                         return (
@@ -1044,7 +1060,7 @@
                                         style={{ 
                                             flex: 1, 
                                             padding: "12px", 
-                                            borderRadius: "5px", 
+                                            borderRadius: "55px", 
                                             border: "none",
                                             background: "rgba(255,255,255,0.9)",
                                             color: "#000"
