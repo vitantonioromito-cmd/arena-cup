@@ -25,7 +25,7 @@
         #root { min-height: 100vh; }
         
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
-        .stat-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;                            textAlign: "center",; }
+        .stat-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; text-align: center; }
         .player-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid rgba(255,255,255,0.1); }
         .match-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin: 15px 0; }
         .message-bubble { margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; border-left: 4px solid #2196F3; }
@@ -90,12 +90,43 @@
             const [nuovoMessaggio, setNuovoMessaggio] = useState("");
             const [ultimoMessaggioVisto, setUltimoMessaggioVisto] = useState(0);
             const [haNuoviMessaggi, setHaNuoviMessaggi] = useState(false);
+            const [statistiche, setStatistiche] = useState({ download: 0, utentiUnici: 0 });
 
             const chatContainerRef = useRef(null);
             const inputRef = useRef(null);
+            const audioRef = useRef(null);
+
+            // 🎵 CREA NOTIFICA SONORA
+            useEffect(() => {
+                audioRef.current = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==");
+                // Suono semplice (puoi sostituire con un file audio vero)
+            }, []);
+
+            // 📈 TRAACIA UTENTE UNICO
+            useEffect(() => {
+                if (isLogged) {
+                    const userKey = `utente_${username}`;
+                    database.ref(`statistiche/utenti/${userKey}`).set({
+                        username: username,
+                        primoAccesso: new Date().toISOString(),
+                        ultimoAccesso: new Date().toISOString()
+                    });
+                }
+            }, [isLogged, username]);
 
             useEffect(() => {
                 if (!isLogged) return;
+
+                // 📊 CARICA STATISTICHE
+                database.ref('statistiche').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        setStatistiche({
+                            download: data.download || 0,
+                            utentiUnici: data.utenti ? Object.keys(data.utenti).length : 0
+                        });
+                    }
+                });
 
                 database.ref('giocatori').on('value', (snapshot) => {
                     const data = snapshot.val();
@@ -107,12 +138,16 @@
                     const messaggiArray = data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : [];
                     setMessaggi(messaggiArray);
 
-                    // CONTROLLO NUOVI MESSAGGI
+                    // 🔔 NOTIFICA NUOVI MESSAGGI
                     if (messaggiArray.length > 0) {
                         const ultimoTimestamp = Math.max(...messaggiArray.map(m => m.timestamp));
                         
                         if (activeTab !== "chat" && ultimoTimestamp > ultimoMessaggioVisto) {
                             setHaNuoviMessaggi(true);
+                            // 🎵 SUONA NOTIFICA
+                            if (audioRef.current && ultimoMessaggioVisto > 0) {
+                                audioRef.current.play().catch(e => console.log("Audio non riproducibile"));
+                            }
                         }
                         
                         if (activeTab === "chat") {
@@ -126,7 +161,60 @@
                     const data = snapshot.val();
                     setPartite(data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : []);
                 });
+
+                // 📱 VERIFICA INSTALLAZIONE PWA
+                verificaInstallazione();
             }, [isLogged, activeTab, ultimoMessaggioVisto]);
+
+            // 📱 CONTATORE DOWNLOAD PWA
+            const tracciaDownload = () => {
+                database.ref('statistiche/download').transaction((current) => {
+                    return (current || 0) + 1;
+                });
+            };
+
+            const verificaInstallazione = () => {
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    if (document.getElementById('installBtn')) return;
+                    
+                    const installBtn = document.createElement('button');
+                    installBtn.id = 'installBtn';
+                    installBtn.textContent = '📱 Installa App';
+                    installBtn.style.cssText = `
+                        position: fixed; 
+                        bottom: 20px; 
+                        right: 20px; 
+                        background: #4CAF50; 
+                        color: white; 
+                        padding: 10px 15px; 
+                        border: none; 
+                        border-radius: 20px; 
+                        cursor: pointer;
+                        z-index: 1000;
+                        font-size: 14px;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                    `;
+                    document.body.appendChild(installBtn);
+                    
+                    installBtn.onclick = () => {
+                        e.prompt();
+                        e.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === 'accepted') {
+                                tracciaDownload();
+                                installBtn.remove();
+                                alert('🎉 App installata! Grazie!');
+                            }
+                        });
+                    };
+
+                    // Rimuovi il pulsante dopo 30 secondi
+                    setTimeout(() => {
+                        if (document.getElementById('installBtn')) {
+                            document.getElementById('installBtn').remove();
+                        }
+                    }, 30000);
+                });
+            };
 
             // SCROLL AUTOMATICO CHAT
             useEffect(() => {
@@ -282,12 +370,11 @@
             const inviaMessaggio = () => {
                 if (!nuovoMessaggio.trim()) return;
                 
-                // SOSTITUISCI "admin" CON "Vitantonio" NEI MESSAGGI
                 const mittenteVisualizzato = username === "admin" ? "Vitantonio" : username;
                 
                 database.ref('messaggi').push({
-                    mittente: username, // Salva sempre il vero username
-                    mittente_visualizzato: mittenteVisualizzato, // Salva come visualizzare
+                    mittente: username,
+                    mittente_visualizzato: mittenteVisualizzato,
                     messaggio: nuovoMessaggio,
                     timestamp: Date.now(),
                     created_at: new Date().toLocaleString('it-IT')
@@ -300,7 +387,8 @@
             };
 
             const rispondiAMessaggio = (msg) => {
-                setNuovoMessaggio(`@${msg.mittente === "admin" ? "Vitantonio" : msg.mittente} `);
+                const nomeVisualizzato = msg.mittente === "admin" ? "Vitantonio" : msg.mittente;
+                setNuovoMessaggio(`@${nomeVisualizzato} `);
                 setTimeout(() => {
                     if (inputRef.current) inputRef.current.focus();
                 }, 100);
@@ -362,7 +450,7 @@
                         alignItems: "center" 
                     }}>
                         <div style={{ 
-                           textAlign: "center", 
+                            textAlign: "center", 
                             background: "rgba(255,255,255,0.1)", 
                             padding: "40px", 
                             borderRadius: "15px",
@@ -492,6 +580,24 @@
                                         <h3 style={{ color: "#FF6B6B", margin: "0 0 10px 0" }}>👥 Giocatori</h3>
                                         <p style={{ margin: 0, fontSize: "2rem", fontWeight: "bold" }}>{stats.totaleGiocatori}</p>
                                     </div>
+                                    
+                                    {/* 📱 STATISTICHE ADMIN (SOLO PER ADMIN) */}
+                                    {username === "admin" && (
+                                        <>
+                                            <div className="stat-card">
+                                                <h3 style={{ color: "#9C27B0", margin: "0 0 10px 0" }}>📱 Download</h3>
+                                                <p style={{ margin: 0, fontSize: "2rem", fontWeight: "bold" }}>
+                                                    {statistiche.download || 0}
+                                                </p>
+                                            </div>
+                                            <div className="stat-card">
+                                                <h3 style={{ color: "#00BCD4", margin: "0 0 10px 0" }}>👤 Utenti Unici</h3>
+                                                <p style={{ margin: 0, fontSize: "2rem", fontWeight: "bold" }}>
+                                                    {statistiche.utentiUnici || 0}
+                                                </p>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
 
                                 {top3.length > 0 && (
@@ -793,7 +899,7 @@
                                 
                                 <div 
                                     ref={chatContainerRef}
-                                                                        style={{ 
+                                    style={{ 
                                         flex: 1, 
                                         overflowY: "auto", 
                                         background: "rgba(255,255,255,0.05)", 
@@ -808,12 +914,12 @@
                                         </p>
                                     ) : (
                                         messaggi.map(msg => {
-    const mittenteVisualizzato = msg.mittente_visualizzato 
-        ? msg.mittente_visualizzato 
-        : (msg.mittente === "admin" ? "Vitantonio" : msg.mittente);
+                                            const mittenteVisualizzato = msg.mittente_visualizzato 
+                                                ? msg.mittente_visualizzato 
+                                                : (msg.mittente === "admin" ? "Vitantonio" : msg.mittente);
                                             const isOwnMessage = msg.mittente === username;
                                             const isAdminMessage = msg.mittente === "admin";
-                                                                
+                                            
                                             return (
                                                 <div key={msg.id} className={`message-bubble ${isOwnMessage ? "own-message" : ""} ${isAdminMessage ? "admin-message" : ""}`}>
                                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
