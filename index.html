@@ -438,6 +438,24 @@
             50% { box-shadow: 0 0 15px #0096FF; }
             100% { box-shadow: 0 0 5px #0096FF; }
         }
+
+        /* PRESENZE BADGE */
+        .presenze-badge {
+            background: linear-gradient(135deg, #9C27B0, #E91E63);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+            animation: glow-purple 2s infinite;
+        }
+        
+        @keyframes glow-purple {
+            0% { box-shadow: 0 0 5px #9C27B0; }
+            50% { box-shadow: 0 0 15px #9C27B0; }
+            100% { box-shadow: 0 0 5px #9C27B0; }
+        }
         
         .mvp-stats {
             display: flex;
@@ -944,7 +962,9 @@
                         rinvii_buoni: data[key].rinvii_buoni || 0,
                         errori: data[key].errori || 0,
                         interventi_decisivi: data[key].interventi_decisivi || 0,
-                        partite_portiere: data[key].partite_portiere || 0
+                        partite_portiere: data[key].partite_portiere || 0,
+                        // Inizializza presenze se non esiste
+                        presenze: data[key].presenze || 0
                     })) : [];
                     setGiocatori(giocatoriArray);
                 });
@@ -1020,7 +1040,7 @@
                                 
                                 if (!eraConfermato && oraConfermato) {
                                     showPushNotification(
-                                        "✅ Prenotazione Confermata",
+                                        "✅ Prenotazione Confermada",
                                         `Sei confermato per il ${formattaData(nuovaPartita.data)}`,
                                         'calendar'
                                     );
@@ -1095,6 +1115,12 @@
                     punteggio_benji: calcolaPunteggioBenjiPrice(g)
                 }))
                 .sort((a, b) => b.punteggio_benji - a.punteggio_benji)
+                .slice(0, 10);
+
+            // 🎯 CLASSIFICA PRESENZE/PARTITE GIOCATE
+            const classificaPresenze = [...giocatori]
+                .filter(g => (g.presenze || 0) > 0)
+                .sort((a, b) => (b.presenze || 0) - (a.presenze || 0))
                 .slice(0, 10);
 
             // 🔐 SISTEMA LOGIN CON PASSWORD CORRETTA PER ADMIN
@@ -1185,7 +1211,7 @@
                 });
             };
 
-            // 🎯 MODIFICA PAGELLA
+            // 🎯 MODIFICA PAGELLA - FUNZIONANTE
             const avviaModificaPagella = (pagella) => {
                 setPagellaInModifica(pagella.id);
                 setModificaPagella({
@@ -1212,6 +1238,9 @@
                     setPagellaInModifica(null);
                     setModificaPagella({ voto: "", commento: "", fazione: "nessuna" });
                     alert("✅ Pagella modificata!");
+                }).catch(error => {
+                    console.error("Errore modifica pagella:", error);
+                    alert("❌ Errore nella modifica della pagella");
                 });
             };
 
@@ -1244,6 +1273,68 @@
                     case 'rossa': return <span className="badge-fazione badge-rossa">ARMATA ROSSA</span>;
                     default: return null;
                 }
+            };
+
+            // ⚽ AGGIUNGI/RIMUOVI PRESENZA
+            const aggiungiPresenza = (id, quantitaInput) => {
+                if (loginForm.username !== "admin") return alert("Solo admin può aggiornare le presenze!");
+                
+                const giocatore = giocatori.find(g => g.id === id);
+                if (!giocatore) return;
+                
+                const quantita = parseInt(quantitaInput);
+                if (isNaN(quantita)) return alert("Inserisci un numero valido!");
+                
+                const nuovoValore = Math.max(0, (giocatore.presenze || 0) + quantita);
+                
+                database.ref(`giocatori/${id}`).update({
+                    presenze: nuovoValore
+                }).then(() => {
+                    const azione = quantita >= 0 ? "aggiunte" : "rimosse";
+                    alert(`📊 ${Math.abs(quantita)} presenze ${azione}!`);
+                    document.getElementById(`presenze-${id}`).value = "";
+                });
+            };
+
+            // 🗓️ TOGGLE PRENOTAZIONE - SENZA DOPPI ADMIN
+            const togglePrenotazionePartita = (partitaId) => {
+                const partita = partite.find(p => p.id === partitaId);
+                if (!partita) return;
+                
+                const nomeVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
+                let confermati = partita.confermati || [];
+                
+                // RIMUOVI EVENTUALI DOPPI "admin"
+                confermati = confermati.filter((nome, index, array) => 
+                    array.indexOf(nome) === index
+                );
+                
+                const limite = partita.triangolare ? 15 : 10;
+                const giaConfermato = confermati.includes(nomeVisualizzato);
+                
+                if (!giaConfermato && confermati.length >= limite) {
+                    alert(`Partita al completo! ${limite} giocatori confermati.`);
+                    return;
+                }
+
+                const nuoviConfermati = giaConfermato 
+                    ? confermati.filter(name => name !== nomeVisualizzato)
+                    : [...confermati, nomeVisualizzato];
+
+                database.ref(`partite/${partitaId}`).update({
+                    confermati: nuoviConfermati
+                }).then(() => {
+                    if (!giaConfermato) {
+                        alert("✅ Prenotazione confermata!");
+                        showPushNotification(
+                            "✅ Prenotazione Confermata",
+                            `Sei confermato per il ${formattaData(partita.data)}`,
+                            'calendar'
+                        );
+                    } else {
+                        alert("❌ Prenotazione annullata!");
+                    }
+                });
             };
 
             // ALTRE FUNZIONI ESISTENTI...
@@ -1350,7 +1441,8 @@
                 mediaGenerale: giocatoriConMedia.length > 0 ? 
                     giocatoriConMedia.reduce((sum, g) => sum + (g.media_calcolata || 0), 0) / giocatoriConMedia.length : 0,
                 totaleMVP: giocatoriConMedia.reduce((sum, g) => sum + (g.mvp_count || 0), 0),
-                totalePortieri: giocatori.filter(g => g.partite_portiere > 0).length
+                totalePortieri: giocatori.filter(g => g.partite_portiere > 0).length,
+                totalePresenze: giocatoriConMedia.reduce((sum, g) => sum + (g.presenze || 0), 0)
             };
 
             const formattaData = (dataString) => {
@@ -1479,8 +1571,9 @@
                                 <p style={{ margin: "5px 0 0 0", color: "#ccc", fontSize: "0.8rem" }}>
                                     {activeTab === "classifica" ? "Classifica" : 
                                      activeTab === "calendario" ? "Calendario" : 
-                                     activeTab === "pagelle" ? "Pagelle" : 
-                                     activeTab === "impostazioni" ? "Impostazioni" : "Chat"} | 
+                                     activeTab === "presenze" ? "Partite Giocate" : 
+                                     activeTab === "chat" ? "Chat" : 
+                                     activeTab === "pagelle" ? "Pagelle" : "Impostazioni"} | 
                                     {stats.totaleGiocatori} giocatori
                                 </p>
                             </div>
@@ -1521,6 +1614,12 @@
                                         {notificheCalendario > 9 ? '9+' : notificheCalendario}
                                     </span>
                                 )}
+                            </button>
+                            <button
+                                className={`desktop-nav-button ${activeTab === "presenze" ? "active" : ""}`}
+                                onClick={() => setActiveTab("presenze")}
+                            >
+                                📊 Partite Giocate
                             </button>
                             <button
                                 className={`desktop-nav-button ${activeTab === "chat" ? "active" : ""}`}
@@ -1680,7 +1779,7 @@
                             </div>
                         )}
 
-                        {/* TAB CALENDARIO */}
+                        {/* TAB CALENDARIO - CON PRENOTAZIONI SENZA DOPPI */}
                         {activeTab === "calendario" && (
                             <div>
                                 <h2>🗓️ Calendario Partite</h2>
@@ -1696,7 +1795,14 @@
                                         .map(partita => {
                                             const stato = getStatoPartita(partita);
                                             const nomeVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
-                                            const isConfermato = partita.confermati?.includes(nomeVisualizzato);
+                                            
+                                            // RIMUOVI DOPPI DALLE PRENOTAZIONI
+                                            let confermatiUnici = partita.confermati || [];
+                                            confermatiUnici = confermatiUnici.filter((nome, index, array) => 
+                                                array.indexOf(nome) === index
+                                            );
+                                            
+                                            const isConfermato = confermatiUnici.includes(nomeVisualizzato);
                                             const limite = partita.triangolare ? 15 : 10;
                                             
                                             return (
@@ -1710,7 +1816,7 @@
                                                                 🕒 {partita.ora} • 📍 {partita.luogo}
                                                             </p>
                                                             <p style={{ margin: "5px 0", color: stato.colore, fontWeight: "bold" }}>
-                                                                {stato.testo} • {partita.confermati?.length || 0}/{limite} confermati
+                                                                {stato.testo} • {confermatiUnici.length}/{limite} confermati
                                                             </p>
                                                         </div>
                                                         
@@ -1730,10 +1836,10 @@
 
                                                     <div className="confermato-list">
                                                         <h4 style={{ margin: "15px 0 10px 0", color: "#4CAF50" }}>
-                                                            Giocatori Confermati ({partita.confermati?.length || 0})
+                                                            Giocatori Confermati ({confermatiUnici.length})
                                                         </h4>
-                                                        {partita.confermati && partita.confermati.length > 0 ? (
-                                                            partita.confermati.map((nome, index) => (
+                                                        {confermatiUnici.length > 0 ? (
+                                                            confermatiUnici.map((nome, index) => (
                                                                 <div 
                                                                     key={index} 
                                                                     className={`confermato-item ${nome === nomeVisualizzato ? 'current-user' : ''}`}
@@ -1750,6 +1856,112 @@
                                                 </div>
                                             );
                                         })
+                                )}
+                            </div>
+                        )}
+
+                        {/* NUOVO TAB: PARTITE GIOCATE/PRESENZE */}
+                        {activeTab === "presenze" && (
+                            <div>
+                                <h2>📊 Partite Giocate / Presenze</h2>
+                                
+                                <div className="stats-grid">
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#9C27B0", margin: "0 0 10px 0", fontSize: "1rem" }}>📊 Partite Totali</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totalePresenze}</p>
+                                    </div>
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#E91E63", margin: "0 0 10px 0", fontSize: "1rem" }}>👥 Giocatori Attivi</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
+                                            {giocatori.filter(g => (g.presenze || 0) > 0).length}
+                                        </p>
+                                    </div>
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#2196F3", margin: "0 0 10px 0", fontSize: "1rem" }}>📈 Media Partite</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
+                                            {giocatori.filter(g => (g.presenze || 0) > 0).length > 0 
+                                                ? (stats.totalePresenze / giocatori.filter(g => (g.presenze || 0) > 0).length).toFixed(1) 
+                                                : "0.0"}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* CLASSIFICA PRESENZE */}
+                                <div className="classifica-card" style={{ marginTop: "20px" }}>
+                                    <h3 style={{ marginBottom: "15px", color: "#9C27B0" }}>🏆 Classifica Partite Giocate</h3>
+                                    {classificaPresenze.length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="icon">📊</div>
+                                            <p>Nessuna partita giocata ancora.</p>
+                                        </div>
+                                    ) : (
+                                        classificaPresenze.map((giocatore, index) => (
+                                            <div key={giocatore.id} className="classifica-item">
+                                                <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                    {index + 1}
+                                                </div>
+                                                <div className="classifica-nome">
+                                                    {giocatore.nome}
+                                                    {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    <span className="presenze-badge">{giocatore.presenze || 0} partite</span>
+                                                </div>
+                                                <div className="classifica-valore">
+                                                    {giocatore.presenze || 0}
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                {/* LISTA COMPLETA GIOCATORI CON CONTROLLI PRESENZE (SOLO ADMIN) */}
+                                {loginForm.username === "admin" && (
+                                    <div style={{ marginTop: "30px" }}>
+                                        <h3>👥 Gestione Presenze Giocatori</h3>
+                                        {giocatori.length === 0 ? (
+                                            <p style={{ textAlign: "center", color: "#888", padding: "20px" }}>
+                                                Nessun giocatore ancora.
+                                            </p>
+                                        ) : (
+                                            giocatori.map(giocatore => (
+                                                <div key={giocatore.id} className="player-card">
+                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
+                                                        <div style={{ flex: 1 }}>
+                                                            <h4 style={{ margin: "0 0 5px 0", fontSize: "1.1rem" }}>
+                                                                {giocatore.nome}
+                                                                {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                                {(giocatore.presenze || 0) > 0 && (
+                                                                    <span className="presenze-badge">{giocatore.presenze} partite</span>
+                                                                )}
+                                                            </h4>
+                                                        </div>
+                                                        
+                                                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+                                                            <input 
+                                                                id={`presenze-${giocatore.id}`}
+                                                                type="number" 
+                                                                placeholder="±Presenze" 
+                                                                className="number-input"
+                                                            />
+                                                            <button 
+                                                                onClick={() => aggiungiPresenza(giocatore.id, document.getElementById(`presenze-${giocatore.id}`).value)}
+                                                                style={{ 
+                                                                    padding: "8px 12px", 
+                                                                    background: "#9C27B0",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "12px"
+                                                                }}
+                                                            >
+                                                                ±📊
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -1848,7 +2060,7 @@
                             </div>
                         )}
 
-                        {/* TAB PAGELLE MIGLIORATO CON MODIFICA */}
+                        {/* TAB PAGELLE MIGLIORATO CON MODIFICA FUNZIONANTE */}
                         {activeTab === "pagelle" && (
                             <div>
                                 <h2>📝 Pagelle Giocatori</h2>
@@ -1921,7 +2133,7 @@
                                     </div>
                                 )}
 
-                                {/* LISTA PAGELLE MIGLIORATA CON MODIFICA */}
+                                {/* LISTA PAGELLE MIGLIORATA CON MODIFICA FUNZIONANTE */}
                                 {pagelle.length === 0 ? (
                                     <div className="empty-state">
                                         <div className="icon">📝</div>
@@ -1953,7 +2165,7 @@
                                                 </div>
                                             )}
                                             
-                                            {/* MODIFICA PAGELLA (SOLO ADMIN) */}
+                                            {/* MODIFICA PAGELLA (SOLO ADMIN) - FUNZIONANTE */}
                                             {loginForm.username === "admin" && (
                                                 <div style={{ marginTop: "15px" }}>
                                                     {pagellaInModifica === pagella.id ? (
@@ -2167,6 +2379,14 @@
                                     {notificheCalendario > 9 ? '9+' : notificheCalendario}
                                 </div>
                             )}
+                        </button>
+                        
+                        <button
+                            className={`nav-button ${activeTab === "presenze" ? "active" : ""}`}
+                            onClick={() => setActiveTab("presenze")}
+                        >
+                            <div className="icon">📊</div>
+                            <div className="label">Partite</div>
                         </button>
                         
                         <button
