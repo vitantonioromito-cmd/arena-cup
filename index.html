@@ -8,21 +8,15 @@
     <!-- PWA METADATA -->
     <meta name="theme-color" content="#1a1a2e"/>
     <meta name="description" content="App per la gestione del torneo di calcetto Arena Cup">
-    <meta name="keywords" content="calcetto, torneo, arena cup, football, soccer">
-    <meta name="author" content="Arena Cup Team">
-    
-    <!-- APPLE/IOS SPECIFIC -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ArenaCup">
+    
+    <!-- ICONE iOS -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' fill='%23121212'/><text x='50%' y='60%' font-size='100' text-anchor='middle' fill='%234CAF50'>⚽</text></svg>">
     
-    <!-- ANDROID/CHROME -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
-    
-    <!-- PWA MANIFEST -->
-    <link rel="manifest" id="app-manifest">
+    <!-- NOTIFICHE PUSH -->
+    <script src="https://cdn.jsdelivr.net/npm/push.js@1.0.12/bin/push.min.js"></script>
     
     <!-- EXTERNAL LIBRARIES -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -31,7 +25,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
-    <!-- APP STYLES -->
     <style>
         * { 
             margin: 0; 
@@ -73,12 +66,6 @@
             z-index: 1000;
         }
         
-        .app-nav {
-            display: flex;
-            background: rgba(255,255,255,0.05);
-            border-bottom: 1px solid #333;
-        }
-        
         .app-content {
             flex: 1;
             padding: 20px;
@@ -113,6 +100,7 @@
             gap: 4px;
             transition: all 0.3s ease;
             border-radius: 10px;
+            position: relative;
         }
         
         .nav-button.active {
@@ -124,16 +112,37 @@
             font-size: 1.2rem;
         }
         
-        .nav-button.notification::after {
-            content: "";
+        /* NOTIFICHE BADGE - STILE WHATSAPP */
+        .notification-badge {
             position: absolute;
-            top: 8px;
-            right: 25%;
-            width: 8px;
-            height: 8px;
+            top: 5px;
+            right: 20%;
             background: #ff4444;
+            color: white;
             border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             animation: pulse 1.5s infinite;
+            box-shadow: 0 2px 8px rgba(255, 68, 68, 0.4);
+            border: 2px solid rgba(26, 26, 46, 0.95);
+        }
+        
+        .notification-badge.small {
+            min-width: 8px;
+            height: 8px;
+            font-size: 0;
+            right: 25%;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
         
         .stats-grid { 
@@ -192,7 +201,270 @@
             border-left: 4px solid #FFC107; 
         }
         
-        input, button { 
+        /* STILI PAGELLE */
+        .pagella-card {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .pagella-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .pagella-giocatore {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .pagella-data {
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+        
+        .pagella-voto {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .pagella-commento {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            border-left: 3px solid #2196F3;
+            font-style: italic;
+        }
+        
+        .pagella-form {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .voto-select {
+            background: rgba(255,255,255,0.9);
+            color: #000;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-right: 10px;
+        }
+        
+        .giocatore-select {
+            background: rgba(255,255,255,0.9);
+            color: #000;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-right: 10px;
+            min-width: 150px;
+        }
+        
+        .pagella-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        /* CLASSIFICHE STYLES */
+        .classifica-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .classifica-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .classifica-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .classifica-item:last-child {
+            border-bottom: none;
+        }
+        
+        .classifica-pos {
+            font-weight: bold;
+            font-size: 1.1rem;
+            width: 30px;
+            text-align: center;
+        }
+        
+        .classifica-pos.oro { color: #FFD700; }
+        .classifica-pos.argento { color: #C0C0C0; }
+        .classifica-pos.bronzo { color: #CD7F32; }
+        
+        .classifica-nome {
+            flex: 1;
+            margin: 0 15px;
+        }
+        
+        .classifica-valore {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #4CAF50;
+        }
+        
+        /* MVP STYLES */
+        .mvp-badge {
+            background: linear-gradient(135deg, #FFD700, #FFC107);
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+            animation: glow-gold 2s infinite;
+        }
+        
+        @keyframes glow-gold {
+            0% { box-shadow: 0 0 5px #FFD700; }
+            50% { box-shadow: 0 0 15px #FFD700; }
+            100% { box-shadow: 0 0 5px #FFD700; }
+        }
+        
+        .mvp-stats {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .mvp-stat {
+            background: rgba(255, 193, 7, 0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            font-size: 0.8rem;
+        }
+        
+        /* INPUT NEGATIVI */
+        .number-input {
+            background: rgba(255,255,255,0.9);
+            color: #000;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            width: 70px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .number-input.negative {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+            border: 1px solid rgba(244, 67, 54, 0.5);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+        
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        /* NOTIFICATION SETTINGS */
+        .notification-settings {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        input, button, textarea { 
             padding: 15px; 
             border-radius: 12px; 
             border: none; 
@@ -200,21 +472,21 @@
             font-size: 16px;
         }
         
-        input {
+        input, textarea {
             background: rgba(255,255,255,0.9);
             color: #000;
             width: 100%;
         }
         
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
         button { 
             cursor: pointer; 
             font-weight: bold;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
         }
         
         .current-user-badge {
@@ -251,30 +523,6 @@
             border-left: 3px solid #4CAF50;
         }
         
-        .install-prompt {
-            position: fixed;
-            bottom: 80px;
-            left: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #007AFF, #5856D6);
-            color: white;
-            padding: 20px;
-            border-radius: 20px;
-            text-align: center;
-            z-index: 1001;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        
-        .install-prompt button {
-            background: white;
-            color: #007AFF;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-weight: bold;
-            margin: 10px 5px 0 5px;
-        }
-        
         @media (min-width: 768px) {
             .stats-grid { 
                 grid-template-columns: repeat(3, 1fr); 
@@ -294,63 +542,51 @@
     </style>
 </head>
 <body>
-    <div id="install-prompt" class="install-prompt" style="display: none;">
-        <h3>📱 Installa Arena Cup</h3>
-        <p>Per un'esperienza migliore, installa l'app sul tuo dispositivo!</p>
-        <button id="install-button">Installa App</button>
-        <button class="close" onclick="document.getElementById('install-prompt').style.display='none'">Più tardi</button>
-    </div>
-
     <div id="root"></div>
     
     <script>
-        // PWA SETUP
-        const manifest = {
-            "name": "Arena Cup",
-            "short_name": "ArenaCup",
-            "description": "Gestione torneo calcetto - App Ufficiale",
-            "start_url": "./",
-            "display": "standalone",
-            "background_color": "#121212",
-            "theme_color": "#1a1a2e",
-            "orientation": "portrait",
-            "icons": [
-                {
-                    "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23121212'/><text x='50%' y='60%' font-size='100' text-anchor='middle' fill='%234CAF50'>⚽</text></svg>",
-                    "sizes": "192x192",
-                    "type": "image/svg+xml"
-                }
-            ]
-        };
-
-        const blob = new Blob([JSON.stringify(manifest)], {type: 'application/manifest+json'});
-        const manifestURL = URL.createObjectURL(blob);
-        document.getElementById('app-manifest').href = manifestURL;
-
-        // INSTALL PROMPT
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            setTimeout(() => {
-                document.getElementById('install-prompt').style.display = 'block';
-            }, 3000);
-        });
-
-        document.getElementById('install-button').addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    document.getElementById('install-prompt').style.display = 'none';
-                }
-                deferredPrompt = null;
+        // SERVICE WORKER per notifiche push
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(registration => console.log('SW registered'))
+                .catch(error => console.log('SW registration failed'));
+        }
+        
+        // Richiedi permesso notifiche
+        function requestNotificationPermission() {
+            if ("Notification" in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        console.log("Notifiche abilitate!");
+                        localStorage.setItem('notificationsEnabled', 'true');
+                    }
+                });
             }
-        });
+        }
+        
+        // Mostra notifica push
+        function showPushNotification(title, message, tag = 'arena-cup') {
+            if (localStorage.getItem('notificationsEnabled') === 'true' && "Notification" in window) {
+                if (Notification.permission === "granted") {
+                    new Notification(title, {
+                        body: message,
+                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
+                        tag: tag,
+                        requireInteraction: true
+                    });
+                }
+            }
+        }
+        
+        // Vibrazione (solo mobile)
+        function vibrate() {
+            if (navigator.vibrate) {
+                navigator.vibrate(200);
+            }
+        }
     </script>
     
     <script type="text/babel">
-        // ✅ CODICE REACT COMPLETO - TUTTE LE FUNZIONALITÀ ORIGINALI
         const { useState, useEffect, useRef } = React;
 
         const firebaseConfig = {
@@ -367,22 +603,50 @@
         const database = firebase.database();
 
         function App() {
-            const [username, setUsername] = useState(localStorage.getItem("username") || "");
+            const [loginForm, setLoginForm] = useState({
+                username: localStorage.getItem("username") || "",
+                password: ""
+            });
             const [isLogged, setIsLogged] = useState(!!localStorage.getItem("username"));
-            const [activeTab, setActiveTab] = useState("statistiche");
+            const [activeTab, setActiveTab] = useState("classifica");
             
             const [giocatori, setGiocatori] = useState([]);
             const [messaggi, setMessaggi] = useState([]);
             const [partite, setPartite] = useState([]);
+            const [pagelle, setPagelle] = useState([]);
             const [form, setForm] = useState({ nome: "", gol: 0, assist: 0, voto: "" });
             const [nuovoMessaggio, setNuovoMessaggio] = useState("");
             const [ultimoMessaggioVisto, setUltimoMessaggioVisto] = useState(0);
             const [haNuoviMessaggi, setHaNuoviMessaggi] = useState(false);
             const [statistiche, setStatistiche] = useState({ download: 0, utentiUnici: 0 });
+            
+            // 🔔 STATI NOTIFICHE
+            const [notificheChat, setNotificheChat] = useState(0);
+            const [notificheCalendario, setNotificheCalendario] = useState(0);
+            const [notificationsEnabled, setNotificationsEnabled] = useState(
+                localStorage.getItem('notificationsEnabled') === 'true'
+            );
+            const [chatNotificationsEnabled, setChatNotificationsEnabled] = useState(
+                localStorage.getItem('chatNotificationsEnabled') !== 'false'
+            );
+            const [calendarNotificationsEnabled, setCalendarNotificationsEnabled] = useState(
+                localStorage.getItem('calendarNotificationsEnabled') !== 'false'
+            );
+
+            // 📝 STATI PAGELLE
+            const [nuovaPagella, setNuovaPagella] = useState({
+                giocatore: "",
+                voto: "",
+                commento: "",
+                data: new Date().toISOString().split('T')[0]
+            });
 
             const chatContainerRef = useRef(null);
 
-            // 🎵 NOTIFICA SONORA
+            // 🔐 PASSWORD ADMIN (MODIFICA QUESTA CON LA TUA PASSWORD)
+            const ADMIN_PASSWORD = "giulia85";
+
+            // 🎵 NOTIFICA SONORA + VIBRAZIONE
             const playNotificationSound = () => {
                 try {
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -398,13 +662,59 @@
                     oscillator.start();
                     gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
                     setTimeout(() => oscillator.stop(), 300);
+                    
+                    // Vibrazione
+                    vibrate();
                 } catch (e) {
                     console.log("Audio non supportato");
                 }
             };
 
+            // 🔔 GESTIONE NOTIFICHE PUSH
+            const showNotification = (title, body, type = 'chat') => {
+                if (!notificationsEnabled) return;
+                
+                if (type === 'chat' && !chatNotificationsEnabled) return;
+                if (type === 'calendar' && !calendarNotificationsEnabled) return;
+                
+                // Notifica browser
+                if ("Notification" in window && Notification.permission === "granted") {
+                    new Notification(title, {
+                        body: body,
+                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
+                        tag: 'arena-cup'
+                    });
+                }
+                
+                // Notifica Push.js (fallback)
+                if (typeof Push !== 'undefined') {
+                    Push.create(title, {
+                        body: body,
+                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
+                        timeout: 5000,
+                        onClick: function () {
+                            window.focus();
+                            this.close();
+                        }
+                    });
+                }
+            };
+
             useEffect(() => {
                 if (!isLogged) return;
+
+                // Richiedi permesso notifiche al primo accesso
+                if (localStorage.getItem('notificationPermissionAsked') !== 'true') {
+                    if ("Notification" in window && Notification.permission === "default") {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === "granted") {
+                                setNotificationsEnabled(true);
+                                localStorage.setItem('notificationsEnabled', 'true');
+                            }
+                            localStorage.setItem('notificationPermissionAsked', 'true');
+                        });
+                    }
+                }
 
                 database.ref('statistiche').on('value', (snapshot) => {
                     const data = snapshot.val();
@@ -421,6 +731,7 @@
                     setGiocatori(data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : []);
                 });
 
+                let ultimoMessaggioTimestamp = 0;
                 database.ref('messaggi').on('value', (snapshot) => {
                     const data = snapshot.val();
                     const messaggiArray = data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : [];
@@ -429,25 +740,97 @@
                     if (messaggiArray.length > 0) {
                         const ultimoTimestamp = Math.max(...messaggiArray.map(m => m.timestamp));
                         
+                        // 🔔 NOTIFICA NUOVI MESSAGGI
                         if (activeTab !== "chat" && ultimoTimestamp > ultimoMessaggioVisto) {
+                            const nuoviMessaggi = messaggiArray.filter(m => m.timestamp > ultimoMessaggioVisto && m.mittente !== loginForm.username);
+                            const countNuovi = nuoviMessaggi.length;
+                            
+                            setNotificheChat(countNuovi);
                             setHaNuoviMessaggi(true);
-                            if (ultimoMessaggioVisto > 0) {
+                            
+                            if (ultimoMessaggioVisto > 0 && countNuovi > 0) {
                                 playNotificationSound();
+                                
+                                // Notifica push per ogni nuovo messaggio
+                                nuoviMessaggi.forEach(msg => {
+                                    const mittente = msg.mittente === "admin" ? "Vitantonio" : msg.mittente;
+                                    if (mittente !== loginForm.username) {
+                                        showNotification(
+                                            `💬 Nuovo messaggio da ${mittente}`,
+                                            msg.messaggio.length > 50 ? msg.messaggio.substring(0, 50) + '...' : msg.messaggio,
+                                            'chat'
+                                        );
+                                    }
+                                });
                             }
                         }
                         
                         if (activeTab === "chat") {
                             setUltimoMessaggioVisto(ultimoTimestamp);
                             setHaNuoviMessaggi(false);
+                            setNotificheChat(0);
                         }
+                        
+                        ultimoMessaggioTimestamp = ultimoTimestamp;
                     }
                 });
 
+                let partitePrecedenti = [];
                 database.ref('partite').on('value', (snapshot) => {
                     const data = snapshot.val();
-                    setPartite(data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : []);
+                    const nuovePartite = data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : [];
+                    setPartite(nuovePartite);
+
+                    // 🔔 NOTIFICA NUOVE PARTITE O MODIFICHE
+                    if (partitePrecedenti.length > 0) {
+                        nuovePartite.forEach(nuovaPartita => {
+                            const vecchiaPartita = partitePrecedenti.find(p => p.id === nuovaPartita.id);
+                            
+                            if (!vecchiaPartita) {
+                                // Nuova partita aggiunta
+                                showNotification(
+                                    "🗓️ Nuova Partita Programmata!",
+                                    `${formattaData(nuovaPartita.data)} - ${nuovaPartita.ora}`,
+                                    'calendar'
+                                );
+                            } else if (JSON.stringify(vecchiaPartita.confermati) !== JSON.stringify(nuovaPartita.confermati)) {
+                                // Cambiamenti nelle prenotazioni
+                                const nomeVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
+                                const eraConfermato = vecchiaPartita.confermati?.includes(nomeVisualizzato);
+                                const oraConfermato = nuovaPartita.confermati?.includes(nomeVisualizzato);
+                                
+                                if (!eraConfermato && oraConfermato) {
+                                    showNotification(
+                                        "✅ Prenotazione Confermata",
+                                        `Sei confermato per il ${formattaData(nuovaPartita.data)}`,
+                                        'calendar'
+                                    );
+                                }
+                            }
+                        });
+                    }
+                    
+                    partitePrecedenti = nuovePartite;
+                    
+                    // Conta notifiche calendario (partite imminenti)
+                    const oggi = new Date();
+                    const partiteImminenti = nuovePartite.filter(p => {
+                        const dataPartita = new Date(p.data);
+                        const diffGiorni = (dataPartita - oggi) / (1000 * 60 * 60 * 24);
+                        return diffGiorni <= 2 && diffGiorni >= 0;
+                    });
+                    setNotificheCalendario(partiteImminenti.length);
                 });
-            }, [isLogged, activeTab, ultimoMessaggioVisto]);
+
+                // 📝 CARICA PAGELLE
+                database.ref('pagelle').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    const pagelleArray = data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : [];
+                    // Ordina per data più recente
+                    pagelleArray.sort((a, b) => new Date(b.data) - new Date(a.data));
+                    setPagelle(pagelleArray);
+                });
+            }, [isLogged, activeTab, ultimoMessaggioVisto, loginForm.username]);
 
             // SCROLL AUTOMATICO CHAT
             useEffect(() => {
@@ -456,37 +839,130 @@
                 }
             }, [messaggi, activeTab]);
 
+            // 🏆 CALCOLA CLASSIFICHE
+            const classificaMarcatori = [...giocatori]
+                .filter(g => (g.gol || 0) > 0)
+                .sort((a, b) => (b.gol || 0) - (a.gol || 0))
+                .slice(0, 10);
+
+            const classificaAssist = [...giocatori]
+                .filter(g => (g.assist || 0) > 0)
+                .sort((a, b) => (b.assist || 0) - (a.assist || 0))
+                .slice(0, 10);
+
+            const classificaMVP = [...giocatori]
+                .filter(g => (g.mvp_count || 0) > 0)
+                .sort((a, b) => (b.mvp_count || 0) - (a.mvp_count || 0))
+                .slice(0, 10);
+
+            // 🔐 SISTEMA LOGIN CON PASSWORD PER ADMIN
             const handleLogin = () => {
-                if (!username.trim()) return alert("Inserisci un nome!");
-                localStorage.setItem("username", username);
+                if (!loginForm.username.trim()) return alert("Inserisci un nome!");
+                
+                // Se è admin, verifica password
+                if (loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") {
+                    if (loginForm.password !== ADMIN_PASSWORD) {
+                        alert("❌ Password admin errata!");
+                        return;
+                    }
+                }
+                
+                localStorage.setItem("username", loginForm.username);
                 setIsLogged(true);
             };
 
             const handleLogout = () => {
                 localStorage.removeItem("username");
                 setIsLogged(false);
-                setUsername("");
+                setLoginForm({ username: "", password: "" });
             };
 
-            const addGiocatore = () => {
-                if (username !== "admin") return alert("Solo admin può aggiungere giocatori!");
-                if (!form.nome.trim()) return alert("Inserisci un nome!");
+            // 🔔 GESTIONE IMPOSTAZIONI NOTIFICHE
+            const toggleNotifications = () => {
+                const newState = !notificationsEnabled;
+                setNotificationsEnabled(newState);
+                localStorage.setItem('notificationsEnabled', newState.toString());
                 
-                database.ref('giocatori').push({
-                    nome: form.nome,
-                    gol: parseInt(form.gol) || 0,
-                    assist: parseInt(form.assist) || 0,
-                    voti: form.voto ? [parseFloat(form.voto)] : [],
-                    media_calcolata: form.voto ? parseFloat(form.voto) : 0,
-                    timestamp: Date.now()
+                if (newState && "Notification" in window && Notification.permission === "default") {
+                    Notification.requestPermission();
+                }
+            };
+
+            const toggleChatNotifications = () => {
+                const newState = !chatNotificationsEnabled;
+                setChatNotificationsEnabled(newState);
+                localStorage.setItem('chatNotificationsEnabled', newState.toString());
+            };
+
+            const toggleCalendarNotifications = () => {
+                const newState = !calendarNotificationsEnabled;
+                setCalendarNotificationsEnabled(newState);
+                localStorage.setItem('calendarNotificationsEnabled', newState.toString());
+            };
+
+            // 📝 FUNZIONI PAGELLE (SOLO ADMIN)
+            const aggiungiPagella = () => {
+                if (loginForm.username !== "admin") return alert("Solo Vitantonio può aggiungere pagelle!");
+                if (!nuovaPagella.giocatore.trim()) return alert("Seleziona un giocatore!");
+                if (!nuovaPagella.voto) return alert("Inserisci un voto!");
+                
+                database.ref('pagelle').push({
+                    giocatore: nuovaPagella.giocatore,
+                    voto: parseFloat(nuovaPagella.voto),
+                    commento: nuovaPagella.commento,
+                    data: nuovaPagella.data,
+                    autore: "Vitantonio",
+                    timestamp: Date.now(),
+                    created_at: new Date().toLocaleString('it-IT')
                 }).then(() => {
-                    setForm({ nome: "", gol: 0, assist: 0, voto: "" });
-                    alert("✅ Giocatore aggiunto!");
+                    setNuovaPagella({
+                        giocatore: "",
+                        voto: "",
+                        commento: "",
+                        data: new Date().toISOString().split('T')[0]
+                    });
+                    alert("📝 Pagella aggiunta!");
+                    
+                    // 🔔 NOTIFICA NUOVA PAGELLA
+                    showNotification(
+                        "📝 Nuova Pagella Aggiunta",
+                        `Vitantonio ha valutato ${nuovaPagella.giocatore} con ${nuovaPagella.voto}/10`,
+                        'chat'
+                    );
+                });
+            };
+
+            const eliminaPagella = (id, giocatore) => {
+                if (loginForm.username !== "admin") return alert("Solo Vitantonio può eliminare pagelle!");
+                if (!confirm(`Eliminare la pagella di ${giocatore}?`)) return;
+                database.ref(`pagelle/${id}`).remove();
+            };
+
+            // ⚽ FUNZIONI GOL/ASSIST/MVP CON NUMERI NEGATIVI
+            const addGolAssist = (id, tipo, quantitaInput) => {
+                if (loginForm.username !== "admin") return alert("Solo admin può aggiornare Gol/Assist!");
+                
+                const giocatore = giocatori.find(g => g.id === id);
+                if (!giocatore) return;
+                
+                const quantita = parseInt(quantitaInput);
+                if (isNaN(quantita)) return alert("Inserisci un numero valido!");
+                
+                const nuovoValore = Math.max(0, (giocatore[tipo] || 0) + quantita);
+                
+                database.ref(`giocatori/${id}`).update({
+                    [tipo]: nuovoValore
+                }).then(() => {
+                    const azione = quantita >= 0 ? "aggiunti" : "rimossi";
+                    const emoji = tipo === 'gol' ? '⚽' : '🎯';
+                    const nome = tipo === 'gol' ? 'gol' : 'assist';
+                    alert(`${emoji} ${Math.abs(quantita)} ${nome} ${azione}!`);
+                    document.getElementById(`${tipo}-${id}`).value = "";
                 });
             };
 
             const addVoto = (id, votoInput) => {
-                if (username !== "admin") return alert("Solo admin può aggiungere voti!");
+                if (loginForm.username !== "admin") return alert("Solo admin può aggiungere voti!");
                 const voto = parseFloat(votoInput);
                 if (voto < 1 || voto > 10) return alert("Voto deve essere tra 1 e 10!");
                 
@@ -505,34 +981,71 @@
                 });
             };
 
-            const addGolAssist = (id, tipo) => {
-                if (username !== "admin") return alert("Solo admin può aggiornare Gol/Assist!");
+            // 🏆 FUNZIONE MVP
+            const addMVP = (id) => {
+                if (loginForm.username !== "admin") return alert("Solo admin può assegnare MVP!");
                 
                 const giocatore = giocatori.find(g => g.id === id);
                 if (!giocatore) return;
                 
-                const inputElement = document.getElementById(`${tipo}-${id}`);
-                const quantita = inputElement.value;
-                if (!quantita || isNaN(quantita) || parseInt(quantita) <= 0) return;
-                
-                const nuovoValore = (giocatore[tipo] || 0) + parseInt(quantita);
+                const nuovoCount = (giocatore.mvp_count || 0) + 1;
                 
                 database.ref(`giocatori/${id}`).update({
-                    [tipo]: nuovoValore
+                    mvp_count: nuovoCount
                 }).then(() => {
-                    alert(`${tipo === 'gol' ? '⚽' : '🎯'} ${quantita} ${tipo === 'gol' ? 'gol' : 'assist'} aggiunti!`);
-                    inputElement.value = "";
+                    alert("🏆 MVP assegnato!");
+                    
+                    // 🔔 NOTIFICA MVP
+                    showNotification(
+                        "🏆 Nuovo MVP!",
+                        `${giocatore.nome} è stato nominato MVP!`,
+                        'chat'
+                    );
+                });
+            };
+
+            const removeMVP = (id) => {
+                if (loginForm.username !== "admin") return alert("Solo admin può rimuovere MVP!");
+                
+                const giocatore = giocatori.find(g => g.id === id);
+                if (!giocatore) return;
+                
+                const nuovoCount = Math.max(0, (giocatore.mvp_count || 0) - 1);
+                
+                database.ref(`giocatori/${id}`).update({
+                    mvp_count: nuovoCount
+                }).then(() => {
+                    alert("🏆 MVP rimosso!");
+                });
+            };
+
+            // ALTRE FUNZIONI ESISTENTI...
+            const addGiocatore = () => {
+                if (loginForm.username !== "admin") return alert("Solo admin può aggiungere giocatori!");
+                if (!form.nome.trim()) return alert("Inserisci un nome!");
+                
+                database.ref('giocatori').push({
+                    nome: form.nome,
+                    gol: parseInt(form.gol) || 0,
+                    assist: parseInt(form.assist) || 0,
+                    voti: form.voto ? [parseFloat(form.voto)] : [],
+                    media_calcolata: form.voto ? parseFloat(form.voto) : 0,
+                    mvp_count: 0,
+                    timestamp: Date.now()
+                }).then(() => {
+                    setForm({ nome: "", gol: 0, assist: 0, voto: "" });
+                    alert("✅ Giocatore aggiunto!");
                 });
             };
 
             const eliminaGiocatore = (id, nome) => {
-                if (username !== "admin") return alert("Solo admin può eliminare giocatori!");
+                if (loginForm.username !== "admin") return alert("Solo admin può eliminare giocatori!");
                 if (!confirm(`Sei sicuro di voler eliminare ${nome}?`)) return;
                 database.ref(`giocatori/${id}`).remove();
             };
 
             const generaCalendario = () => {
-                if (username !== "admin") return alert("Solo admin può generare il calendario!");
+                if (loginForm.username !== "admin") return alert("Solo admin può generare il calendario!");
                 
                 const oggi = new Date();
                 let nextTuesday = new Date(oggi);
@@ -559,6 +1072,13 @@
                         });
                     }
                     alert("🗓️ Calendario generato!");
+                    
+                    // 🔔 NOTIFICA CALENDARIO GENERATO
+                    showNotification(
+                        "🗓️ Calendario Aggiornato!",
+                        "Il nuovo calendario partite è stato generato",
+                        'calendar'
+                    );
                 });
             };
 
@@ -566,7 +1086,7 @@
                 const partita = partite.find(p => p.id === partitaId);
                 if (!partita) return;
                 
-                const nomeVisualizzato = username === "admin" ? "Vitantonio" : username;
+                const nomeVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
                 const confermati = partita.confermati || [];
                 const limite = partita.triangolare ? 15 : 10;
                 const giaConfermato = confermati.includes(nomeVisualizzato);
@@ -583,31 +1103,53 @@
                 database.ref(`partite/${partitaId}`).update({
                     confermati: nuoviConfermati
                 }).then(() => {
-                    if (!giaConfermato) alert("✅ Prenotazione confermata!");
+                    if (!giaConfermato) {
+                        alert("✅ Prenotazione confermata!");
+                        // 🔔 NOTIFICA PRENOTAZIONE
+                        showNotification(
+                            "✅ Prenotazione Confermata",
+                            `Sei confermato per il ${formattaData(partita.data)}`,
+                            'calendar'
+                        );
+                    }
                 });
             };
 
             const attivaTriangolare = (partitaId) => {
-                if (username !== "admin") return alert("Solo admin può attivare il triangolare!");
+                if (loginForm.username !== "admin") return alert("Solo admin può attivare il triangolare!");
                 database.ref(`partite/${partitaId}`).update({ triangolare: true })
-                .then(() => alert("🏆 Triangolare attivato!"));
+                .then(() => {
+                    alert("🏆 Triangolare attivato!");
+                    showNotification(
+                        "🏆 Modalità Triangolare Attivata",
+                        "La partita è ora un triangolare (15 giocatori)",
+                        'calendar'
+                    );
+                });
             };
 
             const disattivaTriangolare = (partitaId) => {
-                if (username !== "admin") return alert("Solo admin può disattivare il triangolare!");
+                if (loginForm.username !== "admin") return alert("Solo admin può disattivare il triangolare!");
                 database.ref(`partite/${partitaId}`).update({ 
                     triangolare: false,
                     confermati: []
-                }).then(() => alert("🔁 Triangolare disattivato!"));
+                }).then(() => {
+                    alert("🔁 Triangolare disattivato!");
+                    showNotification(
+                        "🔁 Modalità Normale Attivata",
+                        "La partita torna alla modalità standard (10 giocatori)",
+                        'calendar'
+                    );
+                });
             };
 
             const inviaMessaggio = () => {
                 if (!nuovoMessaggio.trim()) return;
                 
-                const mittenteVisualizzato = username === "admin" ? "Vitantonio" : username;
+                const mittenteVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
                 
                 database.ref('messaggi').push({
-                    mittente: username,
+                    mittente: loginForm.username,
                     mittente_visualizzato: mittenteVisualizzato,
                     messaggio: nuovoMessaggio,
                     timestamp: Date.now(),
@@ -640,7 +1182,8 @@
                 totaleAssist: giocatoriConMedia.reduce((sum, g) => sum + (g.assist || 0), 0),
                 totaleGiocatori: giocatoriConMedia.length,
                 mediaGenerale: giocatoriConMedia.length > 0 ? 
-                    giocatoriConMedia.reduce((sum, g) => sum + (g.media_calcolata || 0), 0) / giocatoriConMedia.length : 0
+                    giocatoriConMedia.reduce((sum, g) => sum + (g.media_calcolata || 0), 0) / giocatoriConMedia.length : 0,
+                totaleMVP: giocatoriConMedia.reduce((sum, g) => sum + (g.mvp_count || 0), 0)
             };
 
             const top3 = [...giocatoriConMedia]
@@ -670,15 +1213,15 @@
             };
 
             const isCurrentUser = (nomeGiocatore) => {
-                if (username === "admin") {
+                if (loginForm.username === "admin") {
                     return nomeGiocatore === "Vitantonio";
                 } else {
-                    return nomeGiocatore === username;
+                    return nomeGiocatore === loginForm.username;
                 }
             };
 
             const getCurrentUserName = () => {
-                return username === "admin" ? "Vitantonio" : username;
+                return loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
             };
 
             if (!isLogged) {
@@ -701,21 +1244,43 @@
                                 backdropFilter: "blur(10px)"
                             }}>
                                 <h1 style={{ fontSize: "2.5rem", marginBottom: "30px" }}>🏆 Arena Cup</h1>
+                                
+                                {/* USERNAME */}
                                 <input 
                                     placeholder="Nome giocatore" 
-                                    value={username} 
-                                    onChange={e => setUsername(e.target.value)}
-                                    onKeyPress={e => e.key === 'Enter' && handleLogin()}
+                                    value={loginForm.username}
+                                    onChange={e => setLoginForm({...loginForm, username: e.target.value})}
                                     style={{ 
                                         padding: "15px", 
                                         fontSize: "16px", 
-                                        marginBottom: "15px", 
+                                        marginBottom: "10px", 
                                         width: "100%",
                                         borderRadius: "12px",
                                         border: "none",
                                         background: "rgba(255,255,255,0.9)"
                                     }}
                                 />
+                                
+                                {/* PASSWORD SOLO SE ADMIN */}
+                                {(loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") && (
+                                    <input 
+                                        type="password"
+                                        placeholder="Password admin" 
+                                        value={loginForm.password}
+                                        onChange={e => setLoginForm({...loginForm, password: e.target.value})}
+                                        onKeyPress={e => e.key === 'Enter' && handleLogin()}
+                                        style={{ 
+                                            padding: "15px", 
+                                            fontSize: "16px", 
+                                            marginBottom: "15px", 
+                                            width: "100%",
+                                            borderRadius: "12px",
+                                            border: "2px solid #FFD700",
+                                            background: "rgba(255,255,255,0.9)"
+                                        }}
+                                    />
+                                )}
+                                
                                 <button 
                                     onClick={handleLogin}
                                     style={{ 
@@ -730,8 +1295,14 @@
                                         width: "100%"
                                     }}
                                 >
-                                    Accedi 🚀
+                                    {loginForm.username.toLowerCase() === "admin" ? "🔐 Accedi come Admin" : "🚀 Accedi"}
                                 </button>
+                                
+                                {(loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") && (
+                                    <p style={{ color: "#FFD700", fontSize: "0.8rem", marginTop: "10px" }}>
+                                        🔐 Accesso protetto da password
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -745,8 +1316,10 @@
                             <div>
                                 <h1 style={{ margin: 0, fontSize: "1.5rem" }}>🏆 Arena Cup</h1>
                                 <p style={{ margin: "5px 0 0 0", color: "#ccc", fontSize: "0.8rem" }}>
-                                    {activeTab === "statistiche" ? "Statistiche" : 
-                                     activeTab === "calendario" ? "Calendario" : "Chat"} | 
+                                    {activeTab === "classifica" ? "Classifica" : 
+                                     activeTab === "calendario" ? "Calendario" : 
+                                     activeTab === "pagelle" ? "Pagelle" : 
+                                     activeTab === "impostazioni" ? "Impostazioni" : "Chat"} | 
                                     {stats.totaleGiocatori} giocatori
                                 </p>
                             </div>
@@ -771,130 +1344,114 @@
                     </div>
 
                     <div className="app-content">
-                        {activeTab === "statistiche" && (
+                        {activeTab === "classifica" && (
                             <div>
-                                <h2>📊 Statistiche</h2>
+                                <h2>🏆 Classifiche</h2>
+                                
+                                {/* STATISTICHE GENERALI */}
                                 <div className="stats-grid">
                                     <div className="stat-card">
-                                        <h3 style={{ color: "#FFD700", margin: "0 0 10px 0", fontSize: "1rem" }}>⚽ Gol</h3>
+                                        <h3 style={{ color: "#FFD700", margin: "0 0 10px 0", fontSize: "1rem" }}>⚽ Gol Totali</h3>
                                         <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleGol}</p>
                                     </div>
                                     <div className="stat-card">
-                                        <h3 style={{ color: "#4CAF50", margin: "0 0 10px 0", fontSize: "1rem" }}>🎯 Assist</h3>
+                                        <h3 style={{ color: "#4CAF50", margin: "0 0 10px 0", fontSize: "1rem" }}>🎯 Assist Totali</h3>
                                         <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleAssist}</p>
                                     </div>
                                     <div className="stat-card">
-                                        <h3 style={{ color: "#2196F3", margin: "0 0 10px 0", fontSize: "1rem" }}>⭐ Media</h3>
+                                        <h3 style={{ color: "#2196F3", margin: "0 0 10px 0", fontSize: "1rem" }}>⭐ Media Generale</h3>
                                         <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.mediaGenerale.toFixed(2)}</p>
                                     </div>
                                     <div className="stat-card">
-                                        <h3 style={{ color: "#FF6B6B", margin: "0 0 10px 0", fontSize: "1rem" }}>👥 Giocatori</h3>
-                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleGiocatori}</p>
+                                        <h3 style={{ color: "#FFC107", margin: "0 0 10px 0", fontSize: "1rem" }}>🏆 MVP Totali</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleMVP}</p>
                                     </div>
-                                    
-                                    {username === "admin" && (
-                                        <>
-                                            <div className="stat-card">
-                                                <h3 style={{ color: "#9C27B0", margin: "0 0 10px 0", fontSize: "1rem" }}>📱 Download</h3>
-                                                <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
-                                                    {statistiche.download || 0}
-                                                </p>
-                                            </div>
-                                            <div className="stat-card">
-                                                <h3 style={{ color: "#00BCD4", margin: "0 0 10px 0", fontSize: "1rem" }}>👤 Utenti Unici</h3>
-                                                <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
-                                                    {statistiche.utentiUnici || 0}
-                                                </p>
-                                            </div>
-                                        </>
-                                    )}
                                 </div>
 
-                                {top3.length > 0 && (
-                                    <div style={{ margin: "30px 0" }}>
-                                        <h3>🏆 Top 3</h3>
-                                        <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
-                                            {top3.map((g, i) => (
-                                                <div key={g.id} style={{ 
-                                                    flex: "1", 
-                                                    minWidth: "150px",
-                                                    padding: "20px", 
-                                                    textAlign: "center", 
-                                                    background: i === 0 ? "#FFD700" : i === 1 ? "#C0C0C0" : "#CD7F32", 
-                                                    color: "#000", 
-                                                    borderRadius: "15px",
-                                                    fontWeight: "bold"
-                                                }}>
-                                                    <div style={{ fontSize: "2rem" }}>
-                                                        {i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}
+                                {/* CLASSIFICHE */}
+                                <div className="classifica-grid">
+                                    {/* CLASSIFICA MARCATORI */}
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#FFD700" }}>⚽ Top Marcatori</h3>
+                                        {classificaMarcatori.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">⚽</div>
+                                                <p>Nessun gol segnato ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaMarcatori.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
                                                     </div>
-                                                    <h3 style={{ margin: "10px 0", fontSize: "1.1rem" }}>{g.nome}</h3>
-                                                    <p>⭐ {g.media_calcolata.toFixed(2)}</p>
-                                                    <p>⚽ {g.gol || 0} 🎯 {g.assist || 0}</p>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.gol || 0} gol
+                                                    </div>
                                                 </div>
-                                            ))}
-                                        </div>
+                                            ))
+                                        )}
                                     </div>
-                                )}
 
-                                {username === "admin" && (
-                                    <div style={{ 
-                                        background: "rgba(255,255,255,0.1)", 
-                                        padding: "20px", 
-                                        borderRadius: "15px", 
-                                        margin: "20px 0",
-                                        backdropFilter: "blur(10px)"
-                                    }}>
-                                        <h3>👑 Aggiungi Giocatore</h3>
-                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
-                                            <input 
-                                                placeholder="Nome giocatore" 
-                                                value={form.nome} 
-                                                onChange={e => setForm({...form, nome: e.target.value})}
-                                                style={{ padding: "12px", borderRadius: "10px", border: "none", flex: 1, fontSize: "14px" }}
-                                            />
-                                            <input 
-                                                type="number" 
-                                                placeholder="Gol" 
-                                                value={form.gol} 
-                                                onChange={e => setForm({...form, gol: e.target.value})}
-                                                style={{ padding: "12px", borderRadius: "10px", border: "none", width: "70px", fontSize: "14px" }}
-                                            />
-                                            <input 
-                                                type="number" 
-                                                placeholder="Assist" 
-                                                value={form.assist} 
-                                                onChange={e => setForm({...form, assist: e.target.value})}
-                                                style={{ padding: "12px", borderRadius: "10px", border: "none", width: "70px", fontSize: "14px" }}
-                                            />
-                                            <input 
-                                                type="number" 
-                                                placeholder="Voto" 
-                                                value={form.voto} 
-                                                onChange={e => setForm({...form, voto: e.target.value})}
-                                                min="1" max="10" step="0.1"
-                                                style={{ padding: "12px", borderRadius: "10px", border: "none", width: "70px", fontSize: "14px" }}
-                                            />
-                                            <button 
-                                                onClick={addGiocatore}
-                                                style={{ 
-                                                    padding: "12px 20px", 
-                                                    background: "#4CAF50",
-                                                    color: "white",
-                                                    border: "none",
-                                                    borderRadius: "10px",
-                                                    cursor: "pointer",
-                                                    fontSize: "14px"
-                                                }}
-                                            >
-                                                ➕ Aggiungi
-                                            </button>
-                                        </div>
+                                    {/* CLASSIFICA ASSIST */}
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>🎯 Top Assist</h3>
+                                        {classificaAssist.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">🎯</div>
+                                                <p>Nessun assist ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaAssist.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.assist || 0} assist
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
-                                )}
 
-                                <div>
-                                    <h3>👥 Lista Giocatori ({giocatori.length})</h3>
+                                    {/* CLASSIFICA MVP */}
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>🏆 MVP Stagione</h3>
+                                        {classificaMVP.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">🏆</div>
+                                                <p>Nessun MVP ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaMVP.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.mvp_count || 0} MVP
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* LISTA COMPLETA GIOCATORI CON CONTROLLI ADMIN */}
+                                <div style={{ marginTop: "30px" }}>
+                                    <h3>👥 Tutti i Giocatori ({giocatori.length})</h3>
                                     {giocatori.length === 0 ? (
                                         <p style={{ textAlign: "center", color: "#888", padding: "40px" }}>
                                             Nessun giocatore ancora.
@@ -909,6 +1466,7 @@
                                                             <h4 style={{ margin: "0 0 5px 0", fontSize: "1.1rem" }}>
                                                                 {giocatore.nome}
                                                                 {isCurrentUserGiocatore && <span className="current-user-badge">TU</span>}
+                                                                {(giocatore.mvp_count || 0) > 0 && <span className="mvp-badge">MVP ×{giocatore.mvp_count}</span>}
                                                             </h4>
                                                             <div style={{ color: "#ccc", fontSize: "0.8rem" }}>
                                                                 ⚽ {giocatore.gol || 0} gol • 🎯 {giocatore.assist || 0} assist • 
@@ -919,15 +1477,18 @@
                                                             </div>
                                                         </div>
                                                         
-                                                        {username === "admin" && (
+                                                        {loginForm.username === "admin" && (
                                                             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+                                                                {/* GOL CON NUMERI NEGATIVI */}
                                                                 <input 
                                                                     id={`gol-${giocatore.id}`}
-                                                                    type="number" placeholder="Gol" 
-                                                                    style={{ padding: "8px", width: "60px", borderRadius: "8px", border: "none", fontSize: "12px" }}
+                                                                    type="number" 
+                                                                    placeholder="±Gol" 
+                                                                    className="number-input"
+                                                                    onFocus={(e) => e.target.select()}
                                                                 />
                                                                 <button 
-                                                                    onClick={() => addGolAssist(giocatore.id, 'gol')}
+                                                                    onClick={() => addGolAssist(giocatore.id, 'gol', document.getElementById(`gol-${giocatore.id}`).value)}
                                                                     style={{ 
                                                                         padding: "8px 12px", 
                                                                         background: "#FFD700",
@@ -938,15 +1499,19 @@
                                                                         fontSize: "12px"
                                                                     }}
                                                                 >
-                                                                    +⚽
+                                                                    ±⚽
                                                                 </button>
+
+                                                                {/* ASSIST CON NUMERI NEGATIVI */}
                                                                 <input 
                                                                     id={`assist-${giocatore.id}`}
-                                                                    type="number" placeholder="Assist" 
-                                                                    style={{ padding: "8px", width: "60px", borderRadius: "8px", border: "none", fontSize: "12px" }}
+                                                                    type="number" 
+                                                                    placeholder="±Assist" 
+                                                                    className="number-input"
+                                                                    onFocus={(e) => e.target.select()}
                                                                 />
                                                                 <button 
-                                                                    onClick={() => addGolAssist(giocatore.id, 'assist')}
+                                                                    onClick={() => addGolAssist(giocatore.id, 'assist', document.getElementById(`assist-${giocatore.id}`).value)}
                                                                     style={{ 
                                                                         padding: "8px 12px", 
                                                                         background: "#4CAF50",
@@ -957,12 +1522,16 @@
                                                                         fontSize: "12px"
                                                                     }}
                                                                 >
-                                                                    +🎯
+                                                                    ±🎯
                                                                 </button>
+
+                                                                {/* VOTO */}
                                                                 <input 
                                                                     id={`voto-${giocatore.id}`}
-                                                                    type="number" placeholder="Voto" min="1" max="10" step="0.1"
-                                                                    style={{ padding: "8px", width: "60px", borderRadius: "8px", border: "none", fontSize: "12px" }}
+                                                                    type="number" 
+                                                                    placeholder="Voto" 
+                                                                    min="1" max="10" step="0.1"
+                                                                    className="number-input"
                                                                 />
                                                                 <button 
                                                                     onClick={() => addVoto(giocatore.id, document.getElementById(`voto-${giocatore.id}`).value)}
@@ -978,6 +1547,38 @@
                                                                 >
                                                                     +⭐
                                                                 </button>
+
+                                                                {/* MVP */}
+                                                                <button 
+                                                                    onClick={() => addMVP(giocatore.id)}
+                                                                    style={{ 
+                                                                        padding: "8px 12px", 
+                                                                        background: "#FFC107",
+                                                                        color: "black",
+                                                                        border: "none",
+                                                                        borderRadius: "8px",
+                                                                        cursor: "pointer",
+                                                                        fontSize: "12px"
+                                                                    }}
+                                                                >
+                                                                    +🏆
+                                                                </button>
+
+                                                                <button 
+                                                                    onClick={() => removeMVP(giocatore.id)}
+                                                                    style={{ 
+                                                                        padding: "8px 12px", 
+                                                                        background: "#FF9800",
+                                                                        color: "white",
+                                                                        border: "none",
+                                                                        borderRadius: "8px",
+                                                                        cursor: "pointer",
+                                                                        fontSize: "12px"
+                                                                    }}
+                                                                >
+                                                                    -🏆
+                                                                </button>
+
                                                                 <button 
                                                                     onClick={() => eliminaGiocatore(giocatore.id, giocatore.nome)}
                                                                     style={{ 
@@ -1000,240 +1601,295 @@
                                         })
                                     )}
                                 </div>
-                            </div>
-                        )}
 
-                        {activeTab === "calendario" && (
-                            <div>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap" }}>
-                                    <h2>🗓️ Calendario Partite</h2>
-                                    {username === "admin" && (
-                                        <button 
-                                            onClick={generaCalendario}
-                                            style={{ 
-                                                padding: "12px 20px", 
-                                                background: "#2196F3",
-                                                color: "white",
-                                                border: "none",
-                                                borderRadius: "10px",
-                                                cursor: "pointer",
-                                                fontSize: "14px"
-                                            }}
-                                        >
-                                            🔄 Genera
-                                        </button>
-                                    )}
-                                </div>
-
-                                {partite.length === 0 ? (
-                                    <div style={{ textAlign: "center", color: "#888", padding: "40px" }}>
-                                        <p>📅 Nessuna partita in programma.</p>
-                                        {username === "admin" && (
-                                            <p>Clicca "Genera Calendario" per creare le partite!</p>
-                                        )}
+                                {/* FORM AGGIUNGI GIOCATORE (SOLO ADMIN) */}
+                                {loginForm.username === "admin" && (
+                                    <div style={{ marginTop: "30px", background: "rgba(255,255,255,0.1)", padding: "20px", borderRadius: "15px" }}>
+                                        <h3>➕ Aggiungi Nuovo Giocatore</h3>
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
+                                            <input 
+                                                placeholder="Nome giocatore" 
+                                                value={form.nome}
+                                                onChange={e => setForm({...form, nome: e.target.value})}
+                                                style={{ flex: 1, minWidth: "150px" }}
+                                            />
+                                            <input 
+                                                type="number" 
+                                                placeholder="Gol iniziali" 
+                                                value={form.gol}
+                                                onChange={e => setForm({...form, gol: e.target.value})}
+                                                style={{ width: "100px" }}
+                                            />
+                                            <input 
+                                                type="number" 
+                                                placeholder="Assist iniziali" 
+                                                value={form.assist}
+                                                onChange={e => setForm({...form, assist: e.target.value})}
+                                                style={{ width: "100px" }}
+                                            />
+                                            <input 
+                                                type="number" 
+                                                placeholder="Voto iniziale" 
+                                                min="1" max="10" step="0.1"
+                                                value={form.voto}
+                                                onChange={e => setForm({...form, voto: e.target.value})}
+                                                style={{ width: "100px" }}
+                                            />
+                                            <button 
+                                                onClick={addGiocatore}
+                                                style={{ 
+                                                    background: "#4CAF50", 
+                                                    color: "white", 
+                                                    padding: "12px 20px" 
+                                                }}
+                                            >
+                                                Aggiungi
+                                            </button>
+                                        </div>
                                     </div>
-                                ) : (
-                                    partite.map(partita => {
-                                        const stato = getStatoPartita(partita);
-                                        const nomeVisualizzato = getCurrentUserName();
-                                        const isConfermato = (partita.confermati || []).includes(nomeVisualizzato);
-                                        
-                                        return (
-                                            <div key={partita.id} className="match-card">
-                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
-                                                    <div style={{ flex: 1 }}>
-                                                        <h3 style={{ margin: "0 0 10px 0", fontSize: "1.1rem" }}>
-                                                            {formattaData(partita.data)} - {partita.ora}
-                                                        </h3>
-                                                        <p style={{ margin: "5px 0", color: "#ccc", fontSize: "0.9rem" }}>
-                                                            📍 {partita.luogo}
-                                                            {partita.triangolare && (
-                                                                <span style={{ 
-                                                                    background: "#FFD700", color: "#000", padding: "2px 8px", 
-                                                                    borderRadius: "10px", fontSize: "0.7rem", marginLeft: "10px", fontWeight: "bold"
-                                                                }}>
-                                                                    🏆 TRIANGOLARE
-                                                                </span>
-                                                            )}
-                                                        </p>
-                                                        
-                                                        <div style={{ 
-                                                            display: "inline-block", 
-                                                            background: stato.colore, color: "#000",
-                                                            padding: "5px 10px", borderRadius: "15px", fontSize: "0.7rem",
-                                                            fontWeight: "bold", margin: "10px 0"
-                                                        }}>
-                                                            {stato.testo} ({(partita.confermati || []).length}/{partita.triangolare ? 15 : 10})
-                                                        </div>
-
-                                                        {(partita.confermati || []).length > 0 && (
-                                                            <div className="confermato-list">
-                                                                <p style={{ margin: "10px 0 5px 0", fontSize: "0.8rem", fontWeight: "bold" }}>
-                                                                    Confermati:
-                                                                </p>
-                                                                {(partita.confermati || []).map((confermato, index) => (
-                                                                    <div 
-                                                                        key={index} 
-                                                                        className={`confermato-item ${isCurrentUser(confermato) ? 'current-user' : ''}`}
-                                                                    >
-                                                                        {confermato} {isCurrentUser(confermato) && " (TU)"}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                                                        <button 
-                                                            onClick={() => togglePrenotazionePartita(partita.id)}
-                                                            style={{ 
-                                                                padding: "12px 20px", 
-                                                                background: isConfermato ? "#F44336" : "#4CAF50",
-                                                                color: "white",
-                                                                border: "none",
-                                                                borderRadius: "10px",
-                                                                cursor: "pointer",
-                                                                fontSize: "14px"
-                                                            }}
-                                                        >
-                                                            {isConfermato ? "❌ Annulla" : "✅ Conferma"}
-                                                        </button>
-
-                                                        {username === "admin" && (
-                                                            <button 
-                                                                onClick={() => partita.triangolare ? disattivaTriangolare(partita.id) : attivaTriangolare(partita.id)}
-                                                                style={{ 
-                                                                    padding: "8px 15px", 
-                                                                    background: partita.triangolare ? "#F44336" : "#FFD700",
-                                                                    color: partita.triangolare ? "white" : "#000",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer",
-                                                                    fontSize: "0.7rem"
-                                                                }}
-                                                            >
-                                                                {partita.triangolare ? "❌ Normale" : "🏆 Triangolare"}
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })
                                 )}
                             </div>
                         )}
 
-                        {activeTab === "chat" && (
-                            <div style={{ display: "flex", flexDirection: "column", height: "60vh" }}>
-                                <h2>💬 Chat Gruppo {haNuoviMessaggi && "🔴"}</h2>
+                        {/* TAB CALENDARIO */}
+                        {activeTab === "calendario" && (
+                            <div>
+                                <h2>🗓️ Calendario Partite</h2>
                                 
-                                <div 
-                                    ref={chatContainerRef}
-                                    style={{ 
-                                        flex: 1, 
-                                        overflowY: "auto", 
-                                        background: "rgba(255,255,255,0.05)", 
-                                        borderRadius: "15px", 
-                                        padding: "15px",
-                                        marginBottom: "15px",
-                                        backdropFilter: "blur(10px)"
-                                    }}
-                                >
-                                    {messaggi.length === 0 ? (
-                                        <p style={{ textAlign: "center", color: "#888", padding: "40px" }}>
-                                            Nessun messaggio ancora. Inizia la conversazione!
-                                        </p>
-                                    ) : (
-                                        messaggi.map(msg => {
-                                            const mittenteVisualizzato = msg.mittente_visualizzato 
-                                                ? msg.mittente_visualizzato 
-                                                : (msg.mittente === "admin" ? "Vitantonio" : msg.mittente);
-                                            const isOwnMessage = msg.mittente === username;
-                                            const isAdminMessage = msg.mittente === "admin";
+                                {loginForm.username === "admin" && (
+                                    <button 
+                                        onClick={generaCalendario}
+                                        style={{ 
+                                            background: "#2196F3", 
+                                            color: "white", 
+                                            padding: "12px 20px", 
+                                            marginBottom: "20px" 
+                                        }}
+                                    >
+                                        🗓️ Genera Nuovo Calendario
+                                    </button>
+                                )}
+
+                                {partite.length === 0 ? (
+                                    <div className="empty-state">
+                                        <div className="icon">🗓️</div>
+                                        <p>Nessuna partita programmata.</p>
+                                        {loginForm.username === "admin" && (
+                                            <p style={{ color: "#FFD700", marginTop: "10px" }}>
+                                                Clicca "Genera Nuovo Calendario" per creare le partite!
+                                            </p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    partite
+                                        .sort((a, b) => new Date(a.data) - new Date(b.data))
+                                        .map(partita => {
+                                            const stato = getStatoPartita(partita);
+                                            const nomeVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
+                                            const isConfermato = partita.confermati?.includes(nomeVisualizzato);
+                                            const limite = partita.triangolare ? 15 : 10;
                                             
                                             return (
-                                                <div key={msg.id} className={`message-bubble ${isOwnMessage ? "own-message" : ""} ${isAdminMessage ? "admin-message" : ""}`}>
-                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                                <div key={partita.id} className="match-card">
+                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
                                                         <div style={{ flex: 1 }}>
-                                                            <div style={{ 
-                                                                fontWeight: "bold", 
-                                                                color: isOwnMessage ? "#4CAF50" : isAdminMessage ? "#FFC107" : "#2196F3",
-                                                                fontSize: "0.9rem"
-                                                            }}>
-                                                                {mittenteVisualizzato}
-                                                                {isAdminMessage && " 👑"}
-                                                            </div>
-                                                            <div style={{ margin: "5px 0", fontSize: "0.95rem" }}>{msg.messaggio}</div>
-                                                            <div style={{ fontSize: "0.7rem", color: "#888" }}>
-                                                                {msg.created_at}
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <div style={{ display: "flex", gap: "5px" }}>
-                                                            <button 
-                                                                onClick={() => rispondiAMessaggio(msg)}
-                                                                style={{ 
-                                                                    background: "transparent", 
-                                                                    border: "none", 
-                                                                    color: "#2196F3", 
-                                                                    cursor: "pointer",
-                                                                    fontSize: "0.7rem"
-                                                                }}
-                                                            >
-                                                                🔄
-                                                            </button>
-                                                            
-                                                            {(username === "admin" || msg.mittente === username) && (
-                                                                <button 
-                                                                    onClick={() => eliminaMessaggio(msg.id)}
-                                                                    style={{ 
-                                                                        background: "transparent", 
-                                                                        border: "none", 
-                                                                        color: "#F44336", 
-                                                                        cursor: "pointer",
-                                                                        fontSize: "0.7rem"
-                                                                    }}
-                                                                >
-                                                                    ❌
-                                                                </button>
+                                                            <h3 style={{ margin: "0 0 10px 0", color: "#4CAF50" }}>
+                                                                {formattaData(partita.data)}
+                                                            </h3>
+                                                            <p style={{ margin: "5px 0", color: "#ccc" }}>
+                                                                🕒 {partita.ora} • 📍 {partita.luogo}
+                                                            </p>
+                                                            <p style={{ margin: "5px 0", color: stato.colore, fontWeight: "bold" }}>
+                                                                {stato.testo} • {partita.confermati?.length || 0}/{limite} confermati
+                                                            </p>
+                                                            {partita.triangolare && (
+                                                                <p style={{ margin: "5px 0", color: "#FFD700", fontWeight: "bold" }}>
+                                                                    🏆 MODALITÀ TRIANGOLARE
+                                                                </p>
                                                             )}
                                                         </div>
+                                                        
+                                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                                                            <button 
+                                                                onClick={() => togglePrenotazionePartita(partita.id)}
+                                                                style={{ 
+                                                                    background: isConfermato ? "#F44336" : "#4CAF50",
+                                                                    color: "white",
+                                                                    padding: "10px 15px",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer"
+                                                                }}
+                                                            >
+                                                                {isConfermato ? "❌ Annulla" : "✅ Conferma"}
+                                                            </button>
+                                                            
+                                                            {loginForm.username === "admin" && (
+                                                                <>
+                                                                    {!partita.triangolare ? (
+                                                                        <button 
+                                                                            onClick={() => attivaTriangolare(partita.id)}
+                                                                            style={{ 
+                                                                                background: "#FFC107",
+                                                                                color: "black",
+                                                                                padding: "10px 15px",
+                                                                                border: "none",
+                                                                                borderRadius: "8px",
+                                                                                cursor: "pointer"
+                                                                            }}
+                                                                        >
+                                                                            🏆 Triangolare
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button 
+                                                                            onClick={() => disattivaTriangolare(partita.id)}
+                                                                            style={{ 
+                                                                                background: "#FF9800",
+                                                                                color: "white",
+                                                                                padding: "10px 15px",
+                                                                                border: "none",
+                                                                                borderRadius: "8px",
+                                                                                cursor: "pointer"
+                                                                            }}
+                                                                        >
+                                                                            🔁 Normale
+                                                                        </button>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* LISTA CONFERMATI */}
+                                                    <div className="confermato-list">
+                                                        <h4 style={{ margin: "15px 0 10px 0", color: "#4CAF50" }}>
+                                                            Giocatori Confermati ({partita.confermati?.length || 0})
+                                                        </h4>
+                                                        {partita.confermati && partita.confermati.length > 0 ? (
+                                                            partita.confermati.map((nome, index) => (
+                                                                <div 
+                                                                    key={index} 
+                                                                    className={`confermato-item ${nome === nomeVisualizzato ? 'current-user' : ''}`}
+                                                                >
+                                                                    {nome} {nome === nomeVisualizzato && " (TU)"}
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <p style={{ color: "#888", fontStyle: "italic" }}>
+                                                                Nessun giocatore confermato ancora.
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             );
                                         })
+                                )}
+                            </div>
+                        )}
+
+                        {/* TAB CHAT */}
+                        {activeTab === "chat" && (
+                            <div>
+                                <h2>💬 Chat di Gruppo</h2>
+                                
+                                <div 
+                                    ref={chatContainerRef}
+                                    style={{ 
+                                        height: "60vh", 
+                                        overflowY: "auto", 
+                                        marginBottom: "20px",
+                                        padding: "10px",
+                                        background: "rgba(255,255,255,0.05)",
+                                        borderRadius: "15px"
+                                    }}
+                                >
+                                    {messaggi.length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="icon">💬</div>
+                                            <p>Nessun messaggio ancora.</p>
+                                            <p style={{ color: "#4CAF50" }}>Inizia la conversazione!</p>
+                                        </div>
+                                    ) : (
+                                        messaggi
+                                            .sort((a, b) => a.timestamp - b.timestamp)
+                                            .map(msg => {
+                                                const isOwnMessage = msg.mittente === loginForm.username;
+                                                const isAdminMessage = msg.mittente === "admin";
+                                                const mittenteVisualizzato = isAdminMessage ? "Vitantonio" : msg.mittente;
+                                                
+                                                return (
+                                                    <div 
+                                                        key={msg.id} 
+                                                        className={`message-bubble ${isOwnMessage ? 'own-message' : ''} ${isAdminMessage ? 'admin-message' : ''}`}
+                                                    >
+                                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                                            <div style={{ flex: 1 }}>
+                                                                <strong style={{ color: isAdminMessage ? "#FFC107" : "#2196F3" }}>
+                                                                    {mittenteVisualizzato}
+                                                                    {isOwnMessage && " (TU)"}
+                                                                </strong>
+                                                                <p style={{ margin: "5px 0 0 0", wordBreak: "break-word" }}>
+                                                                    {msg.messaggio}
+                                                                </p>
+                                                            </div>
+                                                            <div style={{ display: "flex", gap: "5px", marginLeft: "10px" }}>
+                                                                {(isOwnMessage || loginForm.username === "admin") && (
+                                                                    <button 
+                                                                        onClick={() => eliminaMessaggio(msg.id)}
+                                                                        style={{ 
+                                                                            background: "rgba(244, 67, 54, 0.3)",
+                                                                            color: "#F44336",
+                                                                            border: "none",
+                                                                            borderRadius: "5px",
+                                                                            padding: "5px 8px",
+                                                                            cursor: "pointer",
+                                                                            fontSize: "0.7rem"
+                                                                        }}
+                                                                    >
+                                                                        ❌
+                                                                    </button>
+                                                                )}
+                                                                {!isOwnMessage && (
+                                                                    <button 
+                                                                        onClick={() => rispondiAMessaggio(msg)}
+                                                                        style={{ 
+                                                                            background: "rgba(33, 150, 243, 0.3)",
+                                                                            color: "#2196F3",
+                                                                            border: "none",
+                                                                            borderRadius: "5px",
+                                                                            padding: "5px 8px",
+                                                                            cursor: "pointer",
+                                                                            fontSize: "0.7rem"
+                                                                        }}
+                                                                    >
+                                                                        ↩️
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <small style={{ color: "#888", display: "block", marginTop: "5px" }}>
+                                                            {msg.created_at || new Date(msg.timestamp).toLocaleString('it-IT')}
+                                                        </small>
+                                                    </div>
+                                                );
+                                            })
                                     )}
                                 </div>
 
                                 <div style={{ display: "flex", gap: "10px" }}>
                                     <input 
-                                        type="text" 
-                                        value={nuovoMessaggio} 
+                                        placeholder="Scrivi un messaggio..." 
+                                        value={nuovoMessaggio}
                                         onChange={e => setNuovoMessaggio(e.target.value)}
                                         onKeyPress={e => e.key === 'Enter' && inviaMessaggio()}
-                                        placeholder="Scrivi un messaggio..."
-                                        style={{ 
-                                            flex: 1, 
-                                            padding: "15px", 
-                                            borderRadius: "12px", 
-                                            border: "none",
-                                            background: "rgba(255,255,255,0.9)",
-                                            color: "#000",
-                                            fontSize: "16px"
-                                        }}
+                                        style={{ flex: 1 }}
                                     />
                                     <button 
                                         onClick={inviaMessaggio}
-                                        disabled={!nuovoMessaggio.trim()}
                                         style={{ 
-                                            padding: "15px 20px", 
-                                            background: nuovoMessaggio.trim() ? "#4CAF50" : "#666",
-                                            color: "white",
-                                            border: "none",
-                                            borderRadius: "12px",
-                                            cursor: nuovoMessaggio.trim() ? "pointer" : "not-allowed",
-                                            fontSize: "16px"
+                                            background: "#4CAF50", 
+                                            color: "white", 
+                                            padding: "15px 20px" 
                                         }}
                                     >
                                         Invia
@@ -1241,33 +1897,321 @@
                                 </div>
                             </div>
                         )}
+
+                        {/* TAB PAGELLE */}
+                        {activeTab === "pagelle" && (
+                            <div>
+                                <h2>📝 Pagelle Giocatori</h2>
+
+                                {/* FORM AGGIUNGI PAGELLA (SOLO ADMIN) */}
+                                {loginForm.username === "admin" && (
+                                    <div className="pagella-form">
+                                        <h3 style={{ color: "#FFC107", marginBottom: "15px" }}>➕ Aggiungi Nuova Pagella</h3>
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
+                                            <select 
+                                                value={nuovaPagella.giocatore}
+                                                onChange={e => setNuovaPagella({...nuovaPagella, giocatore: e.target.value})}
+                                                className="giocatore-select"
+                                            >
+                                                <option value="">Seleziona giocatore</option>
+                                                {giocatori.map(g => (
+                                                    <option key={g.id} value={g.nome}>{g.nome}</option>
+                                                ))}
+                                            </select>
+                                            
+                                            <select 
+                                                value={nuovaPagella.voto}
+                                                onChange={e => setNuovaPagella({...nuovaPagella, voto: e.target.value})}
+                                                className="voto-select"
+                                            >
+                                                <option value="">Voto</option>
+                                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(v => (
+                                                    <option key={v} value={v}>{v}</option>
+                                                ))}
+                                            </select>
+                                            
+                                            <input 
+                                                type="date"
+                                                value={nuovaPagella.data}
+                                                onChange={e => setNuovaPagella({...nuovaPagella, data: e.target.value})}
+                                                style={{ minWidth: "150px" }}
+                                            />
+                                        </div>
+                                        
+                                        <textarea 
+                                            placeholder="Commento (opzionale)"
+                                            value={nuovaPagella.commento}
+                                            onChange={e => setNuovaPagella({...nuovaPagella, commento: e.target.value})}
+                                            style={{ marginTop: "10px" }}
+                                        />
+                                        
+                                        <div className="pagella-actions">
+                                            <button 
+                                                onClick={aggiungiPagella}
+                                                style={{ 
+                                                    background: "#4CAF50", 
+                                                    color: "white" 
+                                                }}
+                                            >
+                                                💾 Salva Pagella
+                                            </button>
+                                            <button 
+                                                onClick={() => setNuovaPagella({
+                                                    giocatore: "", voto: "", commento: "", 
+                                                    data: new Date().toISOString().split('T')[0]
+                                                })}
+                                                style={{ 
+                                                    background: "#F44336", 
+                                                    color: "white" 
+                                                }}
+                                            >
+                                                ❌ Annulla
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* LISTA PAGELLE */}
+                                {pagelle.length === 0 ? (
+                                    <div className="empty-state">
+                                        <div className="icon">📝</div>
+                                        <p>Nessuna pagella ancora.</p>
+                                        {loginForm.username === "admin" && (
+                                            <p style={{ color: "#FFD700", marginTop: "10px" }}>
+                                                Aggiungi la prima pagella usando il form sopra!
+                                            </p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    pagelle.map(pagella => (
+                                        <div key={pagella.id} className="pagella-card">
+                                            <div className="pagella-header">
+                                                <div>
+                                                    <div className="pagella-giocatore">
+                                                        {pagella.giocatore}
+                                                        {isCurrentUser(pagella.giocatore) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="pagella-data">
+                                                        Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
+                                                        {pagella.created_at && ` • ${pagella.created_at}`}
+                                                    </div>
+                                                </div>
+                                                <div className="pagella-voto">
+                                                    {pagella.voto}/10
+                                                </div>
+                                            </div>
+                                            
+                                            {pagella.commento && (
+                                                <div className="pagella-commento">
+                                                    "{pagella.commento}"
+                                                </div>
+                                            )}
+                                            
+                                            {loginForm.username === "admin" && (
+                                                <div style={{ marginTop: "15px", textAlign: "right" }}>
+                                                    <button 
+                                                        onClick={() => eliminaPagella(pagella.id, pagella.giocatore)}
+                                                        style={{ 
+                                                            background: "rgba(244, 67, 54, 0.2)",
+                                                            color: "#F44336",
+                                                            border: "1px solid rgba(244, 67, 54, 0.5)",
+                                                            padding: "8px 15px",
+                                                            borderRadius: "8px",
+                                                            cursor: "pointer",
+                                                            fontSize: "0.8rem"
+                                                        }}
+                                                    >
+                                                        ❌ Elimina
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+
+                        {/* TAB IMPOSTAZIONI */}
+                        {activeTab === "impostazioni" && (
+                            <div>
+                                <h2>⚙️ Impostazioni</h2>
+                                
+                                {/* IMPOSTAZIONI NOTIFICHE */}
+                                <div className="notification-settings">
+                                    <h3>🔔 Gestione Notifiche</h3>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Notifiche Globali</strong>
+                                            <div style={{ fontSize: "0.8rem", color: "#ccc" }}>
+                                                Attiva/disattiva tutte le notifiche
+                                            </div>
+                                        </div>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={notificationsEnabled}
+                                                onChange={toggleNotifications}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Notifiche Chat</strong>
+                                            <div style={{ fontSize: "0.8rem", color: "#ccc" }}>
+                                                Nuovi messaggi nella chat
+                                            </div>
+                                        </div>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={chatNotificationsEnabled}
+                                                onChange={toggleChatNotifications}
+                                                disabled={!notificationsEnabled}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Notifiche Calendario</strong>
+                                            <div style={{ fontSize: "0.8rem", color: "#ccc" }}>
+                                                Nuove partite e prenotazioni
+                                            </div>
+                                        </div>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={calendarNotificationsEnabled}
+                                                onChange={toggleCalendarNotifications}
+                                                disabled={!notificationsEnabled}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* INFO APP */}
+                                <div className="notification-settings">
+                                    <h3>📊 Statistiche App</h3>
+                                    <div className="setting-item">
+                                        <span>Download App</span>
+                                        <span style={{ color: "#4CAF50", fontWeight: "bold" }}>
+                                            {statistiche.download}
+                                        </span>
+                                    </div>
+                                    <div className="setting-item">
+                                        <span>Utenti Unici</span>
+                                        <span style={{ color: "#2196F3", fontWeight: "bold" }}>
+                                            {statistiche.utentiUnici}
+                                        </span>
+                                    </div>
+                                    <div className="setting-item">
+                                        <span>Versione</span>
+                                        <span style={{ color: "#FFC107", fontWeight: "bold" }}>
+                                            2.0.0
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* INFO ACCOUNT */}
+                                <div className="notification-settings">
+                                    <h3>👤 Account</h3>
+                                    <div className="setting-item">
+                                        <span>Nome</span>
+                                        <span style={{ color: "#4CAF50" }}>
+                                            {getCurrentUserName()}
+                                        </span>
+                                    </div>
+                                    <div className="setting-item">
+                                        <span>Tipo Account</span>
+                                        <span style={{ 
+                                            color: loginForm.username === "admin" ? "#FFD700" : "#2196F3",
+                                            fontWeight: "bold"
+                                        }}>
+                                            {loginForm.username === "admin" ? "🔐 Admin" : "👥 Giocatore"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* LOGOUT */}
+                                <div style={{ textAlign: "center", marginTop: "30px" }}>
+                                    <button 
+                                        onClick={handleLogout}
+                                        style={{ 
+                                            background: "#F44336", 
+                                            color: "white", 
+                                            padding: "15px 30px",
+                                            fontSize: "1rem"
+                                        }}
+                                    >
+                                        🚪 Esci dall'App
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    {/* BOTTOM NAVIGATION */}
+                    {/* BOTTOM NAVIGATION CON BADGE NOTIFICHE */}
                     <div className="app-bottom-nav">
                         <button
-                            className={`nav-button ${activeTab === "statistiche" ? "active" : ""}`}
-                            onClick={() => setActiveTab("statistiche")}
+                            className={`nav-button ${activeTab === "classifica" ? "active" : ""}`}
+                            onClick={() => setActiveTab("classifica")}
                         >
-                            <div className="icon">📊</div>
-                            <div className="label">Statistiche</div>
+                            <div className="icon">🏆</div>
+                            <div className="label">Classifica</div>
                         </button>
+                        
                         <button
                             className={`nav-button ${activeTab === "calendario" ? "active" : ""}`}
                             onClick={() => setActiveTab("calendario")}
                         >
                             <div className="icon">🗓️</div>
                             <div className="label">Calendario</div>
+                            {notificheCalendario > 0 && (
+                                <div className="notification-badge">
+                                    {notificheCalendario > 9 ? '9+' : notificheCalendario}
+                                </div>
+                            )}
                         </button>
+                        
                         <button
-                            className={`nav-button ${activeTab === "chat" ? "active" : ""} ${haNuoviMessaggi && activeTab !== "chat" ? "notification" : ""}`}
+                            className={`nav-button ${activeTab === "chat" ? "active" : ""}`}
                             onClick={() => {
                                 setActiveTab("chat");
                                 setHaNuoviMessaggi(false);
+                                setNotificheChat(0);
                             }}
                         >
                             <div className="icon">💬</div>
                             <div className="label">Chat</div>
+                            {notificheChat > 0 && (
+                                <div className="notification-badge">
+                                    {notificheChat > 9 ? '9+' : notificheChat}
+                                </div>
+                            )}
+                            {haNuoviMessaggi && notificheChat === 0 && (
+                                <div className="notification-badge small"></div>
+                            )}
+                        </button>
+                        
+                        <button
+                            className={`nav-button ${activeTab === "pagelle" ? "active" : ""}`}
+                            onClick={() => setActiveTab("pagelle")}
+                        >
+                            <div className="icon">📝</div>
+                            <div className="label">Pagelle</div>
+                        </button>
+                        
+                        <button
+                            className={`nav-button ${activeTab === "impostazioni" ? "active" : ""}`}
+                            onClick={() => setActiveTab("impostazioni")}
+                        >
+                            <div className="icon">⚙️</div>
+                            <div className="label">Impostazioni</div>
                         </button>
                     </div>
                 </div>
