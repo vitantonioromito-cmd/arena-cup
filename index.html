@@ -15,7 +15,7 @@
     <!-- ICONE iOS -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' fill='%23121212'/><text x='50%' y='60%' font-size='100' text-anchor='middle' fill='%234CAF50'>⚽</text></svg>">
     
-    <!-- NOTIFICHE PUSH -->
+    <!-- NOTIFICHE PUSH MIGLIORATE -->
     <script src="https://cdn.jsdelivr.net/npm/push.js@1.0.12/bin/push.min.js"></script>
     
     <!-- EXTERNAL LIBRARIES -->
@@ -201,7 +201,7 @@
             border-left: 4px solid #FFC107; 
         }
         
-        /* STILI PAGELLE */
+        /* STILI PAGELLE MIGLIORATI */
         .pagella-card {
             background: rgba(255,255,255,0.05);
             padding: 20px;
@@ -279,12 +279,62 @@
             min-width: 150px;
         }
         
+        .fazione-select {
+            background: rgba(255,255,255,0.9);
+            color: #000;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-right: 10px;
+            min-width: 150px;
+        }
+        
         .pagella-actions {
             display: flex;
             gap: 10px;
             margin-top: 15px;
         }
         
+        /* STILI FAZIONI */
+        .fazione-bianca {
+            border-left: 4px solid #ffffff;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .fazione-nera {
+            border-left: 4px solid #000000;
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .fazione-triangolare {
+            border-left: 4px solid #FFD700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+        
+        .badge-fazione {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        
+        .badge-bianca {
+            background: white;
+            color: black;
+        }
+        
+        .badge-nera {
+            background: black;
+            color: white;
+        }
+        
+        .badge-triangolare {
+            background: #FFD700;
+            color: black;
+        }
+
         /* CLASSIFICHE STYLES */
         .classifica-grid {
             display: grid;
@@ -556,6 +606,47 @@
             .app-bottom-nav {
                 display: none;
             }
+            
+            /* DESKTOP NAVIGATION */
+            .desktop-nav {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+            }
+            
+            .desktop-nav-button {
+                padding: 12px 20px;
+                background: rgba(255,255,255,0.1);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            
+            .desktop-nav-button.active {
+                background: #4CAF50;
+                color: white;
+            }
+        }
+        
+        /* NASCONDI NAV MOBILE SU DESKTOP */
+        @media (min-width: 768px) {
+            .app-bottom-nav {
+                display: none;
+            }
+        }
+        
+        /* MOSTRA NAV DESKTOP */
+        .desktop-nav {
+            display: none;
+        }
+        
+        @media (min-width: 768px) {
+            .desktop-nav {
+                display: flex;
+            }
         }
     </style>
 </head>
@@ -563,35 +654,68 @@
     <div id="root"></div>
     
     <script>
-        // SERVICE WORKER per notifiche push
+        // SERVICE WORKER MIGLIORATO per notifiche push
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
-                .then(registration => console.log('SW registered'))
+                .then(registration => {
+                    console.log('SW registered');
+                    // FORZA AGGIORNAMENTO CACHE
+                    registration.update();
+                })
                 .catch(error => console.log('SW registration failed'));
         }
         
-        // Richiedi permesso notifiche
+        // Richiedi permesso notifiche MIGLIORATO
         function requestNotificationPermission() {
             if ("Notification" in window) {
                 Notification.requestPermission().then(permission => {
                     if (permission === "granted") {
                         console.log("Notifiche abilitate!");
                         localStorage.setItem('notificationsEnabled', 'true');
+                        
+                        // CREA NOTIFICA DI TEST
+                        if (localStorage.getItem('notificationTestShown') !== 'true') {
+                            new Notification("Arena Cup - Notifiche Attive", {
+                                body: "Ora riceverai notifiche per nuovi messaggi e partite!",
+                                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
+                                tag: 'arena-cup-welcome'
+                            });
+                            localStorage.setItem('notificationTestShown', 'true');
+                        }
                     }
                 });
             }
         }
         
-        // Mostra notifica push
+        // Mostra notifica push MIGLIORATO
         function showPushNotification(title, message, tag = 'arena-cup') {
+            // CONTROLLO SE L'APP È IN BACKGROUND
+            const isAppInBackground = document.hidden || document.visibilityState === 'hidden';
+            
             if (localStorage.getItem('notificationsEnabled') === 'true' && "Notification" in window) {
                 if (Notification.permission === "granted") {
-                    new Notification(title, {
-                        body: message,
-                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
-                        tag: tag,
-                        requireInteraction: true
-                    });
+                    // CREA SEMPRE LA NOTIFICA SE L'APP È IN BACKGROUND
+                    if (isAppInBackground) {
+                        new Notification(title, {
+                            body: message,
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
+                            tag: tag,
+                            requireInteraction: true
+                        });
+                    }
+                    
+                    // USA ANCHE PUSH.JS COME FALLBACK
+                    if (typeof Push !== 'undefined') {
+                        Push.create(title, {
+                            body: message,
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
+                            timeout: 6000,
+                            onClick: function () {
+                                window.focus();
+                                this.close();
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -599,9 +723,18 @@
         // Vibrazione (solo mobile)
         function vibrate() {
             if (navigator.vibrate) {
-                navigator.vibrate(200);
+                navigator.vibrate([100, 50, 100]);
             }
         }
+        
+        // 🔔 FORZA RICHIESTA PERMESSI NOTIFICHE AL CARICAMENTO
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                if ("Notification" in window && Notification.permission === "default") {
+                    requestNotificationPermission();
+                }
+            }, 2000);
+        });
     </script>
     
     <script type="text/babel">
@@ -638,7 +771,7 @@
             const [haNuoviMessaggi, setHaNuoviMessaggi] = useState(false);
             const [statistiche, setStatistiche] = useState({ download: 0, utentiUnici: 0 });
             
-            // 🔔 STATI NOTIFICHE
+            // 🔔 STATI NOTIFICHE MIGLIORATI
             const [notificheChat, setNotificheChat] = useState(0);
             const [notificheCalendario, setNotificheCalendario] = useState(0);
             const [notificationsEnabled, setNotificationsEnabled] = useState(
@@ -651,22 +784,24 @@
                 localStorage.getItem('calendarNotificationsEnabled') !== 'false'
             );
 
-            // 📝 STATI PAGELLE
+            // 📝 STATI PAGELLE MIGLIORATI
             const [nuovaPagella, setNuovaPagella] = useState({
                 giocatore: "",
                 voto: "",
                 commento: "",
-                data: new Date().toISOString().split('T')[0]
+                data: new Date().toISOString().split('T')[0],
+                fazione: "nessuna" // AGGIUNTA FAZIONE
             });
 
             const chatContainerRef = useRef(null);
 
-            // 🔐 PASSWORD ADMIN (MODIFICA QUESTA CON LA TUA PASSWORD)
-            const ADMIN_PASSWORD = "arenacup2024";
+            // 🔐 PASSWORD ADMIN AGGIORNATA
+            const ADMIN_PASSWORD = "giulia85";
 
-            // 🎵 NOTIFICA SONORA + VIBRAZIONE
+            // 🎵 NOTIFICA SONORA + VIBRAZIONE MIGLIORATA
             const playNotificationSound = () => {
                 try {
+                    // PRIMA PROVA CON AUDIO CONTEXT
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     const oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
@@ -681,59 +816,102 @@
                     gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
                     setTimeout(() => oscillator.stop(), 300);
                     
-                    // Vibrazione
+                    // POI PROVA CON VIBRAZIONE
                     vibrate();
                 } catch (e) {
-                    console.log("Audio non supportato");
+                    console.log("Audio non supportato, usa vibrazione");
+                    vibrate();
                 }
             };
 
-            // 🔔 GESTIONE NOTIFICHE PUSH
+            // 🔔 GESTIONE NOTIFICHE PUSH MIGLIORATA
             const showNotification = (title, body, type = 'chat') => {
                 if (!notificationsEnabled) return;
                 
                 if (type === 'chat' && !chatNotificationsEnabled) return;
                 if (type === 'calendar' && !calendarNotificationsEnabled) return;
                 
-                // Notifica browser
+                console.log(`🔔 Tentativo notifica: ${title} - ${body}`);
+                
+                // NOTIFICA BROWSER NATIVA - SEMPRE SE L'APP È IN BACKGROUND
                 if ("Notification" in window && Notification.permission === "granted") {
-                    new Notification(title, {
+                    const options = {
                         body: body,
                         icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
-                        tag: 'arena-cup'
-                    });
+                        tag: 'arena-cup',
+                        requireInteraction: true
+                    };
+                    
+                    // SE L'APP È IN BACKGROUND, MOSTRA SEMPRE LA NOTIFICA
+                    if (document.hidden) {
+                        new Notification(title, options);
+                        console.log("📱 Notifica mostrata (app in background)");
+                    } else {
+                        // SE L'APP È IN PRIMO PIANO, MOSTRA COMUNQUE SE È UN MESSAGGIO IMPORTANTE
+                        if (type === 'chat' && body.includes('@')) {
+                            new Notification(title, options);
+                            console.log("📱 Notifica mostrata (messaggio importante)");
+                        }
+                    }
                 }
                 
-                // Notifica Push.js (fallback)
+                // NOTIFICA PUSH.JS (FALLBACK) - SEMPRE
                 if (typeof Push !== 'undefined') {
-                    Push.create(title, {
-                        body: body,
-                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
-                        timeout: 5000,
-                        onClick: function () {
-                            window.focus();
-                            this.close();
-                        }
-                    });
+                    try {
+                        Push.create(title, {
+                            body: body,
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
+                            timeout: 6000,
+                            onClick: function () {
+                                window.focus();
+                                this.close();
+                            }
+                        });
+                        console.log("📱 Notifica Push.js mostrata");
+                    } catch (e) {
+                        console.log("Push.js fallita:", e);
+                    }
                 }
+                
+                // SUONO E VIBRAZIONE
+                playNotificationSound();
             };
+
+            // 📱 CONTROLLO VISIBILITÀ APP
+            useEffect(() => {
+                const handleVisibilityChange = () => {
+                    if (!document.hidden && activeTab === "chat") {
+                        // SE L'APP TORNA VISIBILE E SIAMO IN CHAT, AZZERA NOTIFICHE
+                        setUltimoMessaggioVisto(Date.now());
+                        setHaNuoviMessaggi(false);
+                        setNotificheChat(0);
+                    }
+                };
+
+                document.addEventListener('visibilitychange', handleVisibilityChange);
+                return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+            }, [activeTab]);
 
             useEffect(() => {
                 if (!isLogged) return;
 
-                // Richiedi permesso notifiche al primo accesso
+                // RICHIEDI PERMESSO NOTIFICHE AL PRIMO ACCESSO
                 if (localStorage.getItem('notificationPermissionAsked') !== 'true') {
-                    if ("Notification" in window && Notification.permission === "default") {
-                        Notification.requestPermission().then(permission => {
-                            if (permission === "granted") {
-                                setNotificationsEnabled(true);
-                                localStorage.setItem('notificationsEnabled', 'true');
-                            }
-                            localStorage.setItem('notificationPermissionAsked', 'true');
-                        });
-                    }
+                    setTimeout(() => {
+                        if ("Notification" in window && Notification.permission === "default") {
+                            Notification.requestPermission().then(permission => {
+                                if (permission === "granted") {
+                                    setNotificationsEnabled(true);
+                                    localStorage.setItem('notificationsEnabled', 'true');
+                                    console.log("✅ Notifiche abilitate!");
+                                }
+                                localStorage.setItem('notificationPermissionAsked', 'true');
+                            });
+                        }
+                    }, 1000);
                 }
 
+                // CARICAMENTO DATI...
                 database.ref('statistiche').on('value', (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
@@ -749,7 +927,6 @@
                     const giocatoriArray = data ? Object.keys(data).map(key => ({ 
                         ...data[key], 
                         id: key,
-                        // Inizializza statistiche portiere se non esistono
                         parate: data[key].parate || 0,
                         gol_subiti: data[key].gol_subiti || 0,
                         rigori_parati: data[key].rigori_parati || 0,
@@ -765,6 +942,8 @@
                 });
 
                 let ultimoMessaggioTimestamp = 0;
+                let primoCaricamento = true;
+                
                 database.ref('messaggi').on('value', (snapshot) => {
                     const data = snapshot.val();
                     const messaggiArray = data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : [];
@@ -773,18 +952,21 @@
                     if (messaggiArray.length > 0) {
                         const ultimoTimestamp = Math.max(...messaggiArray.map(m => m.timestamp));
                         
-                        // 🔔 NOTIFICA NUOVI MESSAGGI
-                        if (activeTab !== "chat" && ultimoTimestamp > ultimoMessaggioVisto) {
-                            const nuoviMessaggi = messaggiArray.filter(m => m.timestamp > ultimoMessaggioVisto && m.mittente !== loginForm.username);
+                        // 🔔 NOTIFICA NUOVI MESSAGGI MIGLIORATA
+                        if ((activeTab !== "chat" || document.hidden) && ultimoTimestamp > ultimoMessaggioVisto) {
+                            const nuoviMessaggi = messaggiArray.filter(m => 
+                                m.timestamp > ultimoMessaggioVisto && 
+                                m.mittente !== loginForm.username
+                            );
                             const countNuovi = nuoviMessaggi.length;
                             
                             setNotificheChat(countNuovi);
                             setHaNuoviMessaggi(true);
                             
-                            if (ultimoMessaggioVisto > 0 && countNuovi > 0) {
-                                playNotificationSound();
+                            if (!primoCaricamento && countNuovi > 0) {
+                                console.log(`💬 ${countNuovi} nuovi messaggi`);
                                 
-                                // Notifica push per ogni nuovo messaggio
+                                // NOTIFICA PER OGNI NUOVO MESSAGGIO
                                 nuoviMessaggi.forEach(msg => {
                                     const mittente = msg.mittente === "admin" ? "Vitantonio" : msg.mittente;
                                     if (mittente !== loginForm.username) {
@@ -798,13 +980,14 @@
                             }
                         }
                         
-                        if (activeTab === "chat") {
+                        if (activeTab === "chat" && !document.hidden) {
                             setUltimoMessaggioVisto(ultimoTimestamp);
                             setHaNuoviMessaggi(false);
                             setNotificheChat(0);
                         }
                         
                         ultimoMessaggioTimestamp = ultimoTimestamp;
+                        primoCaricamento = false;
                     }
                 });
 
@@ -820,14 +1003,14 @@
                             const vecchiaPartita = partitePrecedenti.find(p => p.id === nuovaPartita.id);
                             
                             if (!vecchiaPartita) {
-                                // Nuova partita aggiunta
+                                // NUOVA PARTITA AGGIUNTA
                                 showNotification(
                                     "🗓️ Nuova Partita Programmata!",
                                     `${formattaData(nuovaPartita.data)} - ${nuovaPartita.ora}`,
                                     'calendar'
                                 );
                             } else if (JSON.stringify(vecchiaPartita.confermati) !== JSON.stringify(nuovaPartita.confermati)) {
-                                // Cambiamenti nelle prenotazioni
+                                // CAMBIAMENTI NELLE PRENOTAZIONI
                                 const nomeVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
                                 const eraConfermato = vecchiaPartita.confermati?.includes(nomeVisualizzato);
                                 const oraConfermato = nuovaPartita.confermati?.includes(nomeVisualizzato);
@@ -845,7 +1028,7 @@
                     
                     partitePrecedenti = nuovePartite;
                     
-                    // Conta notifiche calendario (partite imminenti)
+                    // CONTA NOTIFICHE CALENDARIO (PARTITE IMMINENTI)
                     const oggi = new Date();
                     const partiteImminenti = nuovePartite.filter(p => {
                         const dataPartita = new Date(p.data);
@@ -875,34 +1058,15 @@
             // 🧤 CALCOLO PUNTEGGIO BENJI PRICE
             const calcolaPunteggioBenjiPrice = (portiere) => {
                 let punteggio = 0;
-                
-                // PARATE (+3 punti cadauna)
                 punteggio += (portiere.parate || 0) * 3;
-                
-                // PARATE DIFFICILI (+5 punti cadauna)
                 punteggio += (portiere.parate_difficili || 0) * 5;
-                
-                // RIGORI PARATI (+10 punti cadauno)
                 punteggio += (portiere.rigori_parati || 0) * 10;
-                
-                // USCITE VINTE (+4 punti cadauna)
                 punteggio += (portiere.uscite_vinte || 0) * 4;
-                
-                // ASSIST DA PORTIERE (+8 punti cadauno)
                 punteggio += (portiere.assist_portiere || 0) * 8;
-                
-                // RINVII BUONI (+2 punti cadauno)
                 punteggio += (portiere.rinvii_buoni || 0) * 2;
-                
-                // INTERVENTI DECISIVI (+6 punti cadauno)
                 punteggio += (portiere.interventi_decisivi || 0) * 6;
-                
-                // PENALITÀ PER ERRORI (-3 punti cadauno)
                 punteggio -= (portiere.errori || 0) * 3;
-                
-                // BONUS PER PARTITE GIOCATE DA PORTIERE (+2 punti cadauna)
                 punteggio += (portiere.partite_portiere || 0) * 2;
-                
                 return Math.max(0, punteggio);
             };
 
@@ -946,6 +1110,13 @@
                 
                 localStorage.setItem("username", loginForm.username);
                 setIsLogged(true);
+                
+                // 🔔 RICHIEDI NOTIFICHE DOPO LOGIN
+                setTimeout(() => {
+                    if ("Notification" in window && Notification.permission === "default") {
+                        requestNotificationPermission();
+                    }
+                }, 500);
             };
 
             const handleLogout = () => {
@@ -977,17 +1148,24 @@
                 localStorage.setItem('calendarNotificationsEnabled', newState.toString());
             };
 
-            // 📝 FUNZIONI PAGELLE (SOLO ADMIN)
+            // 📝 FUNZIONI PAGELLE MIGLIORATE (SOLO ADMIN)
             const aggiungiPagella = () => {
                 if (loginForm.username !== "admin") return alert("Solo Vitantonio può aggiungere pagelle!");
                 if (!nuovaPagella.giocatore.trim()) return alert("Seleziona un giocatore!");
                 if (!nuovaPagella.voto) return alert("Inserisci un voto!");
                 
+                // CONTROLLO MEZZI VOTI
+                const votoNumero = parseFloat(nuovaPagella.voto);
+                if (isNaN(votoNumero) || votoNumero < 1 || votoNumero > 10) {
+                    return alert("Il voto deve essere un numero tra 1 e 10!");
+                }
+                
                 database.ref('pagelle').push({
                     giocatore: nuovaPagella.giocatore,
-                    voto: parseFloat(nuovaPagella.voto),
+                    voto: votoNumero,
                     commento: nuovaPagella.commento,
                     data: nuovaPagella.data,
+                    fazione: nuovaPagella.fazione, // AGGIUNTA FAZIONE
                     autore: "Vitantonio",
                     timestamp: Date.now(),
                     created_at: new Date().toLocaleString('it-IT')
@@ -996,7 +1174,8 @@
                         giocatore: "",
                         voto: "",
                         commento: "",
-                        data: new Date().toISOString().split('T')[0]
+                        data: new Date().toISOString().split('T')[0],
+                        fazione: "nessuna"
                     });
                     alert("📝 Pagella aggiunta!");
                     
@@ -1149,7 +1328,6 @@
                     voti: form.voto ? [parseFloat(form.voto)] : [],
                     media_calcolata: form.voto ? parseFloat(form.voto) : 0,
                     mvp_count: 0,
-                    // Inizializza statistiche portiere
                     parate: 0,
                     gol_subiti: 0,
                     rigori_parati: 0,
@@ -1283,7 +1461,10 @@
                     messaggio: nuovoMessaggio,
                     timestamp: Date.now(),
                     created_at: new Date().toLocaleString('it-IT')
-                }).then(() => setNuovoMessaggio(""));
+                }).then(() => {
+                    setNuovoMessaggio("");
+                    console.log("💬 Messaggio inviato");
+                });
             };
 
             const eliminaMessaggio = (id) => {
@@ -1352,6 +1533,26 @@
 
             const getCurrentUserName = () => {
                 return loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
+            };
+
+            // 🎯 FUNZIONE PER OTTENERE CLASSE FAZIONE
+            const getClasseFazione = (fazione) => {
+                switch(fazione) {
+                    case 'bianca': return 'fazione-bianca';
+                    case 'nera': return 'fazione-nera';
+                    case 'triangolare': return 'fazione-triangolare';
+                    default: return '';
+                }
+            };
+
+            // 🎯 FUNZIONE PER OTTENERE BADGE FAZIONE
+            const getBadgeFazione = (fazione) => {
+                switch(fazione) {
+                    case 'bianca': return <span className="badge-fazione badge-bianca">ARMATA BIANCA</span>;
+                    case 'nera': return <span className="badge-fazione badge-nera">ARMATA NERA</span>;
+                    case 'triangolare': return <span className="badge-fazione badge-triangolare">TRIANGOLARE</span>;
+                    default: return null;
+                }
             };
 
             if (!isLogged) {
@@ -1470,6 +1671,44 @@
                                     Esci
                                 </button>
                             </div>
+                        </div>
+
+                        {/* DESKTOP NAVIGATION */}
+                        <div className="desktop-nav">
+                            <button
+                                className={`desktop-nav-button ${activeTab === "classifica" ? "active" : ""}`}
+                                onClick={() => setActiveTab("classifica")}
+                            >
+                                🏆 Classifica
+                            </button>
+                            <button
+                                className={`desktop-nav-button ${activeTab === "calendario" ? "active" : ""}`}
+                                onClick={() => setActiveTab("calendario")}
+                            >
+                                🗓️ Calendario {notificheCalendario > 0 && `(${notificheCalendario})`}
+                            </button>
+                            <button
+                                className={`desktop-nav-button ${activeTab === "chat" ? "active" : ""}`}
+                                onClick={() => {
+                                    setActiveTab("chat");
+                                    setHaNuoviMessaggi(false);
+                                    setNotificheChat(0);
+                                }}
+                            >
+                                💬 Chat {notificheChat > 0 && `(${notificheChat})`}
+                            </button>
+                            <button
+                                className={`desktop-nav-button ${activeTab === "pagelle" ? "active" : ""}`}
+                                onClick={() => setActiveTab("pagelle")}
+                            >
+                                📝 Pagelle
+                            </button>
+                            <button
+                                className={`desktop-nav-button ${activeTab === "impostazioni" ? "active" : ""}`}
+                                onClick={() => setActiveTab("impostazioni")}
+                            >
+                                ⚙️ Impostazioni
+                            </button>
                         </div>
                     </div>
 
@@ -1702,12 +1941,12 @@
                                                                     ±🎯
                                                                 </button>
 
-                                                                {/* VOTO */}
+                                                                {/* VOTO CON MEZZI VOTI */}
                                                                 <input 
                                                                     id={`voto-${giocatore.id}`}
                                                                     type="number" 
                                                                     placeholder="Voto" 
-                                                                    min="1" max="10" step="0.1"
+                                                                    min="1" max="10" step="0.5"
                                                                     className="number-input"
                                                                 />
                                                                 <button 
@@ -1845,7 +2084,7 @@
                                             <input 
                                                 type="number" 
                                                 placeholder="Voto iniziale" 
-                                                min="1" max="10" step="0.1"
+                                                min="1" max="10" step="0.5"
                                                 value={form.voto}
                                                 onChange={e => setForm({...form, voto: e.target.value})}
                                                 style={{ width: "100px" }}
@@ -2113,12 +2352,12 @@
                             </div>
                         )}
 
-                        {/* TAB PAGELLE */}
+                        {/* TAB PAGELLE MIGLIORATO */}
                         {activeTab === "pagelle" && (
                             <div>
                                 <h2>📝 Pagelle Giocatori</h2>
 
-                                {/* FORM AGGIUNGI PAGELLA (SOLO ADMIN) */}
+                                {/* FORM AGGIUNGI PAGELLA MIGLIORATO (SOLO ADMIN) */}
                                 {loginForm.username === "admin" && (
                                     <div className="pagella-form">
                                         <h3 style={{ color: "#FFC107", marginBottom: "15px" }}>➕ Aggiungi Nuova Pagella</h3>
@@ -2134,15 +2373,28 @@
                                                 ))}
                                             </select>
                                             
+                                            {/* VOTO CON MEZZI VOTI */}
                                             <select 
                                                 value={nuovaPagella.voto}
                                                 onChange={e => setNuovaPagella({...nuovaPagella, voto: e.target.value})}
                                                 className="voto-select"
                                             >
                                                 <option value="">Voto</option>
-                                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(v => (
+                                                {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(v => (
                                                     <option key={v} value={v}>{v}</option>
                                                 ))}
+                                            </select>
+                                            
+                                            {/* SELEZIONE FAZIONE */}
+                                            <select 
+                                                value={nuovaPagella.fazione}
+                                                onChange={e => setNuovaPagella({...nuovaPagella, fazione: e.target.value})}
+                                                className="fazione-select"
+                                            >
+                                                <option value="nessuna">Nessuna fazione</option>
+                                                <option value="bianca">Armata Bianca</option>
+                                                <option value="nera">Armata Nera</option>
+                                                <option value="triangolare">Triangolare</option>
                                             </select>
                                             
                                             <input 
@@ -2173,7 +2425,8 @@
                                             <button 
                                                 onClick={() => setNuovaPagella({
                                                     giocatore: "", voto: "", commento: "", 
-                                                    data: new Date().toISOString().split('T')[0]
+                                                    data: new Date().toISOString().split('T')[0],
+                                                    fazione: "nessuna"
                                                 })}
                                                 style={{ 
                                                     background: "#F44336", 
@@ -2186,7 +2439,7 @@
                                     </div>
                                 )}
 
-                                {/* LISTA PAGELLE */}
+                                {/* LISTA PAGELLE MIGLIORATA */}
                                 {pagelle.length === 0 ? (
                                     <div className="empty-state">
                                         <div className="icon">📝</div>
@@ -2199,12 +2452,13 @@
                                     </div>
                                 ) : (
                                     pagelle.map(pagella => (
-                                        <div key={pagella.id} className="pagella-card">
+                                        <div key={pagella.id} className={`pagella-card ${getClasseFazione(pagella.fazione)}`}>
                                             <div className="pagella-header">
                                                 <div>
                                                     <div className="pagella-giocatore">
                                                         {pagella.giocatore}
                                                         {isCurrentUser(pagella.giocatore) && <span className="current-user-badge">TU</span>}
+                                                        {getBadgeFazione(pagella.fazione)}
                                                     </div>
                                                     <div className="pagella-data">
                                                         Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
@@ -2251,7 +2505,7 @@
                             <div>
                                 <h2>⚙️ Impostazioni</h2>
                                 
-                                {/* IMPOSTAZIONI NOTIFICHE */}
+                                {/* IMPOSTAZIONI NOTIFICHE MIGLIORATE */}
                                 <div className="notification-settings">
                                     <h3>🔔 Gestione Notifiche</h3>
                                     
@@ -2307,6 +2561,29 @@
                                             <span className="slider"></span>
                                         </label>
                                     </div>
+                                    
+                                    {/* BOTTONE TEST NOTIFICHE */}
+                                    <div style={{ marginTop: "15px", textAlign: "center" }}>
+                                        <button 
+                                            onClick={() => {
+                                                showNotification(
+                                                    "🔔 Test Notifiche Arena Cup",
+                                                    "Questa è una notifica di test! Se la vedi, le notifiche funzionano correttamente.",
+                                                    'chat'
+                                                );
+                                            }}
+                                            style={{ 
+                                                background: "#2196F3", 
+                                                color: "white", 
+                                                padding: "10px 15px",
+                                                border: "none",
+                                                borderRadius: "8px",
+                                                cursor: "pointer"
+                                            }}
+                                        >
+                                            🔔 Test Notifiche
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* INFO APP */}
@@ -2327,7 +2604,7 @@
                                     <div className="setting-item">
                                         <span>Versione</span>
                                         <span style={{ color: "#FFC107", fontWeight: "bold" }}>
-                                            2.1.0
+                                            2.2.0
                                         </span>
                                     </div>
                                 </div>
@@ -2370,7 +2647,7 @@
                         )}
                     </div>
 
-                    {/* BOTTOM NAVIGATION CON BADGE NOTIFICHE */}
+                    {/* BOTTOM NAVIGATION CON BADGE NOTIFICHE - SOLO MOBILE */}
                     <div className="app-bottom-nav">
                         <button
                             className={`nav-button ${activeTab === "classifica" ? "active" : ""}`}
