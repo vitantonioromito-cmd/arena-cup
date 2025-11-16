@@ -296,7 +296,7 @@
             margin-top: 15px;
         }
         
-        /* STILI FAZIONI CORRETTI */
+        /* STILI FAZIONI CORRETTI - SOLO BIANCA/NERA/ROSSA */
         .fazione-bianca {
             border-left: 4px solid #ffffff;
             background: rgba(255, 255, 255, 0.1);
@@ -336,6 +336,21 @@
             background: #ff4444;
             color: white;
             border: 1px solid #cc0000;
+        }
+
+        /* MODIFICA PAGELLA */
+        .modifica-pagella-form {
+            background: rgba(255, 193, 7, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .modifica-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
         }
 
         /* CLASSIFICHE STYLES */
@@ -659,18 +674,6 @@
                 align-items: center;
                 justify-content: center;
             }
-            
-            /* LAYOUT DESKTOP MIGLIORATO */
-            .desktop-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 20px;
-                margin-top: 20px;
-            }
-            
-            .desktop-full-width {
-                grid-column: 1 / -1;
-            }
         }
         
         /* NASCONDI NAV MOBILE SU DESKTOP */
@@ -701,7 +704,6 @@
             navigator.serviceWorker.register('./sw.js')
                 .then(registration => {
                     console.log('SW registered');
-                    // FORZA AGGIORNAMENTO CACHE
                     registration.update();
                 })
                 .catch(error => console.log('SW registration failed'));
@@ -715,7 +717,6 @@
                         console.log("Notifiche abilitate!");
                         localStorage.setItem('notificationsEnabled', 'true');
                         
-                        // CREA NOTIFICA DI TEST
                         if (localStorage.getItem('notificationTestShown') !== 'true') {
                             new Notification("Arena Cup - Notifiche Attive", {
                                 body: "Ora riceverai notifiche per nuovi messaggi e partite!",
@@ -733,7 +734,6 @@
         function showPushNotification(title, message, tag = 'arena-cup') {
             console.log(`🔔 Tentativo notifica: ${title} - ${message}`);
             
-            // CONTROLLO PERMESSI E IMPOSTAZIONI
             if (localStorage.getItem('notificationsEnabled') !== 'true') {
                 console.log("❌ Notifiche disabilitate nelle impostazioni");
                 return;
@@ -746,7 +746,6 @@
                         icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
                         tag: tag,
                         requireInteraction: true,
-                        badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>'
                     });
                     
                     notification.onclick = function() {
@@ -756,7 +755,6 @@
                     
                     console.log("✅ Notifica browser creata con successo");
                     
-                    // Chiudi automaticamente dopo 8 secondi
                     setTimeout(() => {
                         notification.close();
                     }, 8000);
@@ -786,7 +784,6 @@
                 }
             }
             
-            // SUONO E VIBRAZIONE
             playNotificationSound();
         }
         
@@ -800,7 +797,6 @@
         // 🎵 NOTIFICA SONORA MIGLIORATA
         function playNotificationSound() {
             try {
-                // PRIMA PROVA CON AUDIO CONTEXT
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
@@ -815,7 +811,6 @@
                 gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
                 setTimeout(() => oscillator.stop(), 300);
                 
-                // POI PROVA CON VIBRAZIONE
                 vibrate();
             } catch (e) {
                 console.log("Audio non supportato, usa vibrazione");
@@ -889,6 +884,14 @@
                 fazione: "nessuna"
             });
 
+            // 🎯 STATO PER MODIFICA PAGELLA
+            const [pagellaInModifica, setPagellaInModifica] = useState(null);
+            const [modificaPagella, setModificaPagella] = useState({
+                voto: "",
+                commento: "",
+                fazione: "nessuna"
+            });
+
             const chatContainerRef = useRef(null);
 
             // 🔐 PASSWORD ADMIN CORRETTA - giulia85
@@ -897,7 +900,6 @@
             useEffect(() => {
                 if (!isLogged) return;
 
-                // RICHIEDI PERMESSO NOTIFICHE AL PRIMO ACCESSO
                 if (localStorage.getItem('notificationPermissionAsked') !== 'true') {
                     setTimeout(() => {
                         if ("Notification" in window && Notification.permission === "default") {
@@ -907,7 +909,6 @@
                                     localStorage.setItem('notificationsEnabled', 'true');
                                     console.log("✅ Notifiche abilitate!");
                                     
-                                    // NOTIFICA DI BENVENUTO
                                     showPushNotification(
                                         "Arena Cup - Notifiche Attive", 
                                         "Ora riceverai notifiche per nuovi messaggi e partite!"
@@ -919,7 +920,6 @@
                     }, 1500);
                 }
 
-                // CARICAMENTO DATI...
                 database.ref('statistiche').on('value', (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
@@ -960,7 +960,6 @@
                     if (messaggiArray.length > 0) {
                         const ultimoTimestamp = Math.max(...messaggiArray.map(m => m.timestamp));
                         
-                        // 🔔 NOTIFICA NUOVI MESSAGGI - SEMPRE ATTIVA
                         if (ultimoTimestamp > ultimoMessaggioVisto) {
                             const nuoviMessaggi = messaggiArray.filter(m => 
                                 m.timestamp > ultimoMessaggioVisto && 
@@ -974,7 +973,6 @@
                             if (!primoCaricamento && countNuovi > 0) {
                                 console.log(`💬 ${countNuovi} nuovi messaggi`);
                                 
-                                // NOTIFICA PER OGNI NUOVO MESSAGGIO
                                 nuoviMessaggi.forEach(msg => {
                                     const mittente = msg.mittente === "admin" ? "Vitantonio" : msg.mittente;
                                     if (mittente !== loginForm.username) {
@@ -1005,20 +1003,17 @@
                     const nuovePartite = data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : [];
                     setPartite(nuovePartite);
 
-                    // 🔔 NOTIFICA NUOVE PARTITE O MODIFICHE
                     if (partitePrecedenti.length > 0) {
                         nuovePartite.forEach(nuovaPartita => {
                             const vecchiaPartita = partitePrecedenti.find(p => p.id === nuovaPartita.id);
                             
                             if (!vecchiaPartita) {
-                                // NUOVA PARTITA AGGIUNTA
                                 showPushNotification(
                                     "🗓️ Nuova Partita Programmata!",
                                     `${formattaData(nuovaPartita.data)} - ${nuovaPartita.ora}`,
                                     'calendar'
                                 );
                             } else if (JSON.stringify(vecchiaPartita.confermati) !== JSON.stringify(nuovaPartita.confermati)) {
-                                // CAMBIAMENTI NELLE PRENOTAZIONI
                                 const nomeVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
                                 const eraConfermato = vecchiaPartita.confermati?.includes(nomeVisualizzato);
                                 const oraConfermato = nuovaPartita.confermati?.includes(nomeVisualizzato);
@@ -1036,7 +1031,6 @@
                     
                     partitePrecedenti = nuovePartite;
                     
-                    // CONTA NOTIFICHE CALENDARIO (PARTITE IMMINENTI)
                     const oggi = new Date();
                     const partiteImminenti = nuovePartite.filter(p => {
                         const dataPartita = new Date(p.data);
@@ -1050,7 +1044,6 @@
                 database.ref('pagelle').on('value', (snapshot) => {
                     const data = snapshot.val();
                     const pagelleArray = data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : [];
-                    // Ordina per data più recente
                     pagelleArray.sort((a, b) => new Date(b.data) - new Date(a.data));
                     setPagelle(pagelleArray);
                 });
@@ -1108,7 +1101,6 @@
             const handleLogin = () => {
                 if (!loginForm.username.trim()) return alert("Inserisci un nome!");
                 
-                // Se è admin, verifica password
                 if (loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") {
                     if (loginForm.password !== ADMIN_PASSWORD) {
                         alert("❌ Password admin errata! La password corretta è: giulia85");
@@ -1119,7 +1111,6 @@
                 localStorage.setItem("username", loginForm.username);
                 setIsLogged(true);
                 
-                // 🔔 RICHIEDI NOTIFICHE DOPO LOGIN
                 setTimeout(() => {
                     if ("Notification" in window && Notification.permission === "default") {
                         requestNotificationPermission();
@@ -1162,7 +1153,6 @@
                 if (!nuovaPagella.giocatore.trim()) return alert("Seleziona un giocatore!");
                 if (!nuovaPagella.voto) return alert("Inserisci un voto!");
                 
-                // CONTROLLO MEZZI VOTI
                 const votoNumero = parseFloat(nuovaPagella.voto);
                 if (isNaN(votoNumero) || votoNumero < 1 || votoNumero > 10) {
                     return alert("Il voto deve essere un numero tra 1 e 10!");
@@ -1187,13 +1177,47 @@
                     });
                     alert("📝 Pagella aggiunta!");
                     
-                    // 🔔 NOTIFICA NUOVA PAGELLA
                     showPushNotification(
                         "📝 Nuova Pagella Aggiunta",
                         `Vitantonio ha valutato ${nuovaPagella.giocatore} con ${nuovaPagella.voto}/10`,
                         'chat'
                     );
                 });
+            };
+
+            // 🎯 MODIFICA PAGELLA
+            const avviaModificaPagella = (pagella) => {
+                setPagellaInModifica(pagella.id);
+                setModificaPagella({
+                    voto: pagella.voto.toString(),
+                    commento: pagella.commento || "",
+                    fazione: pagella.fazione || "nessuna"
+                });
+            };
+
+            const salvaModificaPagella = () => {
+                if (!pagellaInModifica) return;
+                
+                const votoNumero = parseFloat(modificaPagella.voto);
+                if (isNaN(votoNumero) || votoNumero < 1 || votoNumero > 10) {
+                    return alert("Il voto deve essere un numero tra 1 e 10!");
+                }
+                
+                database.ref(`pagelle/${pagellaInModifica}`).update({
+                    voto: votoNumero,
+                    commento: modificaPagella.commento,
+                    fazione: modificaPagella.fazione,
+                    modificato_il: new Date().toLocaleString('it-IT')
+                }).then(() => {
+                    setPagellaInModifica(null);
+                    setModificaPagella({ voto: "", commento: "", fazione: "nessuna" });
+                    alert("✅ Pagella modificata!");
+                });
+            };
+
+            const annullaModificaPagella = () => {
+                setPagellaInModifica(null);
+                setModificaPagella({ voto: "", commento: "", fazione: "nessuna" });
             };
 
             const eliminaPagella = (id, giocatore) => {
@@ -1279,200 +1303,10 @@
                 }).then(() => {
                     alert("🏆 MVP assegnato!");
                     
-                    // 🔔 NOTIFICA MVP
                     showPushNotification(
                         "🏆 Nuovo MVP!",
                         `${giocatore.nome} è stato nominato MVP!`,
                         'chat'
-                    );
-                });
-            };
-
-            const removeMVP = (id) => {
-                if (loginForm.username !== "admin") return alert("Solo admin può rimuovere MVP!");
-                
-                const giocatore = giocatori.find(g => g.id === id);
-                if (!giocatore) return;
-                
-                const nuovoCount = Math.max(0, (giocatore.mvp_count || 0) - 1);
-                
-                database.ref(`giocatori/${id}`).update({
-                    mvp_count: nuovoCount
-                }).then(() => {
-                    alert("🏆 MVP rimosso!");
-                });
-            };
-
-            // 🧤 FUNZIONI PORTIERI
-            const aggiungiStatPortiere = (id, tipo, quantitaInput) => {
-                if (loginForm.username !== "admin") return alert("Solo admin può aggiornare statistiche portieri!");
-                
-                const giocatore = giocatori.find(g => g.id === id);
-                if (!giocatore) return;
-                
-                const quantita = parseInt(quantitaInput);
-                if (isNaN(quantita)) return alert("Inserisci un numero valido!");
-                
-                const nuovoValore = Math.max(0, (giocatore[tipo] || 0) + quantita);
-                
-                database.ref(`giocatori/${id}`).update({
-                    [tipo]: nuovoValore
-                }).then(() => {
-                    const nomiStat = {
-                        'parate': 'parate', 'parate_difficili': 'parate difficili',
-                        'rigori_parati': 'rigori parati', 'uscite_vinte': 'uscite vinte',
-                        'assist_portiere': 'assist da portiere', 'rinvii_buoni': 'rinvii buoni',
-                        'interventi_decisivi': 'interventi decisivi', 'errori': 'errori'
-                    };
-                    alert(`🧤 ${quantita} ${nomiStat[tipo]} ${quantita >= 0 ? 'aggiunti' : 'rimossi'}!`);
-                    document.getElementById(`${tipo}-${id}`).value = "";
-                });
-            };
-
-            const aggiungiPartitaPortiere = (id) => {
-                if (loginForm.username !== "admin") return alert("Solo admin può aggiungere partite!");
-                
-                const giocatore = giocatori.find(g => g.id === id);
-                if (!giocatore) return;
-                
-                const nuovoCount = (giocatore.partite_portiere || 0) + 1;
-                
-                database.ref(`giocatori/${id}`).update({
-                    partite_portiere: nuovoCount
-                }).then(() => {
-                    alert("🔄 Partita da portiere aggiunta!");
-                });
-            };
-
-            const addGiocatore = () => {
-                if (loginForm.username !== "admin") return alert("Solo admin può aggiungere giocatori!");
-                if (!form.nome.trim()) return alert("Inserisci un nome!");
-                
-                database.ref('giocatori').push({
-                    nome: form.nome,
-                    gol: parseInt(form.gol) || 0,
-                    assist: parseInt(form.assist) || 0,
-                    voti: form.voto ? [parseFloat(form.voto)] : [],
-                    media_calcolata: form.voto ? parseFloat(form.voto) : 0,
-                    mvp_count: 0,
-                    parate: 0,
-                    gol_subiti: 0,
-                    rigori_parati: 0,
-                    uscite_vinte: 0,
-                    assist_portiere: 0,
-                    parate_difficili: 0,
-                    rinvii_buoni: 0,
-                    errori: 0,
-                    interventi_decisivi: 0,
-                    partite_portiere: 0,
-                    timestamp: Date.now()
-                }).then(() => {
-                    setForm({ nome: "", gol: 0, assist: 0, voto: "" });
-                    alert("✅ Giocatore aggiunto!");
-                });
-            };
-
-            const eliminaGiocatore = (id, nome) => {
-                if (loginForm.username !== "admin") return alert("Solo admin può eliminare giocatori!");
-                if (!confirm(`Sei sicuro di voler eliminare ${nome}?`)) return;
-                database.ref(`giocatori/${id}`).remove();
-            };
-
-            const generaCalendario = () => {
-                if (loginForm.username !== "admin") return alert("Solo admin può generare il calendario!");
-                
-                const oggi = new Date();
-                let nextTuesday = new Date(oggi);
-                const giorniFinoMartedi = (2 - oggi.getDay() + 7) % 7;
-                nextTuesday.setDate(oggi.getDate() + (giorniFinoMartedi === 0 ? 7 : giorniFinoMartedi));
-                
-                if (nextTuesday <= oggi) {
-                    nextTuesday.setDate(nextTuesday.getDate() + 7);
-                }
-                
-                database.ref('partite').remove().then(() => {
-                    for (let i = 0; i < 4; i++) {
-                        const dataPartita = new Date(nextTuesday);
-                        dataPartita.setDate(nextTuesday.getDate() + (i * 7));
-                        
-                        database.ref('partite').push({
-                            data: dataPartita.toISOString().split('T')[0],
-                            ora: "21:00",
-                            luogo: "Campo Calcetto",
-                            confermati: [],
-                            risultato: null,
-                            triangolare: false,
-                            timestamp: Date.now() + i
-                        });
-                    }
-                    alert("🗓️ Calendario generato!");
-                    
-                    // 🔔 NOTIFICA CALENDARIO GENERATO
-                    showPushNotification(
-                        "🗓️ Calendario Aggiornato!",
-                        "Il nuovo calendario partite è stato generato",
-                        'calendar'
-                    );
-                });
-            };
-
-            const togglePrenotazionePartita = (partitaId) => {
-                const partita = partite.find(p => p.id === partitaId);
-                if (!partita) return;
-                
-                const nomeVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
-                const confermati = partita.confermati || [];
-                const limite = partita.triangolare ? 15 : 10;
-                const giaConfermato = confermati.includes(nomeVisualizzato);
-                
-                if (!giaConfermato && confermati.length >= limite) {
-                    alert(`Partita al completo! ${limite} giocatori confermati.`);
-                    return;
-                }
-
-                const nuoviConfermati = giaConfermato 
-                    ? confermati.filter(name => name !== nomeVisualizzato)
-                    : [...confermati, nomeVisualizzato];
-
-                database.ref(`partite/${partitaId}`).update({
-                    confermati: nuoviConfermati
-                }).then(() => {
-                    if (!giaConfermato) {
-                        alert("✅ Prenotazione confermata!");
-                        // 🔔 NOTIFICA PRENOTAZIONE
-                        showPushNotification(
-                            "✅ Prenotazione Confermata",
-                            `Sei confermato per il ${formattaData(partita.data)}`,
-                            'calendar'
-                        );
-                    }
-                });
-            };
-
-            const attivaTriangolare = (partitaId) => {
-                if (loginForm.username !== "admin") return alert("Solo admin può attivare il triangolare!");
-                database.ref(`partite/${partitaId}`).update({ triangolare: true })
-                .then(() => {
-                    alert("🏆 Triangolare attivato!");
-                    showPushNotification(
-                        "🏆 Modalità Triangolare Attivata",
-                        "La partita è ora un triangolare (15 giocatori)",
-                        'calendar'
-                    );
-                });
-            };
-
-            const disattivaTriangolare = (partitaId) => {
-                if (loginForm.username !== "admin") return alert("Solo admin può disattivare il triangolare!");
-                database.ref(`partite/${partitaId}`).update({ 
-                    triangolare: false,
-                    confermati: []
-                }).then(() => {
-                    alert("🔁 Triangolare disattivato!");
-                    showPushNotification(
-                        "🔁 Modalità Normale Attivata",
-                        "La partita torna alla modalità standard (10 giocatori)",
-                        'calendar'
                     );
                 });
             };
@@ -1499,11 +1333,6 @@
                 database.ref(`messaggi/${id}`).remove();
             };
 
-            const rispondiAMessaggio = (msg) => {
-                const nomeVisualizzato = msg.mittente === "admin" ? "Vitantonio" : msg.mittente;
-                setNuovoMessaggio(`@${nomeVisualizzato} `);
-            };
-
             const calcolaMedia = (voti) => {
                 if (!voti || voti.length === 0) return 0;
                 return voti.reduce((a, b) => a + b, 0) / voti.length;
@@ -1523,10 +1352,6 @@
                 totaleMVP: giocatoriConMedia.reduce((sum, g) => sum + (g.mvp_count || 0), 0),
                 totalePortieri: giocatori.filter(g => g.partite_portiere > 0).length
             };
-
-            const top3 = [...giocatoriConMedia]
-                .sort((a, b) => (b.media_calcolata || 0) - (a.media_calcolata || 0))
-                .slice(0, 3);
 
             const formattaData = (dataString) => {
                 const data = new Date(dataString);
@@ -1583,7 +1408,6 @@
                             }}>
                                 <h1 style={{ fontSize: "2.5rem", marginBottom: "30px" }}>🏆 Arena Cup</h1>
                                 
-                                {/* USERNAME */}
                                 <input 
                                     placeholder="Nome giocatore" 
                                     value={loginForm.username}
@@ -1599,7 +1423,6 @@
                                     }}
                                 />
                                 
-                                {/* PASSWORD SOLO SE ADMIN */}
                                 {(loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") && (
                                     <input 
                                         type="password"
@@ -1734,7 +1557,6 @@
                             <div>
                                 <h2>🏆 Classifiche</h2>
                                 
-                                {/* STATISTICHE GENERALI */}
                                 <div className="stats-grid">
                                     <div className="stat-card">
                                         <h3 style={{ color: "#FFD700", margin: "0 0 10px 0", fontSize: "1rem" }}>⚽ Gol Totali</h3>
@@ -1754,9 +1576,7 @@
                                     </div>
                                 </div>
 
-                                {/* CLASSIFICHE IN GRIGLIA DESKTOP */}
                                 <div className="classifica-grid">
-                                    {/* CLASSIFICA MARCATORI */}
                                     <div className="classifica-card">
                                         <h3 style={{ marginBottom: "15px", color: "#FFD700" }}>⚽ Top Marcatori</h3>
                                         {classificaMarcatori.length === 0 ? (
@@ -1782,7 +1602,6 @@
                                         )}
                                     </div>
 
-                                    {/* CLASSIFICA ASSIST */}
                                     <div className="classifica-card">
                                         <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>🎯 Top Assist</h3>
                                         {classificaAssist.length === 0 ? (
@@ -1808,7 +1627,6 @@
                                         )}
                                     </div>
 
-                                    {/* CLASSIFICA MVP */}
                                     <div className="classifica-card">
                                         <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>🏆 MVP Stagione</h3>
                                         {classificaMVP.length === 0 ? (
@@ -1834,7 +1652,6 @@
                                         )}
                                     </div>
 
-                                    {/* 🧤 CLASSIFICA BENJI PRICE */}
                                     <div className="classifica-card">
                                         <h3 style={{ marginBottom: "15px", color: "#0096FF" }}>🧤 Top Benji Price</h3>
                                         {classificaBenjiPrice.length === 0 ? (
@@ -1860,82 +1677,6 @@
                                         )}
                                     </div>
                                 </div>
-
-                                {/* LISTA COMPLETA GIOCATORI */}
-                                <div style={{ marginTop: "30px" }}>
-                                    <h3>👥 Tutti i Giocatori ({giocatori.length})</h3>
-                                    {giocatori.length === 0 ? (
-                                        <p style={{ textAlign: "center", color: "#888", padding: "40px" }}>
-                                            Nessun giocatore ancora.
-                                        </p>
-                                    ) : (
-                                        giocatori.map(giocatore => {
-                                            const isCurrentUserGiocatore = isCurrentUser(giocatore.nome);
-                                            const punteggioBenji = calcolaPunteggioBenjiPrice(giocatore);
-                                            
-                                            return (
-                                                <div key={giocatore.id} className={`player-card ${isCurrentUserGiocatore ? 'current-user' : ''}`}>
-                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
-                                                        <div style={{ flex: 1 }}>
-                                                            <h4 style={{ margin: "0 0 5px 0", fontSize: "1.1rem" }}>
-                                                                {giocatore.nome}
-                                                                {isCurrentUserGiocatore && <span className="current-user-badge">TU</span>}
-                                                                {(giocatore.mvp_count || 0) > 0 && <span className="mvp-badge">MVP ×{giocatore.mvp_count}</span>}
-                                                                {punteggioBenji > 0 && <span className="benji-price-badge">Benji {punteggioBenji}pts</span>}
-                                                            </h4>
-                                                            <div style={{ color: "#ccc", fontSize: "0.8rem" }}>
-                                                                ⚽ {giocatore.gol || 0} gol • 🎯 {giocatore.assist || 0} assist • 
-                                                                <span style={{ color: giocatore.media_calcolata >= 7 ? "#4CAF50" : "#FFD700" }}>
-                                                                    {" "}⭐ {giocatore.media_calcolata?.toFixed(2) || "0.00"}
-                                                                </span>
-                                                                {giocatore.voti && ` (${giocatore.voti.length} voti)`}
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        {loginForm.username === "admin" && (
-                                                            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
-                                                                <input 
-                                                                    id={`gol-${giocatore.id}`}
-                                                                    type="number" 
-                                                                    placeholder="±Gol" 
-                                                                    className="number-input"
-                                                                />
-                                                                <button onClick={() => addGolAssist(giocatore.id, 'gol', document.getElementById(`gol-${giocatore.id}`).value)}>
-                                                                    ±⚽
-                                                                </button>
-
-                                                                <input 
-                                                                    id={`assist-${giocatore.id}`}
-                                                                    type="number" 
-                                                                    placeholder="±Assist" 
-                                                                    className="number-input"
-                                                                />
-                                                                <button onClick={() => addGolAssist(giocatore.id, 'assist', document.getElementById(`assist-${giocatore.id}`).value)}>
-                                                                    ±🎯
-                                                                </button>
-
-                                                                <input 
-                                                                    id={`voto-${giocatore.id}`}
-                                                                    type="number" 
-                                                                    placeholder="Voto" 
-                                                                    min="1" max="10" step="0.5"
-                                                                    className="number-input"
-                                                                />
-                                                                <button onClick={() => addVoto(giocatore.id, document.getElementById(`voto-${giocatore.id}`).value)}>
-                                                                    +⭐
-                                                                </button>
-
-                                                                <button onClick={() => addMVP(giocatore.id)}>
-                                                                    +🏆
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
                             </div>
                         )}
 
@@ -1944,20 +1685,6 @@
                             <div>
                                 <h2>🗓️ Calendario Partite</h2>
                                 
-                                {loginForm.username === "admin" && (
-                                    <button 
-                                        onClick={generaCalendario}
-                                        style={{ 
-                                            background: "#2196F3", 
-                                            color: "white", 
-                                            padding: "12px 20px", 
-                                            marginBottom: "20px" 
-                                        }}
-                                    >
-                                        🗓️ Genera Nuovo Calendario
-                                    </button>
-                                )}
-
                                 {partite.length === 0 ? (
                                     <div className="empty-state">
                                         <div className="icon">🗓️</div>
@@ -2001,7 +1728,6 @@
                                                         </div>
                                                     </div>
 
-                                                    {/* LISTA CONFERMATI */}
                                                     <div className="confermato-list">
                                                         <h4 style={{ margin: "15px 0 10px 0", color: "#4CAF50" }}>
                                                             Giocatori Confermati ({partita.confermati?.length || 0})
@@ -2122,7 +1848,7 @@
                             </div>
                         )}
 
-                        {/* TAB PAGELLE MIGLIORATO */}
+                        {/* TAB PAGELLE MIGLIORATO CON MODIFICA */}
                         {activeTab === "pagelle" && (
                             <div>
                                 <h2>📝 Pagelle Giocatori</h2>
@@ -2143,7 +1869,6 @@
                                                 ))}
                                             </select>
                                             
-                                            {/* VOTO CON MEZZI VOTI */}
                                             <select 
                                                 value={nuovaPagella.voto}
                                                 onChange={e => setNuovaPagella({...nuovaPagella, voto: e.target.value})}
@@ -2155,7 +1880,7 @@
                                                 ))}
                                             </select>
                                             
-                                            {/* SELEZIONE FAZIONE - BIANCA/NERA/ROSSA */}
+                                            {/* SELEZIONE FAZIONE - SOLO BIANCA/NERA/ROSSA */}
                                             <select 
                                                 value={nuovaPagella.fazione}
                                                 onChange={e => setNuovaPagella({...nuovaPagella, fazione: e.target.value})}
@@ -2196,7 +1921,7 @@
                                     </div>
                                 )}
 
-                                {/* LISTA PAGELLE MIGLIORATA CON FAZIONI */}
+                                {/* LISTA PAGELLE MIGLIORATA CON MODIFICA */}
                                 {pagelle.length === 0 ? (
                                     <div className="empty-state">
                                         <div className="icon">📝</div>
@@ -2214,6 +1939,7 @@
                                                     </div>
                                                     <div className="pagella-data">
                                                         Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
+                                                        {pagella.modificato_il && ` • Modificato il ${pagella.modificato_il}`}
                                                     </div>
                                                 </div>
                                                 <div className="pagella-voto">
@@ -2224,6 +1950,99 @@
                                             {pagella.commento && (
                                                 <div className="pagella-commento">
                                                     "{pagella.commento}"
+                                                </div>
+                                            )}
+                                            
+                                            {/* MODIFICA PAGELLA (SOLO ADMIN) */}
+                                            {loginForm.username === "admin" && (
+                                                <div style={{ marginTop: "15px" }}>
+                                                    {pagellaInModifica === pagella.id ? (
+                                                        <div className="modifica-pagella-form">
+                                                            <h4 style={{ color: "#FFC107", marginBottom: "10px" }}>✏️ Modifica Pagella</h4>
+                                                            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
+                                                                <select 
+                                                                    value={modificaPagella.voto}
+                                                                    onChange={e => setModificaPagella({...modificaPagella, voto: e.target.value})}
+                                                                    className="voto-select"
+                                                                >
+                                                                    <option value="">Voto</option>
+                                                                    {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(v => (
+                                                                        <option key={v} value={v}>{v}</option>
+                                                                    ))}
+                                                                </select>
+                                                                
+                                                                <select 
+                                                                    value={modificaPagella.fazione}
+                                                                    onChange={e => setModificaPagella({...modificaPagella, fazione: e.target.value})}
+                                                                    className="fazione-select"
+                                                                >
+                                                                    <option value="nessuna">Nessuna fazione</option>
+                                                                    <option value="bianca">Armata Bianca</option>
+                                                                    <option value="nera">Armata Nera</option>
+                                                                    <option value="rossa">Armata Rossa</option>
+                                                                </select>
+                                                            </div>
+                                                            
+                                                            <textarea 
+                                                                placeholder="Commento"
+                                                                value={modificaPagella.commento}
+                                                                onChange={e => setModificaPagella({...modificaPagella, commento: e.target.value})}
+                                                                style={{ marginTop: "10px", width: "100%" }}
+                                                            />
+                                                            
+                                                            <div className="modifica-actions">
+                                                                <button 
+                                                                    onClick={salvaModificaPagella}
+                                                                    style={{ 
+                                                                        background: "#4CAF50", 
+                                                                        color: "white",
+                                                                        padding: "8px 15px"
+                                                                    }}
+                                                                >
+                                                                    💾 Salva Modifiche
+                                                                </button>
+                                                                <button 
+                                                                    onClick={annullaModificaPagella}
+                                                                    style={{ 
+                                                                        background: "#F44336", 
+                                                                        color: "white",
+                                                                        padding: "8px 15px"
+                                                                    }}
+                                                                >
+                                                                    ❌ Annulla
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ display: "flex", gap: "10px" }}>
+                                                            <button 
+                                                                onClick={() => avviaModificaPagella(pagella)}
+                                                                style={{ 
+                                                                    background: "#2196F3", 
+                                                                    color: "white",
+                                                                    padding: "8px 15px",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer"
+                                                                }}
+                                                            >
+                                                                ✏️ Modifica
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => eliminaPagella(pagella.id, pagella.giocatore)}
+                                                                style={{ 
+                                                                    background: "#F44336", 
+                                                                    color: "white",
+                                                                    padding: "8px 15px",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer"
+                                                                }}
+                                                            >
+                                                                ❌ Elimina
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -2237,7 +2056,6 @@
                             <div>
                                 <h2>⚙️ Impostazioni</h2>
                                 
-                                {/* IMPOSTAZIONI NOTIFICHE MIGLIORATE */}
                                 <div className="notification-settings">
                                     <h3>🔔 Gestione Notifiche</h3>
                                     
@@ -2296,7 +2114,6 @@
                                     </div>
                                 </div>
 
-                                {/* INFO APP */}
                                 <div className="notification-settings">
                                     <h3>📊 Statistiche App</h3>
                                     <div className="setting-item">
@@ -2313,7 +2130,6 @@
                                     </div>
                                 </div>
 
-                                {/* LOGOUT */}
                                 <div style={{ textAlign: "center", marginTop: "30px" }}>
                                     <button 
                                         onClick={handleLogout}
