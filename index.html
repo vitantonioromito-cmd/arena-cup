@@ -56,6 +56,72 @@
             flex-direction: column;
         }
         
+        /* STILI LOGIN CORRETTI */
+        .login-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .login-form {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 40px 30px;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .login-input {
+            padding: 15px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            width: 100%;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            background: rgba(255,255,255,0.95);
+            color: #000;
+            transition: all 0.3s ease;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: white;
+        }
+        
+        .login-button {
+            padding: 15px 30px;
+            font-size: 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .login-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .login-button:active {
+            transform: translateY(0);
+        }
+        
+        .password-hint {
+            color: #FFD700;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
         .app-header {
             background: rgba(26, 26, 46, 0.95);
             backdrop-filter: blur(10px);
@@ -915,6 +981,47 @@
             // 🔐 PASSWORD ADMIN CORRETTA - giulia85
             const ADMIN_PASSWORD = "giulia85";
 
+            // 🔧 FUNZIONE LOGIN MIGLIORATA
+            const handleLogin = (e) => {
+                if (e) e.preventDefault();
+                
+                if (!loginForm.username.trim()) {
+                    alert("Inserisci un nome!");
+                    return;
+                }
+                
+                if (loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") {
+                    if (loginForm.password !== ADMIN_PASSWORD) {
+                        alert("❌ Password admin errata! La password corretta è: giulia85");
+                        return;
+                    }
+                }
+                
+                localStorage.setItem("username", loginForm.username);
+                setIsLogged(true);
+                
+                setTimeout(() => {
+                    if ("Notification" in window && Notification.permission === "default") {
+                        requestNotificationPermission();
+                    }
+                }, 500);
+            };
+
+            // 🔧 GESTIONE INPUT MIGLIORATA
+            const handleInputChange = (field, value) => {
+                setLoginForm(prev => ({
+                    ...prev,
+                    [field]: value
+                }));
+            };
+
+            // 🔧 GESTIONE ENTER KEY
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter') {
+                    handleLogin(e);
+                }
+            };
+
             useEffect(() => {
                 if (!isLogged) return;
 
@@ -963,7 +1070,6 @@
                         errori: data[key].errori || 0,
                         interventi_decisivi: data[key].interventi_decisivi || 0,
                         partite_portiere: data[key].partite_portiere || 0,
-                        // Inizializza presenze se non esiste
                         presenze: data[key].presenze || 0
                     })) : [];
                     setGiocatori(giocatoriArray);
@@ -1060,7 +1166,6 @@
                     setNotificheCalendario(partiteImminenti.length);
                 });
 
-                // 📝 CARICA PAGELLE
                 database.ref('pagelle').on('value', (snapshot) => {
                     const data = snapshot.val();
                     const pagelleArray = data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : [];
@@ -1122,27 +1227,6 @@
                 .filter(g => (g.presenze || 0) > 0)
                 .sort((a, b) => (b.presenze || 0) - (a.presenze || 0))
                 .slice(0, 10);
-
-            // 🔐 SISTEMA LOGIN CON PASSWORD CORRETTA PER ADMIN
-            const handleLogin = () => {
-                if (!loginForm.username.trim()) return alert("Inserisci un nome!");
-                
-                if (loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") {
-                    if (loginForm.password !== ADMIN_PASSWORD) {
-                        alert("❌ Password admin errata! La password corretta è: giulia85");
-                        return;
-                    }
-                }
-                
-                localStorage.setItem("username", loginForm.username);
-                setIsLogged(true);
-                
-                setTimeout(() => {
-                    if ("Notification" in window && Notification.permission === "default") {
-                        requestNotificationPermission();
-                    }
-                }, 500);
-            };
 
             const handleLogout = () => {
                 localStorage.removeItem("username");
@@ -1482,84 +1566,49 @@
                 return loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
             };
 
+            // 🔧 SEZIONE LOGIN CORRETTA
             if (!isLogged) {
                 return (
                     <div className="app-container">
-                        <div style={{ 
-                            flex: 1, 
-                            display: "flex", 
-                            justifyContent: "center", 
-                            alignItems: "center", 
-                            padding: 20 
-                        }}>
-                            <div style={{ 
-                                textAlign: "center", 
-                                background: "rgba(255,255,255,0.1)", 
-                                padding: "40px", 
-                                borderRadius: "20px",
-                                maxWidth: "400px",
-                                width: "100%",
-                                backdropFilter: "blur(10px)"
-                            }}>
+                        <div className="login-container">
+                            <form onSubmit={handleLogin} className="login-form">
                                 <h1 style={{ fontSize: "2.5rem", marginBottom: "30px" }}>🏆 Arena Cup</h1>
                                 
                                 <input 
+                                    type="text"
                                     placeholder="Nome giocatore" 
                                     value={loginForm.username}
-                                    onChange={e => setLoginForm({...loginForm, username: e.target.value})}
-                                    style={{ 
-                                        padding: "15px", 
-                                        fontSize: "16px", 
-                                        marginBottom: "10px", 
-                                        width: "100%",
-                                        borderRadius: "12px",
-                                        border: "none",
-                                        background: "rgba(255,255,255,0.9)"
-                                    }}
+                                    onChange={(e) => handleInputChange('username', e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                    className="login-input"
+                                    autoComplete="username"
+                                    autoFocus
                                 />
                                 
                                 {(loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") && (
-                                    <input 
-                                        type="password"
-                                        placeholder="Password admin" 
-                                        value={loginForm.password}
-                                        onChange={e => setLoginForm({...loginForm, password: e.target.value})}
-                                        onKeyPress={e => e.key === 'Enter' && handleLogin()}
-                                        style={{ 
-                                            padding: "15px", 
-                                            fontSize: "16px", 
-                                            marginBottom: "15px", 
-                                            width: "100%",
-                                            borderRadius: "12px",
-                                            border: "2px solid #FFD700",
-                                            background: "rgba(255,255,255,0.9)"
-                                        }}
-                                    />
+                                    <>
+                                        <input 
+                                            type="password"
+                                            placeholder="Password admin" 
+                                            value={loginForm.password}
+                                            onChange={(e) => handleInputChange('password', e.target.value)}
+                                            onKeyPress={handleKeyPress}
+                                            className="login-input"
+                                            autoComplete="current-password"
+                                        />
+                                        <p className="password-hint">
+                                            🔐 Password admin: giulia85
+                                        </p>
+                                    </>
                                 )}
                                 
                                 <button 
-                                    onClick={handleLogin}
-                                    style={{ 
-                                        padding: "15px 30px", 
-                                        fontSize: "16px", 
-                                        background: "#4CAF50",
-                                        color: "white",
-                                        border: "none",
-                                        borderRadius: "12px",
-                                        cursor: "pointer",
-                                        fontWeight: "bold",
-                                        width: "100%"
-                                    }}
+                                    type="submit"
+                                    className="login-button"
                                 >
                                     {loginForm.username.toLowerCase() === "admin" ? "🔐 Accedi come Admin" : "🚀 Accedi"}
                                 </button>
-                                
-                                {(loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") && (
-                                    <p style={{ color: "#FFD700", fontSize: "0.8rem", marginTop: "10px" }}>
-                                        🔐 Password: giulia85
-                                    </p>
-                                )}
-                            </div>
+                            </form>
                         </div>
                     </div>
                 );
