@@ -1296,7 +1296,7 @@
                 });
             };
 
-            // 🗓️ TOGGLE PRENOTAZIONE - SENZA DOPPI ADMIN
+            // 🗓️ TOGGLE PRENOTAZIONE - SENZA DOPPI ADMIN - CORRETTO
             const togglePrenotazionePartita = (partitaId) => {
                 const partita = partite.find(p => p.id === partitaId);
                 if (!partita) return;
@@ -1304,7 +1304,7 @@
                 const nomeVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
                 let confermati = partita.confermati || [];
                 
-                // RIMUOVI EVENTUALI DOPPI "admin"
+                // RIMUOVI EVENTUALI DOPPI "admin" o "Vitantonio"
                 confermati = confermati.filter((nome, index, array) => 
                     array.indexOf(nome) === index
                 );
@@ -1321,8 +1321,11 @@
                     ? confermati.filter(name => name !== nomeVisualizzato)
                     : [...confermati, nomeVisualizzato];
 
+                // RIMUOVI ULTERIORI DOPPI PRIMA DI SALVARE
+                const confermatiUnici = [...new Set(nuoviConfermati)];
+
                 database.ref(`partite/${partitaId}`).update({
-                    confermati: nuoviConfermati
+                    confermati: confermatiUnici
                 }).then(() => {
                     if (!giaConfermato) {
                         alert("✅ Prenotazione confermata!");
@@ -1776,6 +1779,155 @@
                                         )}
                                     </div>
                                 </div>
+
+                                {/* LISTA COMPLETA GIOCATORI CON TUTTE LE STATISTICHE */}
+                                <div style={{ marginTop: "40px" }}>
+                                    <h3>👥 Lista Completa Giocatori</h3>
+                                    {giocatori.length === 0 ? (
+                                        <p style={{ textAlign: "center", color: "#888", padding: "20px" }}>
+                                            Nessun giocatore ancora.
+                                        </p>
+                                    ) : (
+                                        giocatori.map(giocatore => (
+                                            <div key={giocatore.id} className={`player-card ${isCurrentUser(giocatore.nome) ? 'current-user' : ''}`}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <h4 style={{ margin: "0 0 10px 0", fontSize: "1.2rem" }}>
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {(giocatore.mvp_count || 0) > 0 && (
+                                                                <span className="mvp-badge">{giocatore.mvp_count} MVP</span>
+                                                            )}
+                                                            {(giocatore.presenze || 0) > 0 && (
+                                                                <span className="presenze-badge">{giocatore.presenze} partite</span>
+                                                            )}
+                                                        </h4>
+                                                        
+                                                        <div className="stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", margin: "10px 0" }}>
+                                                            <div style={{ textAlign: "center" }}>
+                                                                <div style={{ fontSize: "0.8rem", color: "#ccc" }}>⚽ Gol</div>
+                                                                <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#FFD700" }}>
+                                                                    {giocatore.gol || 0}
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ textAlign: "center" }}>
+                                                                <div style={{ fontSize: "0.8rem", color: "#ccc" }}>🎯 Assist</div>
+                                                                <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#4CAF50" }}>
+                                                                    {giocatore.assist || 0}
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ textAlign: "center" }}>
+                                                                <div style={{ fontSize: "0.8rem", color: "#ccc" }}>⭐ Media</div>
+                                                                <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#2196F3" }}>
+                                                                    {giocatore.media_calcolata ? giocatore.media_calcolata.toFixed(2) : "0.00"}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* STATISTICHE PORTA (se presenti) */}
+                                                        {(giocatore.parate > 0 || giocatore.partite_portiere > 0) && (
+                                                            <div style={{ marginTop: "10px", padding: "10px", background: "rgba(0, 150, 255, 0.1)", borderRadius: "8px" }}>
+                                                                <h5 style={{ margin: "0 0 8px 0", color: "#0096FF", fontSize: "0.9rem" }}>🧤 Statistiche Portiere</h5>
+                                                                <div className="mvp-stats">
+                                                                    <div className="mvp-stat">Parate: {giocatore.parate || 0}</div>
+                                                                    <div className="mvp-stat">Partite: {giocatore.partite_portiere || 0}</div>
+                                                                    {giocatore.rigori_parati > 0 && <div className="mvp-stat">Rigori: {giocatore.rigori_parati}</div>}
+                                                                    {giocatore.parate_difficili > 0 && <div className="mvp-stat">Parate difficili: {giocatore.parate_difficili}</div>}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    {/* CONTROLLI ADMIN */}
+                                                    {loginForm.username === "admin" && (
+                                                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+                                                            <input 
+                                                                id={`gol-${giocatore.id}`}
+                                                                type="number" 
+                                                                placeholder="±Gol" 
+                                                                className="number-input"
+                                                            />
+                                                            <button 
+                                                                onClick={() => addGolAssist(giocatore.id, 'gol', document.getElementById(`gol-${giocatore.id}`).value)}
+                                                                style={{ 
+                                                                    padding: "8px 12px", 
+                                                                    background: "#FFD700",
+                                                                    color: "black",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "12px"
+                                                                }}
+                                                            >
+                                                                ±⚽
+                                                            </button>
+                                                            
+                                                            <input 
+                                                                id={`assist-${giocatore.id}`}
+                                                                type="number" 
+                                                                placeholder="±Assist" 
+                                                                className="number-input"
+                                                            />
+                                                            <button 
+                                                                onClick={() => addGolAssist(giocatore.id, 'assist', document.getElementById(`assist-${giocatore.id}`).value)}
+                                                                style={{ 
+                                                                    padding: "8px 12px", 
+                                                                    background: "#4CAF50",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "12px"
+                                                                }}
+                                                            >
+                                                                ±🎯
+                                                            </button>
+                                                            
+                                                            <input 
+                                                                id={`voto-${giocatore.id}`}
+                                                                type="number" 
+                                                                step="0.5"
+                                                                min="1"
+                                                                max="10"
+                                                                placeholder="Voto" 
+                                                                className="number-input"
+                                                            />
+                                                            <button 
+                                                                onClick={() => addVoto(giocatore.id, document.getElementById(`voto-${giocatore.id}`).value)}
+                                                                style={{ 
+                                                                    padding: "8px 12px", 
+                                                                    background: "#2196F3",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "12px"
+                                                                }}
+                                                            >
+                                                                +⭐
+                                                            </button>
+                                                            
+                                                            <button 
+                                                                onClick={() => addMVP(giocatore.id)}
+                                                                style={{ 
+                                                                    padding: "8px 12px", 
+                                                                    background: "#FFC107",
+                                                                    color: "black",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "12px"
+                                                                }}
+                                                            >
+                                                                +🏆
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
                         )}
 
@@ -1798,9 +1950,7 @@
                                             
                                             // RIMUOVI DOPPI DALLE PRENOTAZIONI
                                             let confermatiUnici = partita.confermati || [];
-                                            confermatiUnici = confermatiUnici.filter((nome, index, array) => 
-                                                array.indexOf(nome) === index
-                                            );
+                                            confermatiUnici = [...new Set(confermatiUnici)];
                                             
                                             const isConfermato = confermatiUnici.includes(nomeVisualizzato);
                                             const limite = partita.triangolare ? 15 : 10;
