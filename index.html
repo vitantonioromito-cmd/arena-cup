@@ -353,6 +353,24 @@
             100% { box-shadow: 0 0 5px #FFD700; }
         }
         
+        /* BENJI PRICE STYLES */
+        .benji-price-badge {
+            background: linear-gradient(135deg, #0096FF, #00D4FF);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+            animation: glow-blue 2s infinite;
+        }
+        
+        @keyframes glow-blue {
+            0% { box-shadow: 0 0 5px #0096FF; }
+            50% { box-shadow: 0 0 15px #0096FF; }
+            100% { box-shadow: 0 0 5px #0096FF; }
+        }
+        
         .mvp-stats {
             display: flex;
             gap: 10px;
@@ -644,7 +662,7 @@
             const chatContainerRef = useRef(null);
 
             // 🔐 PASSWORD ADMIN (MODIFICA QUESTA CON LA TUA PASSWORD)
-            const ADMIN_PASSWORD = "giulia85";
+            const ADMIN_PASSWORD = "arenacup2024";
 
             // 🎵 NOTIFICA SONORA + VIBRAZIONE
             const playNotificationSound = () => {
@@ -728,7 +746,22 @@
 
                 database.ref('giocatori').on('value', (snapshot) => {
                     const data = snapshot.val();
-                    setGiocatori(data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : []);
+                    const giocatoriArray = data ? Object.keys(data).map(key => ({ 
+                        ...data[key], 
+                        id: key,
+                        // Inizializza statistiche portiere se non esistono
+                        parate: data[key].parate || 0,
+                        gol_subiti: data[key].gol_subiti || 0,
+                        rigori_parati: data[key].rigori_parati || 0,
+                        uscite_vinte: data[key].uscite_vinte || 0,
+                        assist_portiere: data[key].assist_portiere || 0,
+                        parate_difficili: data[key].parate_difficili || 0,
+                        rinvii_buoni: data[key].rinvii_buoni || 0,
+                        errori: data[key].errori || 0,
+                        interventi_decisivi: data[key].interventi_decisivi || 0,
+                        partite_portiere: data[key].partite_portiere || 0
+                    })) : [];
+                    setGiocatori(giocatoriArray);
                 });
 
                 let ultimoMessaggioTimestamp = 0;
@@ -839,6 +872,40 @@
                 }
             }, [messaggi, activeTab]);
 
+            // 🧤 CALCOLO PUNTEGGIO BENJI PRICE
+            const calcolaPunteggioBenjiPrice = (portiere) => {
+                let punteggio = 0;
+                
+                // PARATE (+3 punti cadauna)
+                punteggio += (portiere.parate || 0) * 3;
+                
+                // PARATE DIFFICILI (+5 punti cadauna)
+                punteggio += (portiere.parate_difficili || 0) * 5;
+                
+                // RIGORI PARATI (+10 punti cadauno)
+                punteggio += (portiere.rigori_parati || 0) * 10;
+                
+                // USCITE VINTE (+4 punti cadauna)
+                punteggio += (portiere.uscite_vinte || 0) * 4;
+                
+                // ASSIST DA PORTIERE (+8 punti cadauno)
+                punteggio += (portiere.assist_portiere || 0) * 8;
+                
+                // RINVII BUONI (+2 punti cadauno)
+                punteggio += (portiere.rinvii_buoni || 0) * 2;
+                
+                // INTERVENTI DECISIVI (+6 punti cadauno)
+                punteggio += (portiere.interventi_decisivi || 0) * 6;
+                
+                // PENALITÀ PER ERRORI (-3 punti cadauno)
+                punteggio -= (portiere.errori || 0) * 3;
+                
+                // BONUS PER PARTITE GIOCATE DA PORTIERE (+2 punti cadauna)
+                punteggio += (portiere.partite_portiere || 0) * 2;
+                
+                return Math.max(0, punteggio);
+            };
+
             // 🏆 CALCOLA CLASSIFICHE
             const classificaMarcatori = [...giocatori]
                 .filter(g => (g.gol || 0) > 0)
@@ -853,6 +920,16 @@
             const classificaMVP = [...giocatori]
                 .filter(g => (g.mvp_count || 0) > 0)
                 .sort((a, b) => (b.mvp_count || 0) - (a.mvp_count || 0))
+                .slice(0, 10);
+
+            // 🧤 CLASSIFICA BENJI PRICE
+            const classificaBenjiPrice = [...giocatori]
+                .filter(g => calcolaPunteggioBenjiPrice(g) > 0)
+                .map(g => ({
+                    ...g,
+                    punteggio_benji: calcolaPunteggioBenjiPrice(g)
+                }))
+                .sort((a, b) => b.punteggio_benji - a.punteggio_benji)
                 .slice(0, 10);
 
             // 🔐 SISTEMA LOGIN CON PASSWORD PER ADMIN
@@ -1019,6 +1096,47 @@
                 });
             };
 
+            // 🧤 FUNZIONI PORTIERI
+            const aggiungiStatPortiere = (id, tipo, quantitaInput) => {
+                if (loginForm.username !== "admin") return alert("Solo admin può aggiornare statistiche portieri!");
+                
+                const giocatore = giocatori.find(g => g.id === id);
+                if (!giocatore) return;
+                
+                const quantita = parseInt(quantitaInput);
+                if (isNaN(quantita)) return alert("Inserisci un numero valido!");
+                
+                const nuovoValore = Math.max(0, (giocatore[tipo] || 0) + quantita);
+                
+                database.ref(`giocatori/${id}`).update({
+                    [tipo]: nuovoValore
+                }).then(() => {
+                    const nomiStat = {
+                        'parate': 'parate', 'parate_difficili': 'parate difficili',
+                        'rigori_parati': 'rigori parati', 'uscite_vinte': 'uscite vinte',
+                        'assist_portiere': 'assist da portiere', 'rinvii_buoni': 'rinvii buoni',
+                        'interventi_decisivi': 'interventi decisivi', 'errori': 'errori'
+                    };
+                    alert(`🧤 ${quantita} ${nomiStat[tipo]} ${quantita >= 0 ? 'aggiunti' : 'rimossi'}!`);
+                    document.getElementById(`${tipo}-${id}`).value = "";
+                });
+            };
+
+            const aggiungiPartitaPortiere = (id) => {
+                if (loginForm.username !== "admin") return alert("Solo admin può aggiungere partite!");
+                
+                const giocatore = giocatori.find(g => g.id === id);
+                if (!giocatore) return;
+                
+                const nuovoCount = (giocatore.partite_portiere || 0) + 1;
+                
+                database.ref(`giocatori/${id}`).update({
+                    partite_portiere: nuovoCount
+                }).then(() => {
+                    alert("🔄 Partita da portiere aggiunta!");
+                });
+            };
+
             // ALTRE FUNZIONI ESISTENTI...
             const addGiocatore = () => {
                 if (loginForm.username !== "admin") return alert("Solo admin può aggiungere giocatori!");
@@ -1031,6 +1149,17 @@
                     voti: form.voto ? [parseFloat(form.voto)] : [],
                     media_calcolata: form.voto ? parseFloat(form.voto) : 0,
                     mvp_count: 0,
+                    // Inizializza statistiche portiere
+                    parate: 0,
+                    gol_subiti: 0,
+                    rigori_parati: 0,
+                    uscite_vinte: 0,
+                    assist_portiere: 0,
+                    parate_difficili: 0,
+                    rinvii_buoni: 0,
+                    errori: 0,
+                    interventi_decisivi: 0,
+                    partite_portiere: 0,
                     timestamp: Date.now()
                 }).then(() => {
                     setForm({ nome: "", gol: 0, assist: 0, voto: "" });
@@ -1183,7 +1312,8 @@
                 totaleGiocatori: giocatoriConMedia.length,
                 mediaGenerale: giocatoriConMedia.length > 0 ? 
                     giocatoriConMedia.reduce((sum, g) => sum + (g.media_calcolata || 0), 0) / giocatoriConMedia.length : 0,
-                totaleMVP: giocatoriConMedia.reduce((sum, g) => sum + (g.mvp_count || 0), 0)
+                totaleMVP: giocatoriConMedia.reduce((sum, g) => sum + (g.mvp_count || 0), 0),
+                totalePortieri: giocatori.filter(g => g.partite_portiere > 0).length
             };
 
             const top3 = [...giocatoriConMedia]
@@ -1366,6 +1496,10 @@
                                         <h3 style={{ color: "#FFC107", margin: "0 0 10px 0", fontSize: "1rem" }}>🏆 MVP Totali</h3>
                                         <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleMVP}</p>
                                     </div>
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#0096FF", margin: "0 0 10px 0", fontSize: "1rem" }}>🧤 Portieri</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totalePortieri}</p>
+                                    </div>
                                 </div>
 
                                 {/* CLASSIFICHE */}
@@ -1447,6 +1581,32 @@
                                             ))
                                         )}
                                     </div>
+
+                                    {/* 🧤 CLASSIFICA BENJI PRICE */}
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#0096FF" }}>🧤 Top Benji Price</h3>
+                                        {classificaBenjiPrice.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">🧤</div>
+                                                <p>Nessuna statistica portieri ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaBenjiPrice.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.punteggio_benji} pts
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* LISTA COMPLETA GIOCATORI CON CONTROLLI ADMIN */}
@@ -1459,6 +1619,8 @@
                                     ) : (
                                         giocatori.map(giocatore => {
                                             const isCurrentUserGiocatore = isCurrentUser(giocatore.nome);
+                                            const punteggioBenji = calcolaPunteggioBenjiPrice(giocatore);
+                                            
                                             return (
                                                 <div key={giocatore.id} className={`player-card ${isCurrentUserGiocatore ? 'current-user' : ''}`}>
                                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
@@ -1467,6 +1629,7 @@
                                                                 {giocatore.nome}
                                                                 {isCurrentUserGiocatore && <span className="current-user-badge">TU</span>}
                                                                 {(giocatore.mvp_count || 0) > 0 && <span className="mvp-badge">MVP ×{giocatore.mvp_count}</span>}
+                                                                {punteggioBenji > 0 && <span className="benji-price-badge">Benji {punteggioBenji}pts</span>}
                                                             </h4>
                                                             <div style={{ color: "#ccc", fontSize: "0.8rem" }}>
                                                                 ⚽ {giocatore.gol || 0} gol • 🎯 {giocatore.assist || 0} assist • 
@@ -1475,6 +1638,20 @@
                                                                 </span>
                                                                 {giocatore.voti && ` (${giocatore.voti.length} voti)`}
                                                             </div>
+                                                            
+                                                            {/* STATISTICHE PORTIERE */}
+                                                            {(giocatore.parate > 0 || giocatore.partite_portiere > 0) && (
+                                                                <div style={{ marginTop: "8px", padding: "8px", background: "rgba(0,150,255,0.1)", borderRadius: "6px" }}>
+                                                                    <div style={{ color: "#0096FF", fontSize: "0.8rem" }}>
+                                                                        🧤 Portiere: 
+                                                                        {giocatore.parate > 0 && ` ${giocatore.parate} parate`}
+                                                                        {giocatore.rigori_parati > 0 && ` • ${giocatore.rigori_parati} rigori parati`}
+                                                                        {giocatore.partite_portiere > 0 && ` • ${giocatore.partite_portiere} partite`}
+                                                                        {giocatore.assist_portiere > 0 && ` • ${giocatore.assist_portiere} assist`}
+                                                                        {punteggioBenji > 0 && ` • ${punteggioBenji} punti Benji`}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         
                                                         {loginForm.username === "admin" && (
@@ -1578,6 +1755,44 @@
                                                                 >
                                                                     -🏆
                                                                 </button>
+
+                                                                {/* CONTROLLI PORTIERE */}
+                                                                <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "5px" }}>
+                                                                    <input 
+                                                                        id={`parate-${giocatore.id}`}
+                                                                        type="number" 
+                                                                        placeholder="Parate" 
+                                                                        className="number-input"
+                                                                        style={{ width: "60px" }}
+                                                                    />
+                                                                    <button 
+                                                                        onClick={() => aggiungiStatPortiere(giocatore.id, 'parate', document.getElementById(`parate-${giocatore.id}`).value)}
+                                                                        style={{ padding: "6px 10px", background: "#0096FF", color: "white", fontSize: "10px" }}
+                                                                    >
+                                                                        +🧤
+                                                                    </button>
+
+                                                                    <input 
+                                                                        id={`rigori_parati-${giocatore.id}`}
+                                                                        type="number" 
+                                                                        placeholder="Rigori" 
+                                                                        className="number-input"
+                                                                        style={{ width: "60px" }}
+                                                                    />
+                                                                    <button 
+                                                                        onClick={() => aggiungiStatPortiere(giocatore.id, 'rigori_parati', document.getElementById(`rigori_parati-${giocatore.id}`).value)}
+                                                                        style={{ padding: "6px 10px", background: "#4CAF50", color: "white", fontSize: "10px" }}
+                                                                    >
+                                                                        +🎯
+                                                                    </button>
+
+                                                                    <button 
+                                                                        onClick={() => aggiungiPartitaPortiere(giocatore.id)}
+                                                                        style={{ padding: "6px 10px", background: "#9C27B0", color: "white", fontSize: "10px" }}
+                                                                    >
+                                                                        +🔄
+                                                                    </button>
+                                                                </div>
 
                                                                 <button 
                                                                     onClick={() => eliminaGiocatore(giocatore.id, giocatore.nome)}
@@ -2112,7 +2327,7 @@
                                     <div className="setting-item">
                                         <span>Versione</span>
                                         <span style={{ color: "#FFC107", fontWeight: "bold" }}>
-                                            2.0.0
+                                            2.1.0
                                         </span>
                                     </div>
                                 </div>
