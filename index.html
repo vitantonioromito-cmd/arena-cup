@@ -454,9 +454,38 @@
             text-align: center;
         }
         
-        .classifica-pos.oro { color: #FFD700; }
-        .classifica-pos.argento { color: #C0C0C0; }
-        .classifica-pos.bronzo { color: #CD7F32; }
+        .classifica-pos.oro { 
+            background: linear-gradient(135deg, #FFD700, #FFC107);
+            color: black;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .classifica-pos.argento { 
+            background: linear-gradient(135deg, #C0C0C0, #E0E0E0);
+            color: black;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .classifica-pos.bronzo { 
+            background: linear-gradient(135deg, #CD7F32, #B08D57);
+            color: white;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         
         .classifica-nome {
             flex: 1;
@@ -693,11 +722,80 @@
             border-left: 3px solid #4CAF50;
         }
         
+        /* IL MIO SCORE STYLES */
+        .score-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .score-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 15px;
+            border: 4px solid rgba(255,255,255,0.2);
+        }
+        
+        .score-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .score-stat-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .score-stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .score-stat-label {
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-fill.vinte { background: linear-gradient(90deg, #4CAF50, #45a049); }
+        .progress-fill.perse { background: linear-gradient(90deg, #F44336, #d32f2f); }
+        .progress-fill.pareggiate { background: linear-gradient(90deg, #FFC107, #FFA000); }
+        
         /* DESKTOP STYLES MIGLIORATI */
         @media (min-width: 768px) {
             .stats-grid { 
                 grid-template-columns: repeat(4, 1fr); 
                 gap: 20px; 
+            }
+            
+            .score-stats-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
             
             .app-content {
@@ -978,8 +1076,9 @@
 
             const chatContainerRef = useRef(null);
 
-            // 🔐 PASSWORD ADMIN CORRETTA - giulia85
+            // 🔐 PASSWORD ADMIN CORRETTE
             const ADMIN_PASSWORD = "giulia85";
+            const FABRIZIO_PASSWORD = "manetta2025";
 
             // 🔧 FUNZIONE LOGIN MIGLIORATA
             const handleLogin = (e) => {
@@ -990,9 +1089,17 @@
                     return;
                 }
                 
+                // Controllo password per admin e Fabrizio
                 if (loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") {
                     if (loginForm.password !== ADMIN_PASSWORD) {
                         alert("❌ Password admin errata! La password corretta è: giulia85");
+                        return;
+                    }
+                }
+                
+                if (loginForm.username.toLowerCase() === "fabrizio") {
+                    if (loginForm.password !== FABRIZIO_PASSWORD) {
+                        alert("❌ Password Fabrizio errata!");
                         return;
                     }
                 }
@@ -1070,7 +1177,10 @@
                         errori: data[key].errori || 0,
                         interventi_decisivi: data[key].interventi_decisivi || 0,
                         partite_portiere: data[key].partite_portiere || 0,
-                        presenze: data[key].presenze || 0
+                        presenze: data[key].presenze || 0,
+                        partite_vinte: data[key].partite_vinte || 0,
+                        partite_perse: data[key].partite_perse || 0,
+                        partite_pareggiate: data[key].partite_pareggiate || 0
                     })) : [];
                     setGiocatori(giocatoriArray);
                 });
@@ -1140,7 +1250,7 @@
                                     'calendar'
                                 );
                             } else if (JSON.stringify(vecchiaPartita.confermati) !== JSON.stringify(nuovaPartita.confermati)) {
-                                const nomeVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
+                                const nomeVisualizzato = getCurrentUserName();
                                 const eraConfermato = vecchiaPartita.confermati?.includes(nomeVisualizzato);
                                 const oraConfermato = nuovaPartita.confermati?.includes(nomeVisualizzato);
                                 
@@ -1196,6 +1306,13 @@
                 return Math.max(0, punteggio);
             };
 
+            // 📊 CALCOLO PERCENTUALE VITTORIE
+            const calcolaPercentualeVittorie = (giocatore) => {
+                const totali = (giocatore.partite_vinte || 0) + (giocatore.partite_perse || 0) + (giocatore.partite_pareggiate || 0);
+                if (totali === 0) return 0;
+                return ((giocatore.partite_vinte || 0) / totali * 100).toFixed(1);
+            };
+
             // 🏆 CALCOLA CLASSIFICHE
             const classificaMarcatori = [...giocatori]
                 .filter(g => (g.gol || 0) > 0)
@@ -1226,6 +1343,18 @@
             const classificaPresenze = [...giocatori]
                 .filter(g => (g.presenze || 0) > 0)
                 .sort((a, b) => (b.presenze || 0) - (a.presenze || 0))
+                .slice(0, 10);
+
+            // 🆕 CLASSIFICA PARTITE VINTE
+            const classificaVittorie = [...giocatori]
+                .filter(g => (g.partite_vinte || 0) > 0)
+                .sort((a, b) => (b.partite_vinte || 0) - (a.partite_vinte || 0))
+                .slice(0, 10);
+
+            // 🆕 CLASSIFICA PERCENTUALE VITTORIE
+            const classificaPercentualeVittorie = [...giocatori]
+                .filter(g => calcolaPercentualeVittorie(g) > 0)
+                .sort((a, b) => calcolaPercentualeVittorie(b) - calcolaPercentualeVittorie(a))
                 .slice(0, 10);
 
             const handleLogout = () => {
@@ -1259,7 +1388,7 @@
 
             // 📝 FUNZIONI PAGELLE MIGLIORATE (SOLO ADMIN)
             const aggiungiPagella = () => {
-                if (loginForm.username !== "admin") return alert("Solo Vitantonio può aggiungere pagelle!");
+                if (!isAdminUser()) return alert("Solo gli admin possono aggiungere pagelle!");
                 if (!nuovaPagella.giocatore.trim()) return alert("Seleziona un giocatore!");
                 if (!nuovaPagella.voto) return alert("Inserisci un voto!");
                 
@@ -1274,7 +1403,7 @@
                     commento: nuovaPagella.commento,
                     data: nuovaPagella.data,
                     fazione: nuovaPagella.fazione,
-                    autore: "Vitantonio",
+                    autore: getCurrentUserName(),
                     timestamp: Date.now(),
                     created_at: new Date().toLocaleString('it-IT')
                 }).then(() => {
@@ -1289,7 +1418,7 @@
                     
                     showPushNotification(
                         "📝 Nuova Pagella Aggiunta",
-                        `Vitantonio ha valutato ${nuovaPagella.giocatore} con ${nuovaPagella.voto}/10`,
+                        `${getCurrentUserName()} ha valutato ${nuovaPagella.giocatore} con ${nuovaPagella.voto}/10`,
                         'chat'
                     );
                 });
@@ -1334,7 +1463,7 @@
             };
 
             const eliminaPagella = (id, giocatore) => {
-                if (loginForm.username !== "admin") return alert("Solo Vitantonio può eliminare pagelle!");
+                if (!isAdminUser()) return alert("Solo gli admin possono eliminare pagelle!");
                 if (!confirm(`Eliminare la pagella di ${giocatore}?`)) return;
                 database.ref(`pagelle/${id}`).remove();
             };
@@ -1361,7 +1490,7 @@
 
             // ⚽ AGGIUNGI/RIMUOVI PRESENZA
             const aggiungiPresenza = (id, quantitaInput) => {
-                if (loginForm.username !== "admin") return alert("Solo admin può aggiornare le presenze!");
+                if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le presenze!");
                 
                 const giocatore = giocatori.find(g => g.id === id);
                 if (!giocatore) return;
@@ -1380,18 +1509,39 @@
                 });
             };
 
+            // 🆕 AGGIUNGI/RIMUOVI PARTITE VINTE/PERSE/PAREGGIATE
+            const aggiungiRisultatoPartita = (id, tipo, quantitaInput) => {
+                if (!isAdminUser()) return alert("Solo gli admin possono aggiornare i risultati!");
+                
+                const giocatore = giocatori.find(g => g.id === id);
+                if (!giocatore) return;
+                
+                const quantita = parseInt(quantitaInput);
+                if (isNaN(quantita)) return alert("Inserisci un numero valido!");
+                
+                const nuovoValore = Math.max(0, (giocatore[tipo] || 0) + quantita);
+                
+                database.ref(`giocatori/${id}`).update({
+                    [tipo]: nuovoValore
+                }).then(() => {
+                    const azione = quantita >= 0 ? "aggiunte" : "rimosse";
+                    const emoji = tipo === 'partite_vinte' ? '✅' : tipo === 'partite_perse' ? '❌' : '⚖️';
+                    const nome = tipo === 'partite_vinte' ? 'partite vinte' : tipo === 'partite_perse' ? 'partite perse' : 'partite pareggiate';
+                    alert(`${emoji} ${Math.abs(quantita)} ${nome} ${azione}!`);
+                    document.getElementById(`${tipo}-${id}`).value = "";
+                });
+            };
+
             // 🗓️ TOGGLE PRENOTAZIONE - SENZA DOPPI ADMIN - CORRETTO
             const togglePrenotazionePartita = (partitaId) => {
                 const partita = partite.find(p => p.id === partitaId);
                 if (!partita) return;
                 
-                const nomeVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
+                const nomeVisualizzato = getCurrentUserName();
                 let confermati = partita.confermati || [];
                 
-                // RIMUOVI EVENTUALI DOPPI "admin" o "Vitantonio"
-                confermati = confermati.filter((nome, index, array) => 
-                    array.indexOf(nome) === index
-                );
+                // RIMUOVI EVENTUALI DOPPI
+                confermati = [...new Set(confermati)];
                 
                 const limite = partita.triangolare ? 15 : 10;
                 const giaConfermato = confermati.includes(nomeVisualizzato);
@@ -1426,7 +1576,7 @@
 
             // ALTRE FUNZIONI ESISTENTI...
             const addGolAssist = (id, tipo, quantitaInput) => {
-                if (loginForm.username !== "admin") return alert("Solo admin può aggiornare Gol/Assist!");
+                if (!isAdminUser()) return alert("Solo gli admin possono aggiornare Gol/Assist!");
                 
                 const giocatore = giocatori.find(g => g.id === id);
                 if (!giocatore) return;
@@ -1448,7 +1598,7 @@
             };
 
             const addVoto = (id, votoInput) => {
-                if (loginForm.username !== "admin") return alert("Solo admin può aggiungere voti!");
+                if (!isAdminUser()) return alert("Solo gli admin possono aggiungere voti!");
                 const voto = parseFloat(votoInput);
                 if (voto < 1 || voto > 10) return alert("Voto deve essere tra 1 e 10!");
                 
@@ -1469,7 +1619,7 @@
 
             // 🏆 FUNZIONE MVP
             const addMVP = (id) => {
-                if (loginForm.username !== "admin") return alert("Solo admin può assegnare MVP!");
+                if (!isAdminUser()) return alert("Solo gli admin possono assegnare MVP!");
                 
                 const giocatore = giocatori.find(g => g.id === id);
                 if (!giocatore) return;
@@ -1492,7 +1642,7 @@
             const inviaMessaggio = () => {
                 if (!nuovoMessaggio.trim()) return;
                 
-                const mittenteVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
+                const mittenteVisualizzato = getCurrentUserName();
                 
                 database.ref('messaggi').push({
                     mittente: loginForm.username,
@@ -1529,7 +1679,10 @@
                     giocatoriConMedia.reduce((sum, g) => sum + (g.media_calcolata || 0), 0) / giocatoriConMedia.length : 0,
                 totaleMVP: giocatoriConMedia.reduce((sum, g) => sum + (g.mvp_count || 0), 0),
                 totalePortieri: giocatori.filter(g => g.partite_portiere > 0).length,
-                totalePresenze: giocatoriConMedia.reduce((sum, g) => sum + (g.presenze || 0), 0)
+                totalePresenze: giocatoriConMedia.reduce((sum, g) => sum + (g.presenze || 0), 0),
+                totaleVinte: giocatoriConMedia.reduce((sum, g) => sum + (g.partite_vinte || 0), 0),
+                totalePerse: giocatoriConMedia.reduce((sum, g) => sum + (g.partite_perse || 0), 0),
+                totalePareggiate: giocatoriConMedia.reduce((sum, g) => sum + (g.partite_pareggiate || 0), 0)
             };
 
             const formattaData = (dataString) => {
@@ -1555,15 +1708,28 @@
             };
 
             const isCurrentUser = (nomeGiocatore) => {
-                if (loginForm.username === "admin") {
-                    return nomeGiocatore === "Vitantonio";
-                } else {
-                    return nomeGiocatore === loginForm.username;
-                }
+                return nomeGiocatore === loginForm.username;
+            };
+
+            const isAdminUser = () => {
+                return loginForm.username === "admin" || loginForm.username === "vitantonio" || loginForm.username === "fabrizio";
             };
 
             const getCurrentUserName = () => {
-                return loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
+                if (loginForm.username === "admin" || loginForm.username === "vitantonio") {
+                    return "Vitantonio";
+                }
+                return loginForm.username;
+            };
+
+            // 🆕 TROVA GIOCATORE CORRENTE
+            const getCurrentGiocatore = () => {
+                return giocatori.find(g => g.nome === loginForm.username) || {};
+            };
+
+            // 🆕 PAGINE PERSONALI DEL GIOCATORE
+            const getMiePagelle = () => {
+                return pagelle.filter(p => p.giocatore === loginForm.username);
             };
 
             // 🔧 SEZIONE LOGIN CORRETTA
@@ -1585,7 +1751,9 @@
                                     autoFocus
                                 />
                                 
-                                {(loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") && (
+                                {(loginForm.username.toLowerCase() === "admin" || 
+                                  loginForm.username.toLowerCase() === "vitantonio" ||
+                                  loginForm.username.toLowerCase() === "fabrizio") && (
                                     <>
                                         <input 
                                             type="password"
@@ -1597,7 +1765,9 @@
                                             autoComplete="current-password"
                                         />
                                         <p className="password-hint">
-                                            🔐 Password admin: giulia85
+                                            {loginForm.username.toLowerCase() === "fabrizio" 
+                                                ? "🔐 Password Fabrizio: manetta2025" 
+                                                : "🔐 Password admin: giulia85"}
                                         </p>
                                     </>
                                 )}
@@ -1606,7 +1776,11 @@
                                     type="submit"
                                     className="login-button"
                                 >
-                                    {loginForm.username.toLowerCase() === "admin" ? "🔐 Accedi come Admin" : "🚀 Accedi"}
+                                    {loginForm.username.toLowerCase() === "admin" || 
+                                     loginForm.username.toLowerCase() === "vitantonio" ||
+                                     loginForm.username.toLowerCase() === "fabrizio" 
+                                        ? "🔐 Accedi come Admin" 
+                                        : "🚀 Accedi"}
                                 </button>
                             </form>
                         </div>
@@ -1624,6 +1798,7 @@
                                     {activeTab === "classifica" ? "Classifica" : 
                                      activeTab === "calendario" ? "Calendario" : 
                                      activeTab === "presenze" ? "Partite Giocate" : 
+                                     activeTab === "mioscore" ? "Il Mio Score" :
                                      activeTab === "chat" ? "Chat" : 
                                      activeTab === "pagelle" ? "Pagelle" : "Impostazioni"} | 
                                     {stats.totaleGiocatori} giocatori
@@ -1672,6 +1847,12 @@
                                 onClick={() => setActiveTab("presenze")}
                             >
                                 📊 Partite Giocate
+                            </button>
+                            <button
+                                className={`desktop-nav-button ${activeTab === "mioscore" ? "active" : ""}`}
+                                onClick={() => setActiveTab("mioscore")}
+                            >
+                                ⭐ Il Mio Score
                             </button>
                             <button
                                 className={`desktop-nav-button ${activeTab === "chat" ? "active" : ""}`}
@@ -1888,7 +2069,7 @@
                                                     </div>
                                                     
                                                     {/* CONTROLLI ADMIN */}
-                                                    {loginForm.username === "admin" && (
+                                                    {isAdminUser() && (
                                                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
                                                             <input 
                                                                 id={`gol-${giocatore.id}`}
@@ -1995,7 +2176,7 @@
                                         .sort((a, b) => new Date(a.data) - new Date(b.data))
                                         .map(partita => {
                                             const stato = getStatoPartita(partita);
-                                            const nomeVisualizzato = loginForm.username === "admin" ? "Vitantonio" : loginForm.username;
+                                            const nomeVisualizzato = getCurrentUserName();
                                             
                                             // RIMUOVI DOPPI DALLE PRENOTAZIONI
                                             let confermatiUnici = partita.confermati || [];
@@ -2059,10 +2240,10 @@
                             </div>
                         )}
 
-                        {/* NUOVO TAB: PARTITE GIOCATE/PRESENZE */}
+                        {/* NUOVO TAB: PARTITE GIOCATE/PRESENZE CON STATISTICHE AVANZATE */}
                         {activeTab === "presenze" && (
                             <div>
-                                <h2>📊 Partite Giocate / Presenze</h2>
+                                <h2>📊 Partite Giocate / Statistiche Partite</h2>
                                 
                                 <div className="stats-grid">
                                     <div className="stat-card">
@@ -2070,18 +2251,16 @@
                                         <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totalePresenze}</p>
                                     </div>
                                     <div className="stat-card">
-                                        <h3 style={{ color: "#E91E63", margin: "0 0 10px 0", fontSize: "1rem" }}>👥 Giocatori Attivi</h3>
-                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
-                                            {giocatori.filter(g => (g.presenze || 0) > 0).length}
-                                        </p>
+                                        <h3 style={{ color: "#4CAF50", margin: "0 0 10px 0", fontSize: "1rem" }}>✅ Partite Vinte</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleVinte}</p>
                                     </div>
                                     <div className="stat-card">
-                                        <h3 style={{ color: "#2196F3", margin: "0 0 10px 0", fontSize: "1rem" }}>📈 Media Partite</h3>
-                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
-                                            {giocatori.filter(g => (g.presenze || 0) > 0).length > 0 
-                                                ? (stats.totalePresenze / giocatori.filter(g => (g.presenze || 0) > 0).length).toFixed(1) 
-                                                : "0.0"}
-                                        </p>
+                                        <h3 style={{ color: "#F44336", margin: "0 0 10px 0", fontSize: "1rem" }}>❌ Partite Perse</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totalePerse}</p>
+                                    </div>
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#FFC107", margin: "0 0 10px 0", fontSize: "1rem" }}>⚖️ Partite Pareggiate</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totalePareggiate}</p>
                                     </div>
                                 </div>
 
@@ -2102,7 +2281,6 @@
                                                 <div className="classifica-nome">
                                                     {giocatore.nome}
                                                     {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                    <span className="presenze-badge">{giocatore.presenze || 0} partite</span>
                                                 </div>
                                                 <div className="classifica-valore">
                                                     {giocatore.presenze || 0}
@@ -2112,10 +2290,62 @@
                                     )}
                                 </div>
 
-                                {/* LISTA COMPLETA GIOCATORI CON CONTROLLI PRESENZE (SOLO ADMIN) */}
-                                {loginForm.username === "admin" && (
+                                {/* 🆕 CLASSIFICA PARTITE VINTE */}
+                                <div className="classifica-card" style={{ marginTop: "20px" }}>
+                                    <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>🏆 Classifica Partite Vinte</h3>
+                                    {classificaVittorie.length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="icon">✅</div>
+                                            <p>Nessuna partita vinta ancora.</p>
+                                        </div>
+                                    ) : (
+                                        classificaVittorie.map((giocatore, index) => (
+                                            <div key={giocatore.id} className="classifica-item">
+                                                <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                    {index + 1}
+                                                </div>
+                                                <div className="classifica-nome">
+                                                    {giocatore.nome}
+                                                    {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                </div>
+                                                <div className="classifica-valore">
+                                                    {giocatore.partite_vinte || 0} ✅
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                {/* 🆕 CLASSIFICA PERCENTUALE VITTORIE */}
+                                <div className="classifica-card" style={{ marginTop: "20px" }}>
+                                    <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>📈 Classifica Percentuale Vittorie</h3>
+                                    {classificaPercentualeVittorie.length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="icon">📊</div>
+                                            <p>Nessuna statistica vittorie ancora.</p>
+                                        </div>
+                                    ) : (
+                                        classificaPercentualeVittorie.map((giocatore, index) => (
+                                            <div key={giocatore.id} className="classifica-item">
+                                                <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                    {index + 1}
+                                                </div>
+                                                <div className="classifica-nome">
+                                                    {giocatore.nome}
+                                                    {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                </div>
+                                                <div className="classifica-valore">
+                                                    {calcolaPercentualeVittorie(giocatore)}%
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                {/* LISTA COMPLETA GIOCATORI CON CONTROLLI PRESENZE E RISULTATI (SOLO ADMIN) */}
+                                {isAdminUser() && (
                                     <div style={{ marginTop: "30px" }}>
-                                        <h3>👥 Gestione Presenze Giocatori</h3>
+                                        <h3>👥 Gestione Statistiche Partite</h3>
                                         {giocatori.length === 0 ? (
                                             <p style={{ textAlign: "center", color: "#888", padding: "20px" }}>
                                                 Nessun giocatore ancora.
@@ -2132,9 +2362,16 @@
                                                                     <span className="presenze-badge">{giocatore.presenze} partite</span>
                                                                 )}
                                                             </h4>
+                                                            <div style={{ display: "flex", gap: "10px", marginTop: "8px", flexWrap: "wrap" }}>
+                                                                <span style={{ color: "#4CAF50" }}>✅ {giocatore.partite_vinte || 0}</span>
+                                                                <span style={{ color: "#F44336" }}>❌ {giocatore.partite_perse || 0}</span>
+                                                                <span style={{ color: "#FFC107" }}>⚖️ {giocatore.partite_pareggiate || 0}</span>
+                                                                <span style={{ color: "#2196F3" }}>📈 {calcolaPercentualeVittorie(giocatore)}%</span>
+                                                            </div>
                                                         </div>
                                                         
                                                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+                                                            {/* PRESENZE */}
                                                             <input 
                                                                 id={`presenze-${giocatore.id}`}
                                                                 type="number" 
@@ -2155,6 +2392,72 @@
                                                             >
                                                                 ±📊
                                                             </button>
+
+                                                            {/* PARTITE VINTE */}
+                                                            <input 
+                                                                id={`partite_vinte-${giocatore.id}`}
+                                                                type="number" 
+                                                                placeholder="±Vinte" 
+                                                                className="number-input"
+                                                            />
+                                                            <button 
+                                                                onClick={() => aggiungiRisultatoPartita(giocatore.id, 'partite_vinte', document.getElementById(`partite_vinte-${giocatore.id}`).value)}
+                                                                style={{ 
+                                                                    padding: "8px 12px", 
+                                                                    background: "#4CAF50",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "12px"
+                                                                }}
+                                                            >
+                                                                ±✅
+                                                            </button>
+
+                                                            {/* PARTITE PERSE */}
+                                                            <input 
+                                                                id={`partite_perse-${giocatore.id}`}
+                                                                type="number" 
+                                                                placeholder="±Perse" 
+                                                                className="number-input"
+                                                            />
+                                                            <button 
+                                                                onClick={() => aggiungiRisultatoPartita(giocatore.id, 'partite_perse', document.getElementById(`partite_perse-${giocatore.id}`).value)}
+                                                                style={{ 
+                                                                    padding: "8px 12px", 
+                                                                    background: "#F44336",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "12px"
+                                                                }}
+                                                            >
+                                                                ±❌
+                                                            </button>
+
+                                                            {/* PARTITE PAREGGIATE */}
+                                                            <input 
+                                                                id={`partite_pareggiate-${giocatore.id}`}
+                                                                type="number" 
+                                                                placeholder="±Pareggiate" 
+                                                                className="number-input"
+                                                            />
+                                                            <button 
+                                                                onClick={() => aggiungiRisultatoPartita(giocatore.id, 'partite_pareggiate', document.getElementById(`partite_pareggiate-${giocatore.id}`).value)}
+                                                                style={{ 
+                                                                    padding: "8px 12px", 
+                                                                    background: "#FFC107",
+                                                                    color: "black",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "12px"
+                                                                }}
+                                                            >
+                                                                ±⚖️
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -2162,6 +2465,169 @@
                                         )}
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* 🆕 TAB: IL MIO SCORE - PAGINA PERSONALE */}
+                        {activeTab === "mioscore" && (
+                            <div>
+                                <div className="score-header">
+                                    <div className="score-avatar">
+                                        {loginForm.username.charAt(0).toUpperCase()}
+                                    </div>
+                                    <h2>⭐ Il Mio Score - {loginForm.username}</h2>
+                                    <p style={{ color: "#ccc", marginTop: "5px" }}>
+                                        Il tuo rendimento personale nella Arena Cup
+                                    </p>
+                                </div>
+
+                                <div className="score-stats-grid">
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">📊 Partite Giocate</div>
+                                        <div className="score-stat-value">{getCurrentGiocatore().presenze || 0}</div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">✅ Partite Vinte</div>
+                                        <div className="score-stat-value" style={{ color: "#4CAF50" }}>
+                                            {getCurrentGiocatore().partite_vinte || 0}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">❌ Partite Perse</div>
+                                        <div className="score-stat-value" style={{ color: "#F44336" }}>
+                                            {getCurrentGiocatore().partite_perse || 0}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">⚖️ Partite Pareggiate</div>
+                                        <div className="score-stat-value" style={{ color: "#FFC107" }}>
+                                            {getCurrentGiocatore().partite_pareggiate || 0}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* GRAFICO PERCENTUALE PARTITE */}
+                                {(getCurrentGiocatore().presenze || 0) > 0 && (
+                                    <div className="score-stat-card" style={{ margin: "20px 0" }}>
+                                        <div className="score-stat-label">📈 Distribuzione Partite</div>
+                                        <div style={{ margin: "15px 0" }}>
+                                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
+                                                <span>✅ Vinte: {getCurrentGiocatore().partite_vinte || 0}</span>
+                                                <span>{((getCurrentGiocatore().partite_vinte || 0) / (getCurrentGiocatore().presenze || 1) * 100).toFixed(1)}%</span>
+                                            </div>
+                                            <div className="progress-bar">
+                                                <div 
+                                                    className="progress-fill vinte" 
+                                                    style={{ width: `${((getCurrentGiocatore().partite_vinte || 0) / (getCurrentGiocatore().presenze || 1) * 100)}%` }}
+                                                ></div>
+                                            </div>
+                                            
+                                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px", marginTop: "10px" }}>
+                                                <span>❌ Perse: {getCurrentGiocatore().partite_perse || 0}</span>
+                                                <span>{((getCurrentGiocatore().partite_perse || 0) / (getCurrentGiocatore().presenze || 1) * 100).toFixed(1)}%</span>
+                                            </div>
+                                            <div className="progress-bar">
+                                                <div 
+                                                    className="progress-fill perse" 
+                                                    style={{ width: `${((getCurrentGiocatore().partite_perse || 0) / (getCurrentGiocatore().presenze || 1) * 100)}%` }}
+                                                ></div>
+                                            </div>
+                                            
+                                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px", marginTop: "10px" }}>
+                                                <span>⚖️ Pareggiate: {getCurrentGiocatore().partite_pareggiate || 0}</span>
+                                                <span>{((getCurrentGiocatore().partite_pareggiate || 0) / (getCurrentGiocatore().presenze || 1) * 100).toFixed(1)}%</span>
+                                            </div>
+                                            <div className="progress-bar">
+                                                <div 
+                                                    className="progress-fill pareggiate" 
+                                                    style={{ width: `${((getCurrentGiocatore().partite_pareggiate || 0) / (getCurrentGiocatore().presenze || 1) * 100)}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="score-stats-grid">
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">⚽ Gol Segnati</div>
+                                        <div className="score-stat-value" style={{ color: "#FFD700" }}>
+                                            {getCurrentGiocatore().gol || 0}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">🎯 Assist</div>
+                                        <div className="score-stat-value" style={{ color: "#4CAF50" }}>
+                                            {getCurrentGiocatore().assist || 0}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">⭐ Media Voto</div>
+                                        <div className="score-stat-value" style={{ color: "#2196F3" }}>
+                                            {getCurrentGiocatore().media_calcolata ? getCurrentGiocatore().media_calcolata.toFixed(2) : "0.00"}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">🏆 MVP</div>
+                                        <div className="score-stat-value" style={{ color: "#FFC107" }}>
+                                            {getCurrentGiocatore().mvp_count || 0}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* STATISTICHE PORTA (se il giocatore è portiere) */}
+                                {(getCurrentGiocatore().parate > 0 || getCurrentGiocatore().partite_portiere > 0) && (
+                                    <div className="score-stat-card" style={{ margin: "20px 0" }}>
+                                        <div className="score-stat-label">🧤 Statistiche Portiere</div>
+                                        <div className="mvp-stats" style={{ justifyContent: "center", marginTop: "15px" }}>
+                                            <div className="mvp-stat">Parate: {getCurrentGiocatore().parate || 0}</div>
+                                            <div className="mvp-stat">Partite: {getCurrentGiocatore().partite_portiere || 0}</div>
+                                            {getCurrentGiocatore().rigori_parati > 0 && <div className="mvp-stat">Rigori: {getCurrentGiocatore().rigori_parati}</div>}
+                                            {getCurrentGiocatore().parate_difficili > 0 && <div className="mvp-stat">Parate difficili: {getCurrentGiocatore().parate_difficili}</div>}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* LE MIE ULTIME PAGELLE */}
+                                <div style={{ marginTop: "30px" }}>
+                                    <h3>📝 Le Mie Ultime Pagelle</h3>
+                                    {getMiePagelle().length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="icon">📝</div>
+                                            <p>Nessuna pagella ancora.</p>
+                                        </div>
+                                    ) : (
+                                        getMiePagelle().slice(0, 5).map(pagella => (
+                                            <div key={pagella.id} className={`pagella-card ${getClasseFazione(pagella.fazione)}`}>
+                                                <div className="pagella-header">
+                                                    <div>
+                                                        <div className="pagella-giocatore">
+                                                            {pagella.giocatore}
+                                                            {getBadgeFazione(pagella.fazione)}
+                                                        </div>
+                                                        <div className="pagella-data">
+                                                            Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
+                                                        </div>
+                                                    </div>
+                                                    <div className="pagella-voto">
+                                                        {pagella.voto}/10
+                                                    </div>
+                                                </div>
+                                                
+                                                {pagella.commento && (
+                                                    <div className="pagella-commento">
+                                                        "{pagella.commento}"
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
                         )}
 
@@ -2191,8 +2657,8 @@
                                             .sort((a, b) => a.timestamp - b.timestamp)
                                             .map(msg => {
                                                 const isOwnMessage = msg.mittente === loginForm.username;
-                                                const isAdminMessage = msg.mittente === "admin";
-                                                const mittenteVisualizzato = isAdminMessage ? "Vitantonio" : msg.mittente;
+                                                const isAdminMessage = msg.mittente === "admin" || msg.mittente === "vitantonio" || msg.mittente === "fabrizio";
+                                                const mittenteVisualizzato = isAdminMessage ? (msg.mittente === "fabrizio" ? "Fabrizio" : "Vitantonio") : msg.mittente;
                                                 
                                                 return (
                                                     <div 
@@ -2210,7 +2676,7 @@
                                                                 </p>
                                                             </div>
                                                             <div style={{ display: "flex", gap: "5px", marginLeft: "10px" }}>
-                                                                {(isOwnMessage || loginForm.username === "admin") && (
+                                                                {(isOwnMessage || isAdminUser()) && (
                                                                     <button 
                                                                         onClick={() => eliminaMessaggio(msg.id)}
                                                                         style={{ 
@@ -2265,7 +2731,7 @@
                                 <h2>📝 Pagelle Giocatori</h2>
 
                                 {/* FORM AGGIUNGI PAGELLA MIGLIORATO (SOLO ADMIN) */}
-                                {loginForm.username === "admin" && (
+                                {isAdminUser() && (
                                     <div className="pagella-form">
                                         <h3 style={{ color: "#FFC107", marginBottom: "15px" }}>➕ Aggiungi Nuova Pagella</h3>
                                         <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
@@ -2365,7 +2831,7 @@
                                             )}
                                             
                                             {/* MODIFICA PAGELLA (SOLO ADMIN) - FUNZIONANTE */}
-                                            {loginForm.username === "admin" && (
+                                            {isAdminUser() && (
                                                 <div style={{ marginTop: "15px" }}>
                                                     {pagellaInModifica === pagella.id ? (
                                                         <div className="modifica-pagella-form">
@@ -2586,6 +3052,14 @@
                         >
                             <div className="icon">📊</div>
                             <div className="label">Partite</div>
+                        </button>
+                        
+                        <button
+                            className={`nav-button ${activeTab === "mioscore" ? "active" : ""}`}
+                            onClick={() => setActiveTab("mioscore")}
+                        >
+                            <div className="icon">⭐</div>
+                            <div className="label">Il Mio Score</div>
                         </button>
                         
                         <button
