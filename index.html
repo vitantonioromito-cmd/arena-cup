@@ -1177,10 +1177,7 @@
                         errori: data[key].errori || 0,
                         interventi_decisivi: data[key].interventi_decisivi || 0,
                         partite_portiere: data[key].partite_portiere || 0,
-                        presenze: data[key].presenze || 0,
-                        partite_vinte: data[key].partite_vinte || 0,
-                        partite_perse: data[key].partite_perse || 0,
-                        partite_pareggiate: data[key].partite_pareggiate || 0
+                        presenze: data[key].presenze || 0
                     })) : [];
                     setGiocatori(giocatoriArray);
                 });
@@ -1306,7 +1303,7 @@
                 return Math.max(0, punteggio);
             };
 
-            // 📊 CALCOLO PERCENTUALE VITTORIE
+            // 📊 CALCOLO PERCENTUALE VITTORIE - CORRETTO
             const calcolaPercentualeVittorie = (giocatore) => {
                 const totali = (giocatore.partite_vinte || 0) + (giocatore.partite_perse || 0) + (giocatore.partite_pareggiate || 0);
                 if (totali === 0) return 0;
@@ -1353,8 +1350,15 @@
 
             // 🆕 CLASSIFICA PERCENTUALE VITTORIE (TOP 3)
             const classificaPercentualeVittorie = [...giocatori]
-                .filter(g => calcolaPercentualeVittorie(g) > 0)
-                .sort((a, b) => calcolaPercentualeVittorie(b) - calcolaPercentualeVittorie(a))
+                .filter(g => {
+                    const totali = (g.partite_vinte || 0) + (g.partite_perse || 0) + (g.partite_pareggiate || 0);
+                    return totali > 0;
+                })
+                .map(g => ({
+                    ...g,
+                    percentuale: calcolaPercentualeVittorie(g)
+                }))
+                .sort((a, b) => parseFloat(b.percentuale) - parseFloat(a.percentuale))
                 .slice(0, 3);
 
             const handleLogout = () => {
@@ -1386,7 +1390,7 @@
                 localStorage.setItem('calendarNotificationsEnabled', newState.toString());
             };
 
-            // 📝 FUNZIONI PAGELLE MIGLIORATE (SOLO ADMIN E FABRIZIO)
+            // 📝 FUNZIONI PAGELLE MIGLIORATE (SOLO ADMIN)
             const aggiungiPagella = () => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiungere pagelle!");
                 if (!nuovaPagella.giocatore.trim()) return alert("Seleziona un giocatore!");
@@ -1424,8 +1428,9 @@
                 });
             };
 
-            // 🎯 MODIFICA PAGELLA - FUNZIONANTE (SOLO ADMIN E FABRIZIO)
+            // 🎯 MODIFICA PAGELLA - FUNZIONANTE (SOLO ADMIN)
             const avviaModificaPagella = (pagella) => {
+                if (!isAdminUser()) return alert("Solo gli admin possono modificare pagelle!");
                 setPagellaInModifica(pagella.id);
                 setModificaPagella({
                     voto: pagella.voto.toString(),
@@ -1468,27 +1473,7 @@
                 database.ref(`pagelle/${id}`).remove();
             };
 
-            // 🎯 FUNZIONE PER OTTENERE CLASSE FAZIONE
-            const getClasseFazione = (fazione) => {
-                switch(fazione) {
-                    case 'bianca': return 'fazione-bianca';
-                    case 'nera': return 'fazione-nera';
-                    case 'rossa': return 'fazione-rossa';
-                    default: return '';
-                }
-            };
-
-            // 🎯 FUNZIONE PER OTTENERE BADGE FAZIONE
-            const getBadgeFazione = (fazione) => {
-                switch(fazione) {
-                    case 'bianca': return <span className="badge-fazione badge-bianca">ARMATA BIANCA</span>;
-                    case 'nera': return <span className="badge-fazione badge-nera">ARMATA NERA</span>;
-                    case 'rossa': return <span className="badge-fazione badge-rossa">ARMATA ROSSA</span>;
-                    default: return null;
-                }
-            };
-
-            // ⚽ AGGIUNGI/RIMUOVI PRESENZA (SOLO ADMIN E FABRIZIO)
+            // ⚽ AGGIUNGI/RIMUOVI PRESENZA (SOLO ADMIN)
             const aggiungiPresenza = (id, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le presenze!");
                 
@@ -1509,29 +1494,6 @@
                 });
             };
 
-            // 🆕 AGGIUNGI/RIMUOVI PARTITE VINTE/PERSE/PAREGGIATE (SOLO ADMIN E FABRIZIO)
-            const aggiungiRisultatoPartita = (id, tipo, quantitaInput) => {
-                if (!isAdminUser()) return alert("Solo gli admin possono aggiornare i risultati!");
-                
-                const giocatore = giocatori.find(g => g.id === id);
-                if (!giocatore) return;
-                
-                const quantita = parseInt(quantitaInput);
-                if (isNaN(quantita)) return alert("Inserisci un numero valido!");
-                
-                const nuovoValore = Math.max(0, (giocatore[tipo] || 0) + quantita);
-                
-                database.ref(`giocatori/${id}`).update({
-                    [tipo]: nuovoValore
-                }).then(() => {
-                    const azione = quantita >= 0 ? "aggiunte" : "rimosse";
-                    const emoji = tipo === 'partite_vinte' ? '✅' : tipo === 'partite_perse' ? '❌' : '⚖️';
-                    const nome = tipo === 'partite_vinte' ? 'partite vinte' : tipo === 'partite_perse' ? 'partite perse' : 'partite pareggiate';
-                    alert(`${emoji} ${Math.abs(quantita)} ${nome} ${azione}!`);
-                    document.getElementById(`${tipo}-${id}`).value = "";
-                });
-            };
-
             // 🗓️ TOGGLE PRENOTAZIONE - SENZA DOPPI - CORRETTO
             const togglePrenotazionePartita = (partitaId) => {
                 const partita = partite.find(p => p.id === partitaId);
@@ -1541,7 +1503,7 @@
                 let confermati = partita.confermati || [];
                 
                 // RIMUOVI EVENTUALI DOPPI - CORREZIONE DEFINITIVA
-                confermati = confermati.filter(name => name !== "Vitantonio" && name !== "admin");
+                confermati = confermati.filter(name => name !== "Vitantonio" && name !== "admin" && name !== "Fabrizio");
                 
                 const limite = partita.triangolare ? 15 : 10;
                 const giaConfermato = confermati.includes(nomeVisualizzato);
@@ -1614,7 +1576,7 @@
                 });
             };
 
-            // 🏆 FUNZIONE MVP (SOLO ADMIN E FABRIZIO)
+            // 🏆 FUNZIONE MVP (SOLO ADMIN)
             const addMVP = (id) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono assegnare MVP!");
                 
@@ -1676,10 +1638,7 @@
                     giocatoriConMedia.reduce((sum, g) => sum + (g.media_calcolata || 0), 0) / giocatoriConMedia.length : 0,
                 totaleMVP: giocatoriConMedia.reduce((sum, g) => sum + (g.mvp_count || 0), 0),
                 totalePortieri: giocatori.filter(g => g.partite_portiere > 0).length,
-                totalePresenze: giocatoriConMedia.reduce((sum, g) => sum + (g.presenze || 0), 0),
-                totaleVinte: giocatoriConMedia.reduce((sum, g) => sum + (g.partite_vinte || 0), 0),
-                totalePerse: giocatoriConMedia.reduce((sum, g) => sum + (g.partite_perse || 0), 0),
-                totalePareggiate: giocatoriConMedia.reduce((sum, g) => sum + (g.partite_pareggiate || 0), 0)
+                totalePresenze: giocatoriConMedia.reduce((sum, g) => sum + (g.presenze || 0), 0)
             };
 
             const formattaData = (dataString) => {
@@ -1708,9 +1667,9 @@
                 return nomeGiocatore === loginForm.username;
             };
 
-            // 🎯 FUNZIONI PERMESSI CORRETTE - FABRIZIO STESSI POTERI
+            // 🎯 FUNZIONI PERMESSI CORRETTE - SOLO ADMIN HA TUTTI I POTERI
             const isAdminUser = () => {
-                return loginForm.username === "admin" || loginForm.username === "vitantonio" || loginForm.username === "fabrizio";
+                return loginForm.username === "admin" || loginForm.username === "vitantonio";
             };
 
             const getCurrentUserName = () => {
@@ -1723,7 +1682,7 @@
                 return loginForm.username;
             };
 
-            // 🆕 TROVA GIOCATORE CORRENTE
+            // 🆕 TROVA GIOCATORE CORRENTE - CORRETTO
             const getCurrentGiocatore = () => {
                 return giocatori.find(g => g.nome === loginForm.username) || {};
             };
@@ -2061,7 +2020,7 @@
                                                         )}
                                                     </div>
                                                     
-                                                    {/* CONTROLLI ADMIN - FABRIZIO STESSI POTERI */}
+                                                    {/* CONTROLLI ADMIN - SOLO ADMIN HA TUTTI I POTERI */}
                                                     {isAdminUser() && (
                                                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
                                                             <input 
@@ -2173,7 +2132,7 @@
                                             
                                             // RIMUOVI DOPPI DALLE PRENOTAZIONI - CORREZIONE DEFINITIVA
                                             let confermatiUnici = partita.confermati || [];
-                                            confermatiUnici = confermatiUnici.filter(name => name !== "Vitantonio" && name !== "admin");
+                                            confermatiUnici = confermatiUnici.filter(name => name !== "Vitantonio" && name !== "admin" && name !== "Fabrizio");
                                             
                                             const isConfermato = confermatiUnici.includes(nomeVisualizzato);
                                             const limite = partita.triangolare ? 15 : 10;
@@ -2257,7 +2216,7 @@
                                                     {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
                                                 </div>
                                                 <div className="classifica-valore">
-                                                    {calcolaPercentualeVittorie(giocatore)}%
+                                                    {giocatore.percentuale}%
                                                 </div>
                                             </div>
                                         ))
@@ -2316,10 +2275,10 @@
                                     </div>
                                 </div>
 
-                                {/* LISTA COMPLETA GIOCATORI CON CONTROLLI PRESENZE E RISULTATI (SOLO ADMIN E FABRIZIO) */}
+                                {/* LISTA COMPLETA GIOCATORI CON CONTROLLI PRESENZE (SOLO ADMIN) */}
                                 {isAdminUser() && (
                                     <div style={{ marginTop: "30px" }}>
-                                        <h3>👥 Gestione Statistiche Partite</h3>
+                                        <h3>👥 Gestione Presenze</h3>
                                         {giocatori.length === 0 ? (
                                             <p style={{ textAlign: "center", color: "#888", padding: "20px" }}>
                                                 Nessun giocatore ancora.
@@ -2336,12 +2295,6 @@
                                                                     <span className="presenze-badge">{giocatore.presenze} partite</span>
                                                                 )}
                                                             </h4>
-                                                            <div style={{ display: "flex", gap: "10px", marginTop: "8px", flexWrap: "wrap" }}>
-                                                                <span style={{ color: "#4CAF50" }}>✅ {giocatore.partite_vinte || 0}</span>
-                                                                <span style={{ color: "#F44336" }}>❌ {giocatore.partite_perse || 0}</span>
-                                                                <span style={{ color: "#FFC107" }}>⚖️ {giocatore.partite_pareggiate || 0}</span>
-                                                                <span style={{ color: "#2196F3" }}>📈 {calcolaPercentualeVittorie(giocatore)}%</span>
-                                                            </div>
                                                         </div>
                                                         
                                                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
@@ -2365,72 +2318,6 @@
                                                                 }}
                                                             >
                                                                 ±📊
-                                                            </button>
-
-                                                            {/* PARTITE VINTE */}
-                                                            <input 
-                                                                id={`partite_vinte-${giocatore.id}`}
-                                                                type="number" 
-                                                                placeholder="±Vinte" 
-                                                                className="number-input"
-                                                            />
-                                                            <button 
-                                                                onClick={() => aggiungiRisultatoPartita(giocatore.id, 'partite_vinte', document.getElementById(`partite_vinte-${giocatore.id}`).value)}
-                                                                style={{ 
-                                                                    padding: "8px 12px", 
-                                                                    background: "#4CAF50",
-                                                                    color: "white",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer",
-                                                                    fontSize: "12px"
-                                                                }}
-                                                            >
-                                                                ±✅
-                                                            </button>
-
-                                                            {/* PARTITE PERSE */}
-                                                            <input 
-                                                                id={`partite_perse-${giocatore.id}`}
-                                                                type="number" 
-                                                                placeholder="±Perse" 
-                                                                className="number-input"
-                                                            />
-                                                            <button 
-                                                                onClick={() => aggiungiRisultatoPartita(giocatore.id, 'partite_perse', document.getElementById(`partite_perse-${giocatore.id}`).value)}
-                                                                style={{ 
-                                                                    padding: "8px 12px", 
-                                                                    background: "#F44336",
-                                                                    color: "white",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer",
-                                                                    fontSize: "12px"
-                                                                }}
-                                                            >
-                                                                ±❌
-                                                            </button>
-
-                                                            {/* PARTITE PAREGGIATE */}
-                                                            <input 
-                                                                id={`partite_pareggiate-${giocatore.id}`}
-                                                                type="number" 
-                                                                placeholder="±Pareggiate" 
-                                                                className="number-input"
-                                                            />
-                                                            <button 
-                                                                onClick={() => aggiungiRisultatoPartita(giocatore.id, 'partite_pareggiate', document.getElementById(`partite_pareggiate-${giocatore.id}`).value)}
-                                                                style={{ 
-                                                                    padding: "8px 12px", 
-                                                                    background: "#FFC107",
-                                                                    color: "black",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer",
-                                                                    fontSize: "12px"
-                                                                }}
-                                                            >
-                                                                ±⚖️
                                                             </button>
                                                         </div>
                                                     </div>
@@ -2462,70 +2349,6 @@
                                     </div>
                                     
                                     <div className="score-stat-card">
-                                        <div className="score-stat-label">✅ Partite Vinte</div>
-                                        <div className="score-stat-value" style={{ color: "#4CAF50" }}>
-                                            {getCurrentGiocatore().partite_vinte || 0}
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="score-stat-card">
-                                        <div className="score-stat-label">❌ Partite Perse</div>
-                                        <div className="score-stat-value" style={{ color: "#F44336" }}>
-                                            {getCurrentGiocatore().partite_perse || 0}
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="score-stat-card">
-                                        <div className="score-stat-label">⚖️ Partite Pareggiate</div>
-                                        <div className="score-stat-value" style={{ color: "#FFC107" }}>
-                                            {getCurrentGiocatore().partite_pareggiate || 0}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* GRAFICO PERCENTUALE PARTITE */}
-                                {(getCurrentGiocatore().presenze || 0) > 0 && (
-                                    <div className="score-stat-card" style={{ margin: "20px 0" }}>
-                                        <div className="score-stat-label">📈 Distribuzione Partite</div>
-                                        <div style={{ margin: "15px 0" }}>
-                                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-                                                <span>✅ Vinte: {getCurrentGiocatore().partite_vinte || 0}</span>
-                                                <span>{((getCurrentGiocatore().partite_vinte || 0) / (getCurrentGiocatore().presenze || 1) * 100).toFixed(1)}%</span>
-                                            </div>
-                                            <div className="progress-bar">
-                                                <div 
-                                                    className="progress-fill vinte" 
-                                                    style={{ width: `${((getCurrentGiocatore().partite_vinte || 0) / (getCurrentGiocatore().presenze || 1) * 100)}%` }}
-                                                ></div>
-                                            </div>
-                                            
-                                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px", marginTop: "10px" }}>
-                                                <span>❌ Perse: {getCurrentGiocatore().partite_perse || 0}</span>
-                                                <span>{((getCurrentGiocatore().partite_perse || 0) / (getCurrentGiocatore().presenze || 1) * 100).toFixed(1)}%</span>
-                                            </div>
-                                            <div className="progress-bar">
-                                                <div 
-                                                    className="progress-fill perse" 
-                                                    style={{ width: `${((getCurrentGiocatore().partite_perse || 0) / (getCurrentGiocatore().presenze || 1) * 100)}%` }}
-                                                ></div>
-                                            </div>
-                                            
-                                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px", marginTop: "10px" }}>
-                                                <span>⚖️ Pareggiate: {getCurrentGiocatore().partite_pareggiate || 0}</span>
-                                                <span>{((getCurrentGiocatore().partite_pareggiate || 0) / (getCurrentGiocatore().presenze || 1) * 100).toFixed(1)}%</span>
-                                            </div>
-                                            <div className="progress-bar">
-                                                <div 
-                                                    className="progress-fill pareggiate" 
-                                                    style={{ width: `${((getCurrentGiocatore().partite_pareggiate || 0) / (getCurrentGiocatore().presenze || 1) * 100)}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="score-stats-grid">
-                                    <div className="score-stat-card">
                                         <div className="score-stat-label">⚽ Gol Segnati</div>
                                         <div className="score-stat-value" style={{ color: "#FFD700" }}>
                                             {getCurrentGiocatore().gol || 0}
@@ -2545,11 +2368,34 @@
                                             {getCurrentGiocatore().media_calcolata ? getCurrentGiocatore().media_calcolata.toFixed(2) : "0.00"}
                                         </div>
                                     </div>
-                                    
+                                </div>
+
+                                <div className="score-stats-grid">
                                     <div className="score-stat-card">
                                         <div className="score-stat-label">🏆 MVP</div>
                                         <div className="score-stat-value" style={{ color: "#FFC107" }}>
                                             {getCurrentGiocatore().mvp_count || 0}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">🧤 Punti Portiere</div>
+                                        <div className="score-stat-value" style={{ color: "#0096FF" }}>
+                                            {calcolaPunteggioBenjiPrice(getCurrentGiocatore())}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">✅ Partite Vinte</div>
+                                        <div className="score-stat-value" style={{ color: "#4CAF50" }}>
+                                            {getCurrentGiocatore().partite_vinte || 0}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">📈 % Vittorie</div>
+                                        <div className="score-stat-value" style={{ color: "#9C27B0" }}>
+                                            {calcolaPercentualeVittorie(getCurrentGiocatore())}%
                                         </div>
                                     </div>
                                 </div>
@@ -2705,7 +2551,7 @@
                             <div>
                                 <h2>📝 Pagelle Giocatori</h2>
                                 
-                                {/* FORM PER AGGIUNGERE PAGELLA (SOLO ADMIN E FABRIZIO) */}
+                                {/* FORM PER AGGIUNGERE PAGELLA (SOLO ADMIN) */}
                                 {isAdminUser() && (
                                     <div className="pagella-form">
                                         <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>➕ Aggiungi Nuova Pagella</h3>
