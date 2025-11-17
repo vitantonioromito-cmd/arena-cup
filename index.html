@@ -1076,7 +1076,7 @@
 
             const chatContainerRef = useRef(null);
 
-            // 🔐 PASSWORD ADMIN CORRETTE
+            // 🔐 PASSWORD ADMIN CORRETTE (NON VISIBILI)
             const ADMIN_PASSWORD = "giulia85";
             const FABRIZIO_PASSWORD = "manetta2025";
 
@@ -1092,7 +1092,7 @@
                 // Controllo password per admin e Fabrizio
                 if (loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") {
                     if (loginForm.password !== ADMIN_PASSWORD) {
-                        alert("❌ Password admin errata! La password corretta è: giulia85");
+                        alert("❌ Password admin errata!");
                         return;
                     }
                 }
@@ -1351,11 +1351,11 @@
                 .sort((a, b) => (b.partite_vinte || 0) - (a.partite_vinte || 0))
                 .slice(0, 10);
 
-            // 🆕 CLASSIFICA PERCENTUALE VITTORIE
+            // 🆕 CLASSIFICA PERCENTUALE VITTORIE (TOP 3)
             const classificaPercentualeVittorie = [...giocatori]
                 .filter(g => calcolaPercentualeVittorie(g) > 0)
                 .sort((a, b) => calcolaPercentualeVittorie(b) - calcolaPercentualeVittorie(a))
-                .slice(0, 10);
+                .slice(0, 3);
 
             const handleLogout = () => {
                 localStorage.removeItem("username");
@@ -1388,7 +1388,7 @@
 
             // 📝 FUNZIONI PAGELLE MIGLIORATE (SOLO ADMIN E FABRIZIO)
             const aggiungiPagella = () => {
-                if (!isAdminUser() && !isFabrizioUser()) return alert("Solo gli admin possono aggiungere pagelle!");
+                if (!isAdminUser()) return alert("Solo gli admin possono aggiungere pagelle!");
                 if (!nuovaPagella.giocatore.trim()) return alert("Seleziona un giocatore!");
                 if (!nuovaPagella.voto) return alert("Inserisci un voto!");
                 
@@ -1463,7 +1463,7 @@
             };
 
             const eliminaPagella = (id, giocatore) => {
-                if (!isAdminUser() && !isFabrizioUser()) return alert("Solo gli admin possono eliminare pagelle!");
+                if (!isAdminUser()) return alert("Solo gli admin possono eliminare pagelle!");
                 if (!confirm(`Eliminare la pagella di ${giocatore}?`)) return;
                 database.ref(`pagelle/${id}`).remove();
             };
@@ -1488,7 +1488,7 @@
                 }
             };
 
-            // ⚽ AGGIUNGI/RIMUOVI PRESENZA (SOLO ADMIN)
+            // ⚽ AGGIUNGI/RIMUOVI PRESENZA (SOLO ADMIN E FABRIZIO)
             const aggiungiPresenza = (id, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le presenze!");
                 
@@ -1509,7 +1509,7 @@
                 });
             };
 
-            // 🆕 AGGIUNGI/RIMUOVI PARTITE VINTE/PERSE/PAREGGIATE (SOLO ADMIN)
+            // 🆕 AGGIUNGI/RIMUOVI PARTITE VINTE/PERSE/PAREGGIATE (SOLO ADMIN E FABRIZIO)
             const aggiungiRisultatoPartita = (id, tipo, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare i risultati!");
                 
@@ -1614,7 +1614,7 @@
                 });
             };
 
-            // 🏆 FUNZIONE MVP (SOLO ADMIN)
+            // 🏆 FUNZIONE MVP (SOLO ADMIN E FABRIZIO)
             const addMVP = (id) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono assegnare MVP!");
                 
@@ -1708,13 +1708,9 @@
                 return nomeGiocatore === loginForm.username;
             };
 
-            // 🎯 FUNZIONI PERMESSI CORRETTE
+            // 🎯 FUNZIONI PERMESSI CORRETTE - FABRIZIO STESSI POTERI
             const isAdminUser = () => {
-                return loginForm.username === "admin" || loginForm.username === "vitantonio";
-            };
-
-            const isFabrizioUser = () => {
-                return loginForm.username === "fabrizio";
+                return loginForm.username === "admin" || loginForm.username === "vitantonio" || loginForm.username === "fabrizio";
             };
 
             const getCurrentUserName = () => {
@@ -1762,7 +1758,7 @@
                                     <>
                                         <input 
                                             type="password"
-                                            placeholder="Password admin" 
+                                            placeholder="Password" 
                                             value={loginForm.password}
                                             onChange={(e) => handleInputChange('password', e.target.value)}
                                             onKeyPress={handleKeyPress}
@@ -1770,9 +1766,7 @@
                                             autoComplete="current-password"
                                         />
                                         <p className="password-hint">
-                                            {loginForm.username.toLowerCase() === "fabrizio" 
-                                                ? "🔐 Password Fabrizio: manetta2025" 
-                                                : "🔐 Password admin: giulia85"}
+                                            Inserisci la password corretta
                                         </p>
                                     </>
                                 )}
@@ -2067,7 +2061,7 @@
                                                         )}
                                                     </div>
                                                     
-                                                    {/* CONTROLLI ADMIN - SOLO PER ADMIN, NON FABRIZIO */}
+                                                    {/* CONTROLLI ADMIN - FABRIZIO STESSI POTERI */}
                                                     {isAdminUser() && (
                                                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
                                                             <input 
@@ -2239,85 +2233,14 @@
                             </div>
                         )}
 
-                        {/* NUOVO TAB: PARTITE GIOCATE/PRESENZE CON STATISTICHE AVANZATE */}
+                        {/* NUOVO TAB: PARTITE GIOCATE CON SOLO CLASSIFICHE RICHIESTE */}
                         {activeTab === "presenze" && (
                             <div>
-                                <h2>📊 Partite Giocate / Statistiche Partite</h2>
-                                
-                                <div className="stats-grid">
-                                    <div className="stat-card">
-                                        <h3 style={{ color: "#9C27B0", margin: "0 0 10px 0", fontSize: "1rem" }}>📊 Partite Totali</h3>
-                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totalePresenze}</p>
-                                    </div>
-                                    <div className="stat-card">
-                                        <h3 style={{ color: "#4CAF50", margin: "0 0 10px 0", fontSize: "1rem" }}>✅ Partite Vinte</h3>
-                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleVinte}</p>
-                                    </div>
-                                    <div className="stat-card">
-                                        <h3 style={{ color: "#F44336", margin: "0 0 10px 0", fontSize: "1rem" }}>❌ Partite Perse</h3>
-                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totalePerse}</p>
-                                    </div>
-                                    <div className="stat-card">
-                                        <h3 style={{ color: "#FFC107", margin: "0 0 10px 0", fontSize: "1rem" }}>⚖️ Partite Pareggiate</h3>
-                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totalePareggiate}</p>
-                                    </div>
-                                </div>
+                                <h2>📊 Partite Giocate</h2>
 
-                                {/* CLASSIFICA PRESENZE */}
-                                <div className="classifica-card" style={{ marginTop: "20px" }}>
-                                    <h3 style={{ marginBottom: "15px", color: "#9C27B0" }}>🏆 Classifica Partite Giocate</h3>
-                                    {classificaPresenze.length === 0 ? (
-                                        <div className="empty-state">
-                                            <div className="icon">📊</div>
-                                            <p>Nessuna partita giocata ancora.</p>
-                                        </div>
-                                    ) : (
-                                        classificaPresenze.map((giocatore, index) => (
-                                            <div key={giocatore.id} className="classifica-item">
-                                                <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                    {index + 1}
-                                                </div>
-                                                <div className="classifica-nome">
-                                                    {giocatore.nome}
-                                                    {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                </div>
-                                                <div className="classifica-valore">
-                                                    {giocatore.presenze || 0}
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-
-                                {/* 🆕 CLASSIFICA PARTITE VINTE */}
-                                <div className="classifica-card" style={{ marginTop: "20px" }}>
-                                    <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>🏆 Classifica Partite Vinte</h3>
-                                    {classificaVittorie.length === 0 ? (
-                                        <div className="empty-state">
-                                            <div className="icon">✅</div>
-                                            <p>Nessuna partita vinta ancora.</p>
-                                        </div>
-                                    ) : (
-                                        classificaVittorie.map((giocatore, index) => (
-                                            <div key={giocatore.id} className="classifica-item">
-                                                <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                    {index + 1}
-                                                </div>
-                                                <div className="classifica-nome">
-                                                    {giocatore.nome}
-                                                    {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                </div>
-                                                <div className="classifica-valore">
-                                                    {giocatore.partite_vinte || 0} ✅
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-
-                                {/* 🆕 CLASSIFICA PERCENTUALE VITTORIE */}
-                                <div className="classifica-card" style={{ marginTop: "20px" }}>
-                                    <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>📈 Classifica Percentuale Vittorie</h3>
+                                {/* TOP 3 PERCENTUALE VITTORIE */}
+                                <div className="classifica-card" style={{ marginBottom: "20px" }}>
+                                    <h3 style={{ marginBottom: "15px", color: "#FFD700" }}>🏆 Top 3 Percentuale Vittorie</h3>
                                     {classificaPercentualeVittorie.length === 0 ? (
                                         <div className="empty-state">
                                             <div className="icon">📊</div>
@@ -2341,7 +2264,59 @@
                                     )}
                                 </div>
 
-                                {/* LISTA COMPLETA GIOCATORI CON CONTROLLI PRESENZE E RISULTATI (SOLO ADMIN) */}
+                                <div className="classifica-grid">
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#9C27B0" }}>📊 Classifica Partite Giocate</h3>
+                                        {classificaPresenze.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">📊</div>
+                                                <p>Nessuna partita giocata ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaPresenze.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.presenze || 0}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>✅ Classifica Partite Vinte</h3>
+                                        {classificaVittorie.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">✅</div>
+                                                <p>Nessuna partita vinta ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaVittorie.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.partite_vinte || 0} ✅
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* LISTA COMPLETA GIOCATORI CON CONTROLLI PRESENZE E RISULTATI (SOLO ADMIN E FABRIZIO) */}
                                 {isAdminUser() && (
                                     <div style={{ marginTop: "30px" }}>
                                         <h3>👥 Gestione Statistiche Partite</h3>
@@ -2657,57 +2632,58 @@
                                             .map(msg => {
                                                 const isOwnMessage = msg.mittente === loginForm.username;
                                                 const isAdminMessage = msg.mittente === "admin" || msg.mittente === "vitantonio" || msg.mittente === "fabrizio";
-                                                const mittenteVisualizzato = isAdminMessage ? (msg.mittente === "fabrizio" ? "Fabrizio" : "Vitantonio") : msg.mittente;
+                                                const mittenteVisualizzato = msg.mittente_visualizzato || 
+                                                    (msg.mittente === "admin" ? "Vitantonio" : 
+                                                     msg.mittente === "fabrizio" ? "Fabrizio" : msg.mittente);
                                                 
                                                 return (
                                                     <div 
                                                         key={msg.id} 
                                                         className={`message-bubble ${isOwnMessage ? 'own-message' : ''} ${isAdminMessage ? 'admin-message' : ''}`}
                                                     >
-                                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                                            <div style={{ flex: 1 }}>
-                                                                <strong style={{ color: isAdminMessage ? "#FFC107" : "#2196F3" }}>
-                                                                    {mittenteVisualizzato}
-                                                                    {isOwnMessage && " (TU)"}
-                                                                </strong>
-                                                                <p style={{ margin: "5px 0 0 0", wordBreak: "break-word" }}>
-                                                                    {msg.messaggio}
-                                                                </p>
-                                                            </div>
-                                                            <div style={{ display: "flex", gap: "5px", marginLeft: "10px" }}>
-                                                                {(isOwnMessage || isAdminUser() || isFabrizioUser()) && (
-                                                                    <button 
-                                                                        onClick={() => eliminaMessaggio(msg.id)}
-                                                                        style={{ 
-                                                                            background: "rgba(244, 67, 54, 0.3)",
-                                                                            color: "#F44336",
-                                                                            border: "none",
-                                                                            borderRadius: "5px",
-                                                                            padding: "5px 8px",
-                                                                            cursor: "pointer",
-                                                                            fontSize: "0.7rem"
-                                                                        }}
-                                                                    >
-                                                                        ❌
-                                                                    </button>
-                                                                )}
-                                                            </div>
+                                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                                                            <strong style={{ color: isAdminMessage ? "#FFC107" : isOwnMessage ? "#4CAF50" : "#2196F3" }}>
+                                                                {mittenteVisualizzato}
+                                                                {isOwnMessage && " (TU)"}
+                                                            </strong>
+                                                            <small style={{ color: "#ccc", fontSize: "0.7rem" }}>
+                                                                {new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                                                            </small>
                                                         </div>
-                                                        <small style={{ color: "#888", display: "block", marginTop: "5px" }}>
-                                                            {msg.created_at || new Date(msg.timestamp).toLocaleString('it-IT')}
-                                                        </small>
+                                                        <div style={{ wordBreak: "break-word" }}>
+                                                            {msg.messaggio}
+                                                        </div>
+                                                        {(isAdminUser() || isOwnMessage) && (
+                                                            <div style={{ textAlign: "right", marginTop: "8px" }}>
+                                                                <button 
+                                                                    onClick={() => eliminaMessaggio(msg.id)}
+                                                                    style={{ 
+                                                                        background: "#F44336", 
+                                                                        color: "white", 
+                                                                        border: "none", 
+                                                                        padding: "5px 10px", 
+                                                                        borderRadius: "5px", 
+                                                                        fontSize: "0.7rem",
+                                                                        cursor: "pointer"
+                                                                    }}
+                                                                >
+                                                                    Elimina
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 );
                                             })
                                     )}
                                 </div>
-
+                                
                                 <div style={{ display: "flex", gap: "10px" }}>
                                     <input 
+                                        type="text"
                                         placeholder="Scrivi un messaggio..." 
                                         value={nuovoMessaggio}
-                                        onChange={e => setNuovoMessaggio(e.target.value)}
-                                        onKeyPress={e => e.key === 'Enter' && inviaMessaggio()}
+                                        onChange={(e) => setNuovoMessaggio(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && inviaMessaggio()}
                                         style={{ flex: 1 }}
                                     />
                                     <button 
@@ -2715,7 +2691,7 @@
                                         style={{ 
                                             background: "#4CAF50", 
                                             color: "white", 
-                                            padding: "15px 20px" 
+                                            padding: "15px 20px"
                                         }}
                                     >
                                         Invia
@@ -2724,22 +2700,23 @@
                             </div>
                         )}
 
-                        {/* TAB PAGELLE MIGLIORATO CON MODIFICA FUNZIONANTE */}
+                        {/* TAB PAGELLE */}
                         {activeTab === "pagelle" && (
                             <div>
                                 <h2>📝 Pagelle Giocatori</h2>
-
-                                {/* FORM AGGIUNGI PAGELLA MIGLIORATO (SOLO ADMIN E FABRIZIO) */}
-                                {(isAdminUser() || isFabrizioUser()) && (
+                                
+                                {/* FORM PER AGGIUNGERE PAGELLA (SOLO ADMIN E FABRIZIO) */}
+                                {isAdminUser() && (
                                     <div className="pagella-form">
-                                        <h3 style={{ color: "#FFC107", marginBottom: "15px" }}>➕ Aggiungi Nuova Pagella</h3>
-                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
+                                        <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>➕ Aggiungi Nuova Pagella</h3>
+                                        
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "15px" }}>
                                             <select 
                                                 value={nuovaPagella.giocatore}
-                                                onChange={e => setNuovaPagella({...nuovaPagella, giocatore: e.target.value})}
+                                                onChange={(e) => setNuovaPagella(prev => ({ ...prev, giocatore: e.target.value }))}
                                                 className="giocatore-select"
                                             >
-                                                <option value="">Seleziona giocatore</option>
+                                                <option value="">Seleziona Giocatore</option>
                                                 {giocatori.map(g => (
                                                     <option key={g.id} value={g.nome}>{g.nome}</option>
                                                 ))}
@@ -2747,22 +2724,21 @@
                                             
                                             <select 
                                                 value={nuovaPagella.voto}
-                                                onChange={e => setNuovaPagella({...nuovaPagella, voto: e.target.value})}
+                                                onChange={(e) => setNuovaPagella(prev => ({ ...prev, voto: e.target.value }))}
                                                 className="voto-select"
                                             >
                                                 <option value="">Voto</option>
-                                                {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(v => (
-                                                    <option key={v} value={v}>{v}</option>
+                                                {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(voto => (
+                                                    <option key={voto} value={voto}>{voto}</option>
                                                 ))}
                                             </select>
                                             
-                                            {/* SELEZIONE FAZIONE - SOLO BIANCA/NERA/ROSSA */}
                                             <select 
                                                 value={nuovaPagella.fazione}
-                                                onChange={e => setNuovaPagella({...nuovaPagella, fazione: e.target.value})}
+                                                onChange={(e) => setNuovaPagella(prev => ({ ...prev, fazione: e.target.value }))}
                                                 className="fazione-select"
                                             >
-                                                <option value="nessuna">Nessuna fazione</option>
+                                                <option value="nessuna">Nessuna Fazione</option>
                                                 <option value="bianca">Armata Bianca</option>
                                                 <option value="nera">Armata Nera</option>
                                                 <option value="rossa">Armata Rossa</option>
@@ -2771,16 +2747,14 @@
                                             <input 
                                                 type="date"
                                                 value={nuovaPagella.data}
-                                                onChange={e => setNuovaPagella({...nuovaPagella, data: e.target.value})}
-                                                style={{ minWidth: "150px" }}
+                                                onChange={(e) => setNuovaPagella(prev => ({ ...prev, data: e.target.value }))}
                                             />
                                         </div>
                                         
                                         <textarea 
                                             placeholder="Commento (opzionale)"
                                             value={nuovaPagella.commento}
-                                            onChange={e => setNuovaPagella({...nuovaPagella, commento: e.target.value})}
-                                            style={{ marginTop: "10px" }}
+                                            onChange={(e) => setNuovaPagella(prev => ({ ...prev, commento: e.target.value }))}
                                         />
                                         
                                         <div className="pagella-actions">
@@ -2788,186 +2762,291 @@
                                                 onClick={aggiungiPagella}
                                                 style={{ 
                                                     background: "#4CAF50", 
-                                                    color: "white" 
+                                                    color: "white"
                                                 }}
                                             >
-                                                💾 Salva Pagella
+                                                ➕ Aggiungi Pagella
                                             </button>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* LISTA PAGELLE MIGLIORATA CON MODIFICA FUNZIONANTE */}
-                                {pagelle.length === 0 ? (
-                                    <div className="empty-state">
-                                        <div className="icon">📝</div>
-                                        <p>Nessuna pagella ancora.</p>
-                                    </div>
-                                ) : (
-                                    pagelle.map(pagella => (
-                                        <div key={pagella.id} className={`pagella-card ${getClasseFazione(pagella.fazione)}`}>
-                                            <div className="pagella-header">
-                                                <div>
-                                                    <div className="pagella-giocatore">
-                                                        {pagella.giocatore}
-                                                        {isCurrentUser(pagella.giocatore) && <span className="current-user-badge">TU</span>}
-                                                        {getBadgeFazione(pagella.fazione)}
-                                                    </div>
-                                                    <div className="pagella-data">
-                                                        Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
-                                                        {pagella.modificato_il && ` • Modificato il ${pagella.modificato_il}`}
-                                                    </div>
-                                                </div>
-                                                <div className="pagella-voto">
-                                                    {pagella.voto}/10
-                                                </div>
-                                            </div>
-                                            
-                                            {pagella.commento && (
-                                                <div className="pagella-commento">
-                                                    "{pagella.commento}"
-                                                </div>
-                                            )}
-                                            
-                                            {/* MODIFICA PAGELLA (SOLO ADMIN E FABRIZIO) - FUNZIONANTE */}
-                                            {(isAdminUser() || isFabrizioUser()) && (
-                                                <div style={{ marginTop: "15px" }}>
-                                                    {pagellaInModifica === pagella.id ? (
-                                                        <div className="modifica-pagella-form">
-                                                            <h4 style={{ color: "#FFC107", marginBottom: "10px" }}>✏️ Modifica Pagella</h4>
-                                                            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
-                                                                <select 
-                                                                    value={modificaPagella.voto}
-                                                                    onChange={e => setModificaPagella({...modificaPagella, voto: e.target.value})}
-                                                                    className="voto-select"
-                                                                >
-                                                                    <option value="">Voto</option>
-                                                                    {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(v => (
-                                                                        <option key={v} value={v}>{v}</option>
-                                                                    ))}
-                                                                </select>
-                                                                
-                                                                <select 
-                                                                    value={modificaPagella.fazione}
-                                                                    onChange={e => setModificaPagella({...modificaPagella, fazione: e.target.value})}
-                                                                    className="fazione-select"
-                                                                >
-                                                                    <option value="nessuna">Nessuna fazione</option>
-                                                                    <option value="bianca">Armata Bianca</option>
-                                                                    <option value="nera">Armata Nera</option>
-                                                                    <option value="rossa">Armata Rossa</option>
-                                                                </select>
-                                                            </div>
+                                {/* LISTA PAGELLE ESISTENTI */}
+                                <div style={{ marginTop: "30px" }}>
+                                    <h3>📋 Ultime Pagelle</h3>
+                                    
+                                    {pagelle.length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="icon">📝</div>
+                                            <p>Nessuna pagella ancora.</p>
+                                        </div>
+                                    ) : (
+                                        pagelle.map(pagella => (
+                                            <div key={pagella.id} className={`pagella-card ${getClasseFazione(pagella.fazione)}`}>
+                                                {pagellaInModifica === pagella.id ? (
+                                                    // MODIFICA PAGELLA
+                                                    <div className="modifica-pagella-form">
+                                                        <h4 style={{ marginBottom: "10px", color: "#FFC107" }}>✏️ Modifica Pagella</h4>
+                                                        
+                                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "10px" }}>
+                                                            <select 
+                                                                value={modificaPagella.voto}
+                                                                onChange={(e) => setModificaPagella(prev => ({ ...prev, voto: e.target.value }))}
+                                                                className="voto-select"
+                                                            >
+                                                                <option value="">Voto</option>
+                                                                {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(voto => (
+                                                                    <option key={voto} value={voto}>{voto}</option>
+                                                                ))}
+                                                            </select>
                                                             
-                                                            <textarea 
-                                                                placeholder="Commento"
-                                                                value={modificaPagella.commento}
-                                                                onChange={e => setModificaPagella({...modificaPagella, commento: e.target.value})}
-                                                                style={{ marginTop: "10px", width: "100%" }}
-                                                            />
-                                                            
-                                                            <div className="modifica-actions">
-                                                                <button 
-                                                                    onClick={salvaModificaPagella}
-                                                                    style={{ 
-                                                                        background: "#4CAF50", 
-                                                                        color: "white",
-                                                                        padding: "8px 15px"
-                                                                    }}
-                                                                >
-                                                                    💾 Salva Modifiche
-                                                                </button>
-                                                                <button 
-                                                                    onClick={annullaModificaPagella}
-                                                                    style={{ 
-                                                                        background: "#F44336", 
-                                                                        color: "white",
-                                                                        padding: "8px 15px"
-                                                                    }}
-                                                                >
-                                                                    ❌ Annulla
-                                                                </button>
-                                                            </div>
+                                                            <select 
+                                                                value={modificaPagella.fazione}
+                                                                onChange={(e) => setModificaPagella(prev => ({ ...prev, fazione: e.target.value }))}
+                                                                className="fazione-select"
+                                                            >
+                                                                <option value="nessuna">Nessuna Fazione</option>
+                                                                <option value="bianca">Armata Bianca</option>
+                                                                <option value="nera">Armata Nera</option>
+                                                                <option value="rossa">Armata Rossa</option>
+                                                            </select>
                                                         </div>
-                                                    ) : (
-                                                        <div style={{ display: "flex", gap: "10px" }}>
+                                                        
+                                                        <textarea 
+                                                            placeholder="Commento"
+                                                            value={modificaPagella.commento}
+                                                            onChange={(e) => setModificaPagella(prev => ({ ...prev, commento: e.target.value }))}
+                                                        />
+                                                        
+                                                        <div className="modifica-actions">
                                                             <button 
-                                                                onClick={() => avviaModificaPagella(pagella)}
+                                                                onClick={salvaModificaPagella}
                                                                 style={{ 
-                                                                    background: "#2196F3", 
-                                                                    color: "white",
-                                                                    padding: "8px 15px",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer"
+                                                                    background: "#4CAF50", 
+                                                                    color: "white"
                                                                 }}
                                                             >
-                                                                ✏️ Modifica
+                                                                💾 Salva
                                                             </button>
                                                             <button 
-                                                                onClick={() => eliminaPagella(pagella.id, pagella.giocatore)}
+                                                                onClick={annullaModificaPagella}
                                                                 style={{ 
                                                                     background: "#F44336", 
-                                                                    color: "white",
-                                                                    padding: "8px 15px",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer"
+                                                                    color: "white"
                                                                 }}
                                                             >
-                                                                ❌ Elimina
+                                                                ❌ Annulla
                                                             </button>
                                                         </div>
-                                                    )}
-                                                </div>
-                                            )}
+                                                    </div>
+                                                ) : (
+                                                    // VISUALIZZAZIONE PAGELLA
+                                                    <>
+                                                        <div className="pagella-header">
+                                                            <div>
+                                                                <div className="pagella-giocatore">
+                                                                    {pagella.giocatore}
+                                                                    {getBadgeFazione(pagella.fazione)}
+                                                                    {isCurrentUser(pagella.giocatore) && <span className="current-user-badge">TU</span>}
+                                                                </div>
+                                                                <div className="pagella-data">
+                                                                    Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
+                                                                    {pagella.modificato_il && ` • Modificato il ${pagella.modificato_il}`}
+                                                                </div>
+                                                            </div>
+                                                            <div className="pagella-voto">
+                                                                {pagella.voto}/10
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {pagella.commento && (
+                                                            <div className="pagella-commento">
+                                                                "{pagella.commento}"
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {/* AZIONI ADMIN */}
+                                                        {isAdminUser() && (
+                                                            <div className="pagella-actions">
+                                                                <button 
+                                                                    onClick={() => avviaModificaPagella(pagella)}
+                                                                    style={{ 
+                                                                        background: "#FFC107", 
+                                                                        color: "black"
+                                                                    }}
+                                                                >
+                                                                    ✏️ Modifica
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => eliminaPagella(pagella.id, pagella.giocatore)}
+                                                                    style={{ 
+                                                                        background: "#F44336", 
+                                                                        color: "white"
+                                                                    }}
+                                                                >
+                                                                    🗑️ Elimina
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB IMPOSTAZIONI */}
+                        {activeTab === "impostazioni" && (
+                            <div>
+                                <h2>⚙️ Impostazioni</h2>
+                                
+                                <div className="notification-settings">
+                                    <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>🔔 Notifiche</h3>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Notifiche Push</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Ricevi notifiche per nuovi messaggi e partite
+                                            </p>
                                         </div>
-                                    ))
-                                )}
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={notificationsEnabled}
+                                                onChange={toggleNotifications}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Notifiche Chat</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Avvisami per nuovi messaggi in chat
+                                            </p>
+                                        </div>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={chatNotificationsEnabled}
+                                                onChange={toggleChatNotifications}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Notifiche Calendario</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Avvisami per nuove partite e prenotazioni
+                                            </p>
+                                        </div>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={calendarNotificationsEnabled}
+                                                onChange={toggleCalendarNotifications}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div className="notification-settings">
+                                    <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>📊 Statistiche App</h3>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Download App</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Numero di download dell'app
+                                            </p>
+                                        </div>
+                                        <span style={{ fontWeight: "bold", color: "#4CAF50" }}>
+                                            {statistiche.download}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Utenti Unici</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Numero di giocatori registrati
+                                            </p>
+                                        </div>
+                                        <span style={{ fontWeight: "bold", color: "#FFC107" }}>
+                                            {statistiche.utentiUnici}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="notification-settings">
+                                    <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>ℹ️ Informazioni</h3>
+                                    
+                                    <div style={{ padding: "15px 0" }}>
+                                        <p style={{ marginBottom: "10px" }}>
+                                            <strong>Versione App:</strong> 2.0.0
+                                        </p>
+                                        <p style={{ marginBottom: "10px" }}>
+                                            <strong>Sviluppatore:</strong> Vitantonio
+                                        </p>
+                                        <p style={{ marginBottom: "10px" }}>
+                                            <strong>Ultimo Aggiornamento:</strong> {new Date().toLocaleDateString('it-IT')}
+                                        </p>
+                                        <p>
+                                            <strong>Descrizione:</strong> App per la gestione del torneo di calcetto Arena Cup
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
 
-                    {/* BOTTOM NAVIGATION - SOLO MOBILE (SENZA IMPOSTAZIONI) */}
+                    {/* MOBILE BOTTOM NAVIGATION */}
                     <div className="app-bottom-nav">
-                        <button
+                        <button 
                             className={`nav-button ${activeTab === "classifica" ? "active" : ""}`}
                             onClick={() => setActiveTab("classifica")}
                         >
-                            <div className="icon">🏆</div>
-                            <div className="label">Classifica</div>
+                            <span className="icon">🏆</span>
+                            <span>Classifica</span>
                         </button>
                         
-                        <button
+                        <button 
                             className={`nav-button ${activeTab === "calendario" ? "active" : ""}`}
                             onClick={() => setActiveTab("calendario")}
                         >
-                            <div className="icon">🗓️</div>
-                            <div className="label">Calendario</div>
+                            <span className="icon">🗓️</span>
+                            <span>Calendario</span>
                             {notificheCalendario > 0 && (
-                                <div className="notification-badge">
+                                <span className="notification-badge">
                                     {notificheCalendario > 9 ? '9+' : notificheCalendario}
-                                </div>
+                                </span>
                             )}
                         </button>
                         
-                        <button
+                        <button 
                             className={`nav-button ${activeTab === "presenze" ? "active" : ""}`}
                             onClick={() => setActiveTab("presenze")}
                         >
-                            <div className="icon">📊</div>
-                            <div className="label">Partite</div>
+                            <span className="icon">📊</span>
+                            <span>Partite</span>
                         </button>
                         
-                        <button
+                        <button 
                             className={`nav-button ${activeTab === "mioscore" ? "active" : ""}`}
                             onClick={() => setActiveTab("mioscore")}
                         >
-                            <div className="icon">⭐</div>
-                            <div className="label">Il Mio Score</div>
+                            <span className="icon">⭐</span>
+                            <span>Il Mio Score</span>
                         </button>
                         
-                        <button
+                        <button 
                             className={`nav-button ${activeTab === "chat" ? "active" : ""}`}
                             onClick={() => {
                                 setActiveTab("chat");
@@ -2975,21 +3054,13 @@
                                 setNotificheChat(0);
                             }}
                         >
-                            <div className="icon">💬</div>
-                            <div className="label">Chat</div>
+                            <span className="icon">💬</span>
+                            <span>Chat</span>
                             {notificheChat > 0 && (
-                                <div className="notification-badge">
+                                <span className="notification-badge">
                                     {notificheChat > 9 ? '9+' : notificheChat}
-                                </div>
+                                </span>
                             )}
-                        </button>
-                        
-                        <button
-                            className={`nav-button ${activeTab === "pagelle" ? "active" : ""}`}
-                            onClick={() => setActiveTab("pagelle")}
-                        >
-                            <div className="icon">📝</div>
-                            <div className="label">Pagelle</div>
                         </button>
                     </div>
                 </div>
