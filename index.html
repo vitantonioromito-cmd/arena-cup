@@ -1565,16 +1565,13 @@
                 });
             };
 
-            // 🗓️ TOGGLE PRENOTAZIONE - SENZA DOPPI - CORRETTO
+            // 🗓️ TOGGLE PRENOTAZIONE - SISTEMA CORRETTO E SEMPLIFICATO
             const togglePrenotazionePartita = (partitaId) => {
                 const partita = partite.find(p => p.id === partitaId);
                 if (!partita) return;
                 
                 const nomeVisualizzato = getCurrentUserName();
                 let confermati = partita.confermati || [];
-                
-                // RIMUOVI EVENTUALI DOPPI - CORREZIONE DEFINITIVA
-                confermati = confermati.filter(name => name !== "Vitantonio" && name !== "admin" && name !== "Fabrizio");
                 
                 const limite = partita.triangolare ? 15 : 10;
                 const giaConfermato = confermati.includes(nomeVisualizzato);
@@ -1584,9 +1581,22 @@
                     return;
                 }
 
-                const nuoviConfermati = giaConfermato 
-                    ? confermati.filter(name => name !== nomeVisualizzato)
-                    : [...confermati, nomeVisualizzato];
+                let nuoviConfermati;
+                if (giaConfermato) {
+                    // Rimuovi dalla lista
+                    nuoviConfermati = confermati.filter(name => name !== nomeVisualizzato);
+                } else {
+                    // Aggiungi alla lista
+                    nuoviConfermati = [...confermati, nomeVisualizzato];
+                }
+
+                console.log("🔧 Aggiornamento partita:", {
+                    partitaId,
+                    nomeVisualizzato,
+                    giaConfermato,
+                    confermatiPrecedenti: confermati,
+                    nuoviConfermati
+                });
 
                 database.ref(`partite/${partitaId}`).update({
                     confermati: nuoviConfermati
@@ -1601,6 +1611,9 @@
                     } else {
                         alert("❌ Prenotazione annullata!");
                     }
+                }).catch(error => {
+                    console.error("❌ Errore aggiornamento partita:", error);
+                    alert("❌ Errore durante la prenotazione. Riprova.");
                 });
             };
 
@@ -2206,7 +2219,7 @@
                             </div>
                         )}
 
-                        {/* TAB CALENDARIO - CON PRENOTAZIONI SENZA DOPPI E CONTROLLI TRIANGOLARE */}
+                        {/* TAB CALENDARIO - CON PRENOTAZIONI FUNZIONANTI */}
                         {activeTab === "calendario" && (
                             <div>
                                 <h2>🗓️ Calendario Partite</h2>
@@ -2223,11 +2236,8 @@
                                             const stato = getStatoPartita(partita);
                                             const nomeVisualizzato = getCurrentUserName();
                                             
-                                            // RIMUOVI DOPPI DALLE PRENOTAZIONI - CORREZIONE DEFINITIVA
-                                            let confermatiUnici = partita.confermati || [];
-                                            confermatiUnici = confermatiUnici.filter(name => name !== "Vitantonio" && name !== "admin" && name !== "Fabrizio");
-                                            
-                                            const isConfermato = confermatiUnici.includes(nomeVisualizzato);
+                                            const confermati = partita.confermati || [];
+                                            const isConfermato = confermati.includes(nomeVisualizzato);
                                             const limite = partita.triangolare ? 15 : 10;
                                             
                                             return (
@@ -2242,7 +2252,7 @@
                                                                 🕒 {partita.ora} • 📍 {partita.luogo}
                                                             </p>
                                                             <p style={{ margin: "5px 0", color: stato.colore, fontWeight: "bold" }}>
-                                                                {stato.testo} • {confermatiUnici.length}/{limite} confermati
+                                                                {stato.testo} • {confermati.length}/{limite} confermati
                                                             </p>
                                                             {partita.risultato && (
                                                                 <p style={{ margin: "5px 0", color: "#FFD700", fontWeight: "bold" }}>
@@ -2257,7 +2267,11 @@
                                                                 style={{ 
                                                                     background: isConfermato ? "#F44336" : "#4CAF50",
                                                                     color: "white",
-                                                                    padding: "10px 15px"
+                                                                    padding: "10px 15px",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontWeight: "bold"
                                                                 }}
                                                             >
                                                                 {isConfermato ? "❌ Annulla" : "✅ Conferma"}
@@ -2300,10 +2314,10 @@
 
                                                     <div className="confermato-list">
                                                         <h4 style={{ margin: "15px 0 10px 0", color: "#4CAF50" }}>
-                                                            Giocatori Confermati ({confermatiUnici.length})
+                                                            Giocatori Confermati ({confermati.length})
                                                         </h4>
-                                                        {confermatiUnici.length > 0 ? (
-                                                            confermatiUnici.map((nome, index) => (
+                                                        {confermati.length > 0 ? (
+                                                            confermati.map((nome, index) => (
                                                                 <div 
                                                                     key={index} 
                                                                     className={`confermato-item ${nome === nomeVisualizzato ? 'current-user' : ''}`}
@@ -2362,7 +2376,7 @@
                                             <div className="empty-state">
                                                 <div className="icon">📊</div>
                                                 <p>Nessuna partita giocata ancora.</p>
-                                            </div>
+                                        </div>
                                         ) : (
                                             classificaPresenze.map((giocatore, index) => (
                                                 <div key={giocatore.id} className="classifica-item">
