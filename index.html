@@ -1177,7 +1177,10 @@
                         errori: data[key].errori || 0,
                         interventi_decisivi: data[key].interventi_decisivi || 0,
                         partite_portiere: data[key].partite_portiere || 0,
-                        presenze: data[key].presenze || 0
+                        presenze: data[key].presenze || 0,
+                        partite_vinte: data[key].partite_vinte || 0,
+                        partite_perse: data[key].partite_perse || 0,
+                        partite_pareggiate: data[key].partite_pareggiate || 0
                     })) : [];
                     setGiocatori(giocatoriArray);
                 });
@@ -1390,7 +1393,7 @@
                 localStorage.setItem('calendarNotificationsEnabled', newState.toString());
             };
 
-            // 📝 FUNZIONI PAGELLE MIGLIORATE (SOLO ADMIN)
+            // 📝 FUNZIONI PAGELLE MIGLIORATE (SOLO ADMIN E FABRIZIO)
             const aggiungiPagella = () => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiungere pagelle!");
                 if (!nuovaPagella.giocatore.trim()) return alert("Seleziona un giocatore!");
@@ -1428,7 +1431,7 @@
                 });
             };
 
-            // 🎯 MODIFICA PAGELLA - FUNZIONANTE (SOLO ADMIN)
+            // 🎯 MODIFICA PAGELLA - FUNZIONANTE (SOLO ADMIN E FABRIZIO)
             const avviaModificaPagella = (pagella) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono modificare pagelle!");
                 setPagellaInModifica(pagella.id);
@@ -1473,7 +1476,27 @@
                 database.ref(`pagelle/${id}`).remove();
             };
 
-            // ⚽ AGGIUNGI/RIMUOVI PRESENZA (SOLO ADMIN)
+            // 🎯 FUNZIONE PER OTTENERE CLASSE FAZIONE
+            const getClasseFazione = (fazione) => {
+                switch(fazione) {
+                    case 'bianca': return 'fazione-bianca';
+                    case 'nera': return 'fazione-nera';
+                    case 'rossa': return 'fazione-rossa';
+                    default: return '';
+                }
+            };
+
+            // 🎯 FUNZIONE PER OTTENERE BADGE FAZIONE
+            const getBadgeFazione = (fazione) => {
+                switch(fazione) {
+                    case 'bianca': return <span className="badge-fazione badge-bianca">ARMATA BIANCA</span>;
+                    case 'nera': return <span className="badge-fazione badge-nera">ARMATA NERA</span>;
+                    case 'rossa': return <span className="badge-fazione badge-rossa">ARMATA ROSSA</span>;
+                    default: return null;
+                }
+            };
+
+            // ⚽ AGGIUNGI/RIMUOVI PRESENZA (SOLO ADMIN E FABRIZIO)
             const aggiungiPresenza = (id, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le presenze!");
                 
@@ -1576,7 +1599,7 @@
                 });
             };
 
-            // 🏆 FUNZIONE MVP (SOLO ADMIN)
+            // 🏆 FUNZIONE MVP (SOLO ADMIN E FABRIZIO)
             const addMVP = (id) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono assegnare MVP!");
                 
@@ -1667,9 +1690,9 @@
                 return nomeGiocatore === loginForm.username;
             };
 
-            // 🎯 FUNZIONI PERMESSI CORRETTE - SOLO ADMIN HA TUTTI I POTERI
+            // 🎯 FUNZIONI PERMESSI CORRETTE - FABRIZIO STESSI POTERI DI ADMIN
             const isAdminUser = () => {
-                return loginForm.username === "admin" || loginForm.username === "vitantonio";
+                return loginForm.username === "admin" || loginForm.username === "vitantonio" || loginForm.username === "fabrizio";
             };
 
             const getCurrentUserName = () => {
@@ -2020,7 +2043,7 @@
                                                         )}
                                                     </div>
                                                     
-                                                    {/* CONTROLLI ADMIN - SOLO ADMIN HA TUTTI I POTERI */}
+                                                    {/* CONTROLLI ADMIN - FABRIZIO STESSI POTERI */}
                                                     {isAdminUser() && (
                                                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
                                                             <input 
@@ -2275,7 +2298,7 @@
                                     </div>
                                 </div>
 
-                                {/* LISTA COMPLETA GIOCATORI CON CONTROLLI PRESENZE (SOLO ADMIN) */}
+                                {/* LISTA COMPLETA GIOCATORI CON CONTROLLI PRESENZE (SOLO ADMIN E FABRIZIO) */}
                                 {isAdminUser() && (
                                     <div style={{ marginTop: "30px" }}>
                                         <h3>👥 Gestione Presenze</h3>
@@ -2546,12 +2569,12 @@
                             </div>
                         )}
 
-                        {/* TAB PAGELLE */}
+                        {/* TAB PAGELLE - ORA FUNZIONANTE E COMPLETA */}
                         {activeTab === "pagelle" && (
                             <div>
                                 <h2>📝 Pagelle Giocatori</h2>
                                 
-                                {/* FORM PER AGGIUNGERE PAGELLA (SOLO ADMIN) */}
+                                {/* FORM PER AGGIUNGERE PAGELLA (SOLO ADMIN E FABRIZIO) */}
                                 {isAdminUser() && (
                                     <div className="pagella-form">
                                         <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>➕ Aggiungi Nuova Pagella</h3>
@@ -2711,7 +2734,7 @@
                                                             </div>
                                                         )}
                                                         
-                                                        {/* AZIONI ADMIN */}
+                                                        {/* AZIONI ADMIN E FABRIZIO */}
                                                         {isAdminUser() && (
                                                             <div className="pagella-actions">
                                                                 <button 
@@ -2907,6 +2930,14 @@
                                     {notificheChat > 9 ? '9+' : notificheChat}
                                 </span>
                             )}
+                        </button>
+                        
+                        <button 
+                            className={`nav-button ${activeTab === "pagelle" ? "active" : ""}`}
+                            onClick={() => setActiveTab("pagelle")}
+                        >
+                            <span className="icon">📝</span>
+                            <span>Pagelle</span>
                         </button>
                     </div>
                 </div>
