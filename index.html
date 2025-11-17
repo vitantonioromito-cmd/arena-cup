@@ -1386,9 +1386,9 @@
                 localStorage.setItem('calendarNotificationsEnabled', newState.toString());
             };
 
-            // 📝 FUNZIONI PAGELLE MIGLIORATE (SOLO ADMIN)
+            // 📝 FUNZIONI PAGELLE MIGLIORATE (SOLO ADMIN E FABRIZIO)
             const aggiungiPagella = () => {
-                if (!isAdminUser()) return alert("Solo gli admin possono aggiungere pagelle!");
+                if (!isAdminUser() && !isFabrizioUser()) return alert("Solo gli admin possono aggiungere pagelle!");
                 if (!nuovaPagella.giocatore.trim()) return alert("Seleziona un giocatore!");
                 if (!nuovaPagella.voto) return alert("Inserisci un voto!");
                 
@@ -1424,7 +1424,7 @@
                 });
             };
 
-            // 🎯 MODIFICA PAGELLA - FUNZIONANTE
+            // 🎯 MODIFICA PAGELLA - FUNZIONANTE (SOLO ADMIN E FABRIZIO)
             const avviaModificaPagella = (pagella) => {
                 setPagellaInModifica(pagella.id);
                 setModificaPagella({
@@ -1463,7 +1463,7 @@
             };
 
             const eliminaPagella = (id, giocatore) => {
-                if (!isAdminUser()) return alert("Solo gli admin possono eliminare pagelle!");
+                if (!isAdminUser() && !isFabrizioUser()) return alert("Solo gli admin possono eliminare pagelle!");
                 if (!confirm(`Eliminare la pagella di ${giocatore}?`)) return;
                 database.ref(`pagelle/${id}`).remove();
             };
@@ -1488,7 +1488,7 @@
                 }
             };
 
-            // ⚽ AGGIUNGI/RIMUOVI PRESENZA
+            // ⚽ AGGIUNGI/RIMUOVI PRESENZA (SOLO ADMIN)
             const aggiungiPresenza = (id, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le presenze!");
                 
@@ -1509,7 +1509,7 @@
                 });
             };
 
-            // 🆕 AGGIUNGI/RIMUOVI PARTITE VINTE/PERSE/PAREGGIATE
+            // 🆕 AGGIUNGI/RIMUOVI PARTITE VINTE/PERSE/PAREGGIATE (SOLO ADMIN)
             const aggiungiRisultatoPartita = (id, tipo, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare i risultati!");
                 
@@ -1532,7 +1532,7 @@
                 });
             };
 
-            // 🗓️ TOGGLE PRENOTAZIONE - SENZA DOPPI ADMIN - CORRETTO
+            // 🗓️ TOGGLE PRENOTAZIONE - SENZA DOPPI - CORRETTO
             const togglePrenotazionePartita = (partitaId) => {
                 const partita = partite.find(p => p.id === partitaId);
                 if (!partita) return;
@@ -1540,8 +1540,8 @@
                 const nomeVisualizzato = getCurrentUserName();
                 let confermati = partita.confermati || [];
                 
-                // RIMUOVI EVENTUALI DOPPI
-                confermati = [...new Set(confermati)];
+                // RIMUOVI EVENTUALI DOPPI - CORREZIONE DEFINITIVA
+                confermati = confermati.filter(name => name !== "Vitantonio" && name !== "admin");
                 
                 const limite = partita.triangolare ? 15 : 10;
                 const giaConfermato = confermati.includes(nomeVisualizzato);
@@ -1555,11 +1555,8 @@
                     ? confermati.filter(name => name !== nomeVisualizzato)
                     : [...confermati, nomeVisualizzato];
 
-                // RIMUOVI ULTERIORI DOPPI PRIMA DI SALVARE
-                const confermatiUnici = [...new Set(nuoviConfermati)];
-
                 database.ref(`partite/${partitaId}`).update({
-                    confermati: confermatiUnici
+                    confermati: nuoviConfermati
                 }).then(() => {
                     if (!giaConfermato) {
                         alert("✅ Prenotazione confermata!");
@@ -1617,7 +1614,7 @@
                 });
             };
 
-            // 🏆 FUNZIONE MVP
+            // 🏆 FUNZIONE MVP (SOLO ADMIN)
             const addMVP = (id) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono assegnare MVP!");
                 
@@ -1711,13 +1708,21 @@
                 return nomeGiocatore === loginForm.username;
             };
 
+            // 🎯 FUNZIONI PERMESSI CORRETTE
             const isAdminUser = () => {
-                return loginForm.username === "admin" || loginForm.username === "vitantonio" || loginForm.username === "fabrizio";
+                return loginForm.username === "admin" || loginForm.username === "vitantonio";
+            };
+
+            const isFabrizioUser = () => {
+                return loginForm.username === "fabrizio";
             };
 
             const getCurrentUserName = () => {
                 if (loginForm.username === "admin" || loginForm.username === "vitantonio") {
                     return "Vitantonio";
+                }
+                if (loginForm.username === "fabrizio") {
+                    return "Fabrizio";
                 }
                 return loginForm.username;
             };
@@ -1874,12 +1879,6 @@
                                 onClick={() => setActiveTab("pagelle")}
                             >
                                 📝 Pagelle
-                            </button>
-                            <button
-                                className={`desktop-nav-button ${activeTab === "impostazioni" ? "active" : ""}`}
-                                onClick={() => setActiveTab("impostazioni")}
-                            >
-                                ⚙️ Impostazioni
                             </button>
                         </div>
                     </div>
@@ -2068,7 +2067,7 @@
                                                         )}
                                                     </div>
                                                     
-                                                    {/* CONTROLLI ADMIN */}
+                                                    {/* CONTROLLI ADMIN - SOLO PER ADMIN, NON FABRIZIO */}
                                                     {isAdminUser() && (
                                                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
                                                             <input 
@@ -2178,9 +2177,9 @@
                                             const stato = getStatoPartita(partita);
                                             const nomeVisualizzato = getCurrentUserName();
                                             
-                                            // RIMUOVI DOPPI DALLE PRENOTAZIONI
+                                            // RIMUOVI DOPPI DALLE PRENOTAZIONI - CORREZIONE DEFINITIVA
                                             let confermatiUnici = partita.confermati || [];
-                                            confermatiUnici = [...new Set(confermatiUnici)];
+                                            confermatiUnici = confermatiUnici.filter(name => name !== "Vitantonio" && name !== "admin");
                                             
                                             const isConfermato = confermatiUnici.includes(nomeVisualizzato);
                                             const limite = partita.triangolare ? 15 : 10;
@@ -2468,14 +2467,14 @@
                             </div>
                         )}
 
-                        {/* 🆕 TAB: IL MIO SCORE - PAGINA PERSONALE */}
+                        {/* 🆕 TAB: IL MIO SCORE - PAGINA PERSONALE CORRETTA */}
                         {activeTab === "mioscore" && (
                             <div>
                                 <div className="score-header">
                                     <div className="score-avatar">
                                         {loginForm.username.charAt(0).toUpperCase()}
                                     </div>
-                                    <h2>⭐ Il Mio Score - {loginForm.username}</h2>
+                                    <h2>⭐ Il Mio Score - {getCurrentUserName()}</h2>
                                     <p style={{ color: "#ccc", marginTop: "5px" }}>
                                         Il tuo rendimento personale nella Arena Cup
                                     </p>
@@ -2676,7 +2675,7 @@
                                                                 </p>
                                                             </div>
                                                             <div style={{ display: "flex", gap: "5px", marginLeft: "10px" }}>
-                                                                {(isOwnMessage || isAdminUser()) && (
+                                                                {(isOwnMessage || isAdminUser() || isFabrizioUser()) && (
                                                                     <button 
                                                                         onClick={() => eliminaMessaggio(msg.id)}
                                                                         style={{ 
@@ -2730,8 +2729,8 @@
                             <div>
                                 <h2>📝 Pagelle Giocatori</h2>
 
-                                {/* FORM AGGIUNGI PAGELLA MIGLIORATO (SOLO ADMIN) */}
-                                {isAdminUser() && (
+                                {/* FORM AGGIUNGI PAGELLA MIGLIORATO (SOLO ADMIN E FABRIZIO) */}
+                                {(isAdminUser() || isFabrizioUser()) && (
                                     <div className="pagella-form">
                                         <h3 style={{ color: "#FFC107", marginBottom: "15px" }}>➕ Aggiungi Nuova Pagella</h3>
                                         <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
@@ -2830,8 +2829,8 @@
                                                 </div>
                                             )}
                                             
-                                            {/* MODIFICA PAGELLA (SOLO ADMIN) - FUNZIONANTE */}
-                                            {isAdminUser() && (
+                                            {/* MODIFICA PAGELLA (SOLO ADMIN E FABRIZIO) - FUNZIONANTE */}
+                                            {(isAdminUser() || isFabrizioUser()) && (
                                                 <div style={{ marginTop: "15px" }}>
                                                     {pagellaInModifica === pagella.id ? (
                                                         <div className="modifica-pagella-form">
@@ -2927,103 +2926,9 @@
                                 )}
                             </div>
                         )}
-
-                        {/* TAB IMPOSTAZIONI */}
-                        {activeTab === "impostazioni" && (
-                            <div>
-                                <h2>⚙️ Impostazioni</h2>
-                                
-                                <div className="notification-settings">
-                                    <h3>🔔 Gestione Notifiche</h3>
-                                    
-                                    <div className="setting-item">
-                                        <div>
-                                            <strong>Notifiche Globali</strong>
-                                            <div style={{ fontSize: "0.8rem", color: "#ccc" }}>
-                                                Attiva/disattiva tutte le notifiche
-                                            </div>
-                                        </div>
-                                        <label className="switch">
-                                            <input 
-                                                type="checkbox" 
-                                                checked={notificationsEnabled}
-                                                onChange={toggleNotifications}
-                                            />
-                                            <span className="slider"></span>
-                                        </label>
-                                    </div>
-                                    
-                                    <div className="setting-item">
-                                        <div>
-                                            <strong>Notifiche Chat</strong>
-                                            <div style={{ fontSize: "0.8rem", color: "#ccc" }}>
-                                                Nuovi messaggi nella chat
-                                            </div>
-                                        </div>
-                                        <label className="switch">
-                                            <input 
-                                                type="checkbox" 
-                                                checked={chatNotificationsEnabled}
-                                                onChange={toggleChatNotifications}
-                                                disabled={!notificationsEnabled}
-                                            />
-                                            <span className="slider"></span>
-                                        </label>
-                                    </div>
-                                    
-                                    <div style={{ marginTop: "15px", textAlign: "center" }}>
-                                        <button 
-                                            onClick={() => {
-                                                showPushNotification(
-                                                    "🔔 Test Notifiche Arena Cup",
-                                                    "Questa è una notifica di test! Se la vedi, le notifiche funzionano correttamente.",
-                                                    'chat'
-                                                );
-                                            }}
-                                            style={{ 
-                                                background: "#2196F3", 
-                                                color: "white", 
-                                                padding: "10px 15px"
-                                            }}
-                                        >
-                                            🔔 Test Notifiche
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="notification-settings">
-                                    <h3>📊 Statistiche App</h3>
-                                    <div className="setting-item">
-                                        <span>Download App</span>
-                                        <span style={{ color: "#4CAF50", fontWeight: "bold" }}>
-                                            {statistiche.download}
-                                        </span>
-                                    </div>
-                                    <div className="setting-item">
-                                        <span>Utenti Unici</span>
-                                        <span style={{ color: "#2196F3", fontWeight: "bold" }}>
-                                            {statistiche.utentiUnici}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div style={{ textAlign: "center", marginTop: "30px" }}>
-                                    <button 
-                                        onClick={handleLogout}
-                                        style={{ 
-                                            background: "#F44336", 
-                                            color: "white", 
-                                            padding: "15px 30px"
-                                        }}
-                                    >
-                                        🚪 Esci dall'App
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
-                    {/* BOTTOM NAVIGATION - SOLO MOBILE */}
+                    {/* BOTTOM NAVIGATION - SOLO MOBILE (SENZA IMPOSTAZIONI) */}
                     <div className="app-bottom-nav">
                         <button
                             className={`nav-button ${activeTab === "classifica" ? "active" : ""}`}
@@ -3085,14 +2990,6 @@
                         >
                             <div className="icon">📝</div>
                             <div className="label">Pagelle</div>
-                        </button>
-                        
-                        <button
-                            className={`nav-button ${activeTab === "impostazioni" ? "active" : ""}`}
-                            onClick={() => setActiveTab("impostazioni")}
-                        >
-                            <div className="icon">⚙️</div>
-                            <div className="label">Impostazioni</div>
                         </button>
                     </div>
                 </div>
