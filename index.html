@@ -2898,208 +2898,330 @@
     <!-- FILE 5: Chiusura (altre tab + footer) -->
 </body>
 </html>
-                        {/* TAB CALENDARIO - CON PRENOTAZIONI FUNZIONANTI */}
-                        {activeTab === "calendario" && (
+                                                {/* TAB IMPOSTAZIONI - ORA CON BACKUP E IL MIO SCORE INTEGRATI */}
+                        {activeTab === "impostazioni" && (
                             <div>
-                                <h2>🗓️ Calendario Partite</h2>
+                                <h2>⚙️ Impostazioni</h2>
                                 
-                                {partite.length === 0 ? (
-                                    <div className="empty-state">
-                                        <div className="icon">🗓️</div>
-                                        <p>Nessuna partita programmata.</p>
+                                {/* SEZIONE IL MIO SCORE PERSONALE */}
+                                <div className="backup-section">
+                                    <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>⭐ Il Mio Score Personale</h3>
+                                    <div className="score-stats-grid">
+                                        <div className="score-stat-card">
+                                            <div className="score-stat-label">📊 Partite Giocate</div>
+                                            <div className="score-stat-value">{getCurrentGiocatore().presenze || 0}</div>
+                                        </div>
+                                        
+                                        <div className="score-stat-card">
+                                            <div className="score-stat-label">⚽ Gol Segnati</div>
+                                            <div className="score-stat-value" style={{ color: "#FFD700" }}>
+                                                {getCurrentGiocatore().gol || 0}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="score-stat-card">
+                                            <div className="score-stat-label">🎯 Assist</div>
+                                            <div className="score-stat-value" style={{ color: "#4CAF50" }}>
+                                                {getCurrentGiocatore().assist || 0}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="score-stat-card">
+                                            <div className="score-stat-label">⭐ Media Voto</div>
+                                            <div className="score-stat-value" style={{ color: "#2196F3" }}>
+                                                {getCurrentGiocatore().media_calcolata ? getCurrentGiocatore().media_calcolata.toFixed(2) : "0.00"}
+                                            </div>
+                                        </div>
                                     </div>
-                                ) : (
-                                    partite
-                                        .sort((a, b) => new Date(a.data) - new Date(b.data))
-                                        .map(partita => {
-                                            const stato = getStatoPartita(partita);
-                                            const nomeVisualizzato = getCurrentUserName();
-                                            
-                                            const confermati = partita.confermati || [];
-                                            const isConfermato = confermati.includes(nomeVisualizzato);
-                                            const limite = partita.triangolare ? 15 : 10;
-                                            
-                                            return (
-                                                <div key={partita.id} className="match-card">
-                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
-                                                        <div style={{ flex: 1 }}>
-                                                            <h3 style={{ margin: "0 0 10px 0", color: "#4CAF50" }}>
-                                                                {formattaData(partita.data)}
-                                                                {partita.triangolare && <span style={{ background: "#FFC107", color: "black", padding: "2px 8px", borderRadius: "10px", fontSize: "0.7rem", marginLeft: "10px" }}>TRIANGOLARE</span>}
-                                                            </h3>
-                                                            <p style={{ margin: "5px 0", color: "#ccc" }}>
-                                                                🕒 {partita.ora} • 📍 {partita.luogo}
-                                                            </p>
-                                                            <p style={{ margin: "5px 0", color: stato.colore, fontWeight: "bold" }}>
-                                                                {stato.testo} • {confermati.length}/{limite} confermati
-                                                            </p>
-                                                            {partita.risultato && (
-                                                                <p style={{ margin: "5px 0", color: "#FFD700", fontWeight: "bold" }}>
-                                                                🏆 Risultato: {partita.risultato}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                        
-                                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                                                            <button 
-                                                                onClick={() => togglePrenotazionePartita(partita.id)}
-                                                                style={{ 
-                                                                    background: isConfermato ? "#F44336" : "#4CAF50",
-                                                                    color: "white",
-                                                                    padding: "10px 15px",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer",
-                                                                    fontWeight: "bold"
-                                                                }}
-                                                            >
-                                                                {isConfermato ? "❌ Annulla" : "✅ Conferma"}
-                                                            </button>
-                                                        </div>
-                                                    </div>
 
-                                                    {/* CONTROLLI ADMIN E FABRIZIO PER PARTITE */}
-                                                    {isAdminUser() && (
-                                                        <div style={{ marginTop: "15px", padding: "15px", background: "rgba(255,255,255,0.05)", borderRadius: "10px" }}>
-                                                            <h4 style={{ margin: "0 0 10px 0", color: "#FFC107" }}>Controlli Admin</h4>
-                                                            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                                                                <select 
-                                                                    onChange={(e) => impostaRisultatoPartita(partita.id, e.target.value)}
-                                                                    style={{ padding: "8px", borderRadius: "5px", background: "rgba(255,255,255,0.9)", color: "#000" }}
-                                                                >
-                                                                    <option value="">Imposta risultato</option>
-                                                                    <option value="Vittoria Bianca">Vittoria Bianca</option>
-                                                                    <option value="Vittoria Nera">Vittoria Nera</option>
-                                                                    <option value="Vittoria Rossa">Vittoria Rossa</option>
-                                                                    <option value="Pareggio">Pareggio</option>
-                                                                </select>
-                                                                
-                                                                <button 
-                                                                    onClick={() => impostaTriangolare(partita.id, !partita.triangolare)}
-                                                                    style={{ 
-                                                                        background: partita.triangolare ? "#F44336" : "#4CAF50",
-                                                                        color: "white",
-                                                                        padding: "8px 12px",
-                                                                        border: "none",
-                                                                        borderRadius: "5px",
-                                                                        cursor: "pointer"
-                                                                    }}
-                                                                >
-                                                                    {partita.triangolare ? "❌ Normale" : "✅ Triangolare"}
-                                                                </button>
+                                    <div className="score-stats-grid">
+                                        <div className="score-stat-card">
+                                            <div className="score-stat-label">🏆 MVP</div>
+                                            <div className="score-stat-value" style={{ color: "#FFC107" }}>
+                                                {getCurrentGiocatore().mvp_count || 0}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="score-stat-card">
+                                            <div className="score-stat-label">🧤 Punti Portiere</div>
+                                            <div className="score-stat-value" style={{ color: "#0096FF" }}>
+                                                {calcolaPunteggioBenjiPrice(getCurrentGiocatore())}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="score-stat-card">
+                                            <div className="score-stat-label">✅ Partite Vinte</div>
+                                            <div className="score-stat-value" style={{ color: "#4CAF50" }}>
+                                                {getCurrentGiocatore().partite_vinte || 0}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="score-stat-card">
+                                            <div className="score-stat-label">❌ Partite Perse</div>
+                                            <div className="score-stat-value" style={{ color: "#F44336" }}>
+                                                {getCurrentGiocatore().partite_perse || 0}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* LE MIE ULTIME PAGELLE */}
+                                    <div style={{ marginTop: "30px" }}>
+                                        <h4>📝 Le Mie Ultime Pagelle</h4>
+                                        {getMiePagelle().length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">📝</div>
+                                                <p>Nessuna pagella ancora.</p>
+                                            </div>
+                                        ) : (
+                                            getMiePagelle().slice(0, 3).map(pagella => (
+                                                <div key={pagella.id} className={`pagella-card ${getClasseFazione(pagella.fazione)}`}>
+                                                    <div className="pagella-header">
+                                                        <div>
+                                                            <div className="pagella-giocatore">
+                                                                {pagella.giocatore}
+                                                                {getBadgeFazione(pagella.fazione)}
+                                                            </div>
+                                                            <div className="pagella-data">
+                                                                Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
                                                             </div>
                                                         </div>
+                                                        <div className="pagella-voto">
+                                                            {pagella.voto}/10
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {pagella.commento && (
+                                                        <div className="pagella-commento">
+                                                            "{pagella.commento}"
+                                                        </div>
                                                     )}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
 
-                                                    <div className="confermato-list">
-                                                        <h4 style={{ margin: "15px 0 10px 0", color: "#4CAF50" }}>
-                                                            Giocatori Confermati ({confermati.length})
-                                                        </h4>
-                                                        {confermati.length > 0 ? (
-                                                            confermati.map((nome, index) => (
-                                                                <div 
-                                                                    key={index} 
-                                                                    className={`confermato-item ${nome === nomeVisualizzato ? 'current-user' : ''}`}
-                                                                >
-                                                                    {nome} {nome === nomeVisualizzato && " (TU)"}
-                                                                </div>
-                                                            ))
-                                                        ) : (
-                                                            <p style={{ color: "#888", fontStyle: "italic" }}>
-                                                                Nessun giocatore confermato ancora.
-                                                            </p>
-                                                        )}
+                                {/* SEZIONE BACKUP (SOLO ADMIN) */}
+                                {isAdminUser() && (
+                                    <div className="backup-section">
+                                        <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>💾 Sistema di Backup</h3>
+                                        
+                                        <div className="backup-info">
+                                            <p><strong>⚠️ Solo gli admin possono utilizzare queste funzionalità</strong></p>
+                                        </div>
+
+                                        {/* STATISTICHE DATI CORRENTI */}
+                                        <div style={{ margin: "20px 0" }}>
+                                            <h4 style={{ marginBottom: "15px", color: "#4CAF50" }}>📊 Dati Correnti</h4>
+                                            <div className="backup-stats">
+                                                <div className="backup-stat">
+                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>👥 Giocatori</div>
+                                                    <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#FFD700" }}>
+                                                        {giocatori.length}
                                                     </div>
                                                 </div>
-                                            );
-                                        })
+                                                <div className="backup-stat">
+                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>💬 Messaggi</div>
+                                                    <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#4CAF50" }}>
+                                                        {messaggi.length}
+                                                    </div>
+                                                </div>
+                                                <div className="backup-stat">
+                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>🗓️ Partite</div>
+                                                    <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#2196F3" }}>
+                                                        {partite.length}
+                                                    </div>
+                                                </div>
+                                                <div className="backup-stat">
+                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>📝 Pagelle</div>
+                                                    <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#9C27B0" }}>
+                                                        {pagelle.length}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* AZIONI BACKUP */}
+                                        <div style={{ margin: "20px 0" }}>
+                                            <h4 style={{ marginBottom: "15px", color: "#2196F3" }}>🛠️ Azioni Backup</h4>
+                                            
+                                            <div className="backup-actions">
+                                                <button 
+                                                    onClick={esportaBackup}
+                                                    className="btn-backup export"
+                                                >
+                                                    📥 Esporta Backup
+                                                </button>
+                                                
+                                                <label htmlFor="file-input" className="file-input-label">
+                                                    📤 Importa Backup
+                                                </label>
+                                                <input 
+                                                    id="file-input"
+                                                    ref={fileInputRef}
+                                                    type="file"
+                                                    accept=".json"
+                                                    onChange={importaBackup}
+                                                    className="file-input"
+                                                />
+                                                
+                                                {backupData && (
+                                                    <button 
+                                                        onClick={ripristinaDati}
+                                                        className="btn-backup restore"
+                                                    >
+                                                        🔄 Ripristina Dati
+                                                    </button>
+                                                )}
+                                                
+                                                <button 
+                                                    onClick={puliziaDati}
+                                                    className="btn-backup danger"
+                                                >
+                                                    🗑️ Pulizia Dati
+                                                </button>
+                                            </div>
+
+                                            {/* PREVIEW BACKUP CARICATO */}
+                                            {backupData && (
+                                                <div className="backup-info" style={{ background: "rgba(76, 175, 80, 0.1)", borderLeftColor: "#4CAF50" }}>
+                                                    <h4 style={{ color: "#4CAF50", marginBottom: "10px" }}>✅ Backup Caricato</h4>
+                                                    <p><strong>Data creazione:</strong> {new Date(backupData.metadata.data_creazione).toLocaleString('it-IT')}</p>
+                                                    <p><strong>Creato da:</strong> {backupData.metadata.creato_da}</p>
+                                                    <p><strong>Versione:</strong> {backupData.metadata.versione}</p>
+                                                    <div className="backup-stats">
+                                                        <div className="backup-stat">
+                                                            <div style={{ fontSize: "0.7rem", color: "#ccc" }}>👥 Giocatori</div>
+                                                            <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#FFD700" }}>
+                                                                {backupData.metadata.totale_dati.giocatori}
+                                                            </div>
+                                                        </div>
+                                                        <div className="backup-stat">
+                                                            <div style={{ fontSize: "0.7rem", color: "#ccc" }}>💬 Messaggi</div>
+                                                            <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#4CAF50" }}>
+                                                                {backupData.metadata.totale_dati.messaggi}
+                                                            </div>
+                                                        </div>
+                                                        <div className="backup-stat">
+                                                            <div style={{ fontSize: "0.7rem", color: "#ccc" }}>🗓️ Partite</div>
+                                                            <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#2196F3" }}>
+                                                                {backupData.metadata.totale_dati.partite}
+                                                            </div>
+                                                        </div>
+                                                        <div className="backup-stat">
+                                                            <div style={{ fontSize: "0.7rem", color: "#ccc" }}>📝 Pagelle</div>
+                                                            <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#9C27B0" }}>
+                                                                {backupData.metadata.totale_dati.pagelle}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 )}
+
+                                {/* NOTIFICHE E IMPOSTAZIONI APP */}
+                                <div className="notification-settings">
+                                    <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>🔔 Notifiche</h3>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Notifiche Push</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Ricevi notifiche per nuovi messaggi e partite
+                                            </p>
+                                        </div>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={notificationsEnabled}
+                                                onChange={toggleNotifications}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Notifiche Chat</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Avvisami per nuovi messaggi in chat
+                                            </p>
+                                        </div>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={chatNotificationsEnabled}
+                                                onChange={toggleChatNotifications}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Notifiche Calendario</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Avvisami per nuove partite e prenotazioni
+                                            </p>
+                                        </div>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={calendarNotificationsEnabled}
+                                                onChange={toggleCalendarNotifications}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div className="notification-settings">
+                                    <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>📊 Statistiche App</h3>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Download App</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Numero di download dell'app
+                                            </p>
+                                        </div>
+                                        <span style={{ fontWeight: "bold", color: "#4CAF50" }}>
+                                            {statistiche.download}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Utenti Unici</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Numero di giocatori registrati
+                                            </p>
+                                        </div>
+                                        <span style={{ fontWeight: "bold", color: "#FFC107" }}>
+                                            {statistiche.utentiUnici}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="notification-settings">
+                                    <h3 style={{ marginBottom: "15px", color: "#9C27B0" }}>ℹ️ Informazioni</h3>
+                                    
+                                    <div style={{ padding: "15px 0" }}>
+                                        <p style={{ marginBottom: "10px" }}>
+                                            <strong>Versione App:</strong> 2.0.0
+                                        </p>
+                                        <p style={{ marginBottom: "10px" }}>
+                                            <strong>Sviluppatore:</strong> Vitantonio
+                                        </p>
+                                        <p style={{ marginBottom: "10px" }}>
+                                            <strong>Ultimo Aggiornamento:</strong> {new Date().toLocaleDateString('it-IT')}
+                                        </p>
+                                        <p>
+                                            <strong>Descrizione:</strong> App per la gestione del torneo di calcetto Arena Cup
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         )}
-
-                        {/* ALTRE TAB ESISTENTI (PRESENZE, MIO SCORE, CHAT, PAGELLE, IMPOSTAZIONI) */}
-                        {/* [Qui andrebbero le altre sezioni che erano nel codice originale] */}
-                        {/* Per brevità mostro solo la struttura, ma tutto il resto è identico */}
-
-                    </div>
-
-                    {/* MOBILE BOTTOM NAVIGATION */}
-                    <div className="app-bottom-nav">
-                        <button 
-                            className={`nav-button ${activeTab === "classifica" ? "active" : ""}`}
-                            onClick={() => setActiveTab("classifica")}
-                        >
-                            <span className="icon">🏆</span>
-                            <span>Classifica</span>
-                        </button>
-                        
-                        <button 
-                            className={`nav-button ${activeTab === "calendario" ? "active" : ""}`}
-                            onClick={() => setActiveTab("calendario")}
-                        >
-                            <span className="icon">🗓️</span>
-                            <span>Calendario</span>
-                            {notificheCalendario > 0 && (
-                                <span className="notification-badge">
-                                    {notificheCalendario > 9 ? '9+' : notificheCalendario}
-                                </span>
-                            )}
-                        </button>
-                        
-                        <button 
-                            className={`nav-button ${activeTab === "presenze" ? "active" : ""}`}
-                            onClick={() => setActiveTab("presenze")}
-                        >
-                            <span className="icon">📊</span>
-                            <span>Partite</span>
-                        </button>
-                        
-                        <button 
-                            className={`nav-button ${activeTab === "mioscore" ? "active" : ""}`}
-                            onClick={() => setActiveTab("mioscore")}
-                        >
-                            <span className="icon">⭐</span>
-                            <span>Il Mio Score</span>
-                        </button>
-                        
-                        <button 
-                            className={`nav-button ${activeTab === "chat" ? "active" : ""}`}
-                            onClick={() => {
-                                setActiveTab("chat");
-                                setHaNuoviMessaggi(false);
-                                setNotificheChat(0);
-                            }}
-                        >
-                            <span className="icon">💬</span>
-                            <span>Chat</span>
-                            {notificheChat > 0 && (
-                                <span className="notification-badge">
-                                    {notificheChat > 9 ? '9+' : notificheChat}
-                                </span>
-                            )}
-                        </button>
-                        
-                        <button 
-                            className={`nav-button ${activeTab === "pagelle" ? "active" : ""}`}
-                            onClick={() => setActiveTab("pagelle")}
-                        >
-                            <span className="icon">📝</span>
-                            <span>Pagelle</span>
-                        </button>
-
-                        <button 
-                            className={`nav-button ${activeTab === "backup" ? "active" : ""}`}
-                            onClick={() => setActiveTab("backup")}
-                        >
-                            <span className="icon">💾</span>
-                            <span>Backup</span>
-                        </button>
-                    </div>
-                </div>
-            );
-        }
-
-        ReactDOM.render(<App />, document.getElementById('root'));
-    </script>
-</body>
-</html>
