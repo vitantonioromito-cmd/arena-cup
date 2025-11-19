@@ -1741,7 +1741,8 @@
                     alert("❌ Errore durante la pulizia dei dati");
                 });
             };
-                        // 🧤 CALCOLO PUNTEGGIO BENJI PRICE
+
+            // 🧤 CALCOLO PUNTEGGIO BENJI PRICE
             const calcolaPunteggioBenjiPrice = (portiere) => {
                 let punteggio = 0;
                 punteggio += (portiere.parate || 0) * 3;
@@ -2247,7 +2248,8 @@
             const getMiePagelle = () => {
                 return pagelle.filter(p => p.giocatore === loginForm.username);
             };
-                        // 🔧 SEZIONE LOGIN CORRETTA
+
+            // 🔧 SEZIONE LOGIN CORRETTA
             if (!isLogged) {
                 return (
                     <div className="app-container">
@@ -2886,19 +2888,8 @@
                                 )}
                             </div>
                         )}
-                        <!DOCTYPE html>
-<html>
-<head>
-    <!-- FILE 1: Tutti gli stili CSS qui -->
-</head>
-<body>
-    <!-- FILE 2: Inizio JavaScript e React -->
-    <!-- FILE 3: Continuazione funzioni -->
-    <!-- FILE 4: Interfaccia React -->
-    <!-- FILE 5: Chiusura (altre tab + footer) -->
-</body>
-</html>
-                                                {/* TAB IMPOSTAZIONI - ORA CON BACKUP E IL MIO SCORE INTEGRATI */}
+
+                        {/* TAB IMPOSTAZIONI - ORA CON BACKUP E IL MIO SCORE INTEGRATI */}
                         {activeTab === "impostazioni" && (
                             <div>
                                 <h2>⚙️ Impostazioni</h2>
@@ -3225,3 +3216,948 @@
                                 </div>
                             </div>
                         )}
+
+                        {/* ALTRE TAB ESISTENTI... */}
+                        {activeTab === "calendario" && (
+                            <div>
+                                <h2>🗓️ Calendario Partite</h2>
+                                {partite.length === 0 ? (
+                                    <div className="empty-state">
+                                        <div className="icon">🗓️</div>
+                                        <p>Nessuna partita programmata.</p>
+                                    </div>
+                                ) : (
+                                    partite.map(partita => {
+                                        const stato = getStatoPartita(partita);
+                                        const confermati = partita.confermati || [];
+                                        const limite = partita.triangolare ? 15 : 10;
+                                        const nomeVisualizzato = getCurrentUserName();
+                                        const isConfermato = confermati.includes(nomeVisualizzato);
+                                        
+                                        return (
+                                            <div key={partita.id} className="match-card">
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <h3 style={{ margin: "0 0 10px 0", color: "#4CAF50" }}>
+                                                            {formattaData(partita.data)} - {partita.ora}
+                                                        </h3>
+                                                        <p style={{ margin: "5px 0", color: "#ccc" }}>
+                                                            📍 {partita.luogo || "Campo Arena"}
+                                                        </p>
+                                                        <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "10px 0" }}>
+                                                            <span style={{ 
+                                                                background: stato.colore, 
+                                                                color: "white", 
+                                                                padding: "5px 10px", 
+                                                                borderRadius: "12px", 
+                                                                fontSize: "0.8rem",
+                                                                fontWeight: "bold"
+                                                            }}>
+                                                                {stato.testo}
+                                                            </span>
+                                                            <span style={{ color: "#FFC107" }}>
+                                                                {confermati.length}/{limite} confermati
+                                                            </span>
+                                                            {partita.triangolare && (
+                                                                <span style={{ 
+                                                                    background: "#9C27B0", 
+                                                                    color: "white", 
+                                                                    padding: "5px 10px", 
+                                                                    borderRadius: "12px", 
+                                                                    fontSize: "0.8rem"
+                                                                }}>
+                                                                    🔺 TRIANGOLARE
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                                                        <button 
+                                                            onClick={() => togglePrenotazionePartita(partita.id)}
+                                                            style={{ 
+                                                                background: isConfermato ? "#F44336" : "#4CAF50",
+                                                                color: "white",
+                                                                border: "none",
+                                                                padding: "10px 15px",
+                                                                borderRadius: "8px",
+                                                                cursor: "pointer",
+                                                                fontWeight: "bold"
+                                                            }}
+                                                        >
+                                                            {isConfermato ? "❌ Annulla" : "✅ Conferma"}
+                                                        </button>
+                                                        
+                                                        {isAdminUser() && (
+                                                            <>
+                                                                <button 
+                                                                    onClick={() => impostaTriangolare(partita.id, !partita.triangolare)}
+                                                                    style={{ 
+                                                                        background: "#9C27B0",
+                                                                        color: "white",
+                                                                        border: "none",
+                                                                        padding: "10px 15px",
+                                                                        borderRadius: "8px",
+                                                                        cursor: "pointer"
+                                                                    }}
+                                                                >
+                                                                    {partita.triangolare ? "🔺 Normale" : "🔺 Triangolare"}
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* LISTA CONFERMATI */}
+                                                <div className="confermato-list">
+                                                    <h4 style={{ margin: "15px 0 10px 0", color: "#FFC107" }}>Giocatori Confermati:</h4>
+                                                    {confermati.length === 0 ? (
+                                                        <p style={{ color: "#888", fontStyle: "italic" }}>Nessun giocatore confermato ancora.</p>
+                                                    ) : (
+                                                        confermati.map((nome, index) => (
+                                                            <div 
+                                                                key={index} 
+                                                                className={`confermato-item ${nome === nomeVisualizzato ? 'current-user' : ''}`}
+                                                            >
+                                                                {nome} {nome === nomeVisualizzato && " (TU)"}
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                                
+                                                {/* CONTROLLI ADMIN PER RISULTATO */}
+                                                {isAdminUser() && (
+                                                    <div style={{ marginTop: "15px", paddingTop: "15px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+                                                        <h4 style={{ marginBottom: "10px", color: "#FFC107" }}>Controlli Admin:</h4>
+                                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                                                            <button 
+                                                                onClick={() => impostaRisultatoPartita(partita.id, "Vittoria")}
+                                                                style={{ 
+                                                                    background: "#4CAF50",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    padding: "8px 12px",
+                                                                    borderRadius: "6px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "0.8rem"
+                                                                }}
+                                                            >
+                                                                ✅ Vittoria
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => impostaRisultatoPartita(partita.id, "Sconfitta")}
+                                                                style={{ 
+                                                                    background: "#F44336",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    padding: "8px 12px",
+                                                                    borderRadius: "6px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "0.8rem"
+                                                                }}
+                                                            >
+                                                                ❌ Sconfitta
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => impostaRisultatoPartita(partita.id, "Pareggio")}
+                                                                style={{ 
+                                                                    background: "#FFC107",
+                                                                    color: "black",
+                                                                    border: "none",
+                                                                    padding: "8px 12px",
+                                                                    borderRadius: "6px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "0.8rem"
+                                                                }}
+                                                            >
+                                                                ⚡ Pareggio
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === "chat" && (
+                            <div>
+                                <h2>💬 Chat di Gruppo</h2>
+                                
+                                <div 
+                                    ref={chatContainerRef}
+                                    style={{ 
+                                        height: "400px", 
+                                        overflowY: "auto", 
+                                        marginBottom: "20px",
+                                        padding: "10px",
+                                        background: "rgba(255,255,255,0.05)",
+                                        borderRadius: "12px"
+                                    }}
+                                >
+                                    {messaggi.length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="icon">💬</div>
+                                            <p>Nessun messaggio ancora.</p>
+                                            <p style={{ fontSize: "0.9rem", marginTop: "10px" }}>Inizia la conversazione!</p>
+                                        </div>
+                                    ) : (
+                                        messaggi.map(msg => {
+                                            const isOwn = msg.mittente === loginForm.username;
+                                            const isAdminMsg = msg.mittente === "admin" || msg.mittente === "vitantonio";
+                                            const mittenteVisualizzato = msg.mittente_visualizzato || 
+                                                (msg.mittente === "admin" ? "Vitantonio" : 
+                                                 msg.mittente === "fabrizio" ? "Fabrizio" : msg.mittente);
+                                            
+                                            return (
+                                                <div 
+                                                    key={msg.id} 
+                                                    className={`message-bubble ${isOwn ? 'own-message' : ''} ${isAdminMsg ? 'admin-message' : ''}`}
+                                                >
+                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "5px" }}>
+                                                        <strong style={{ color: isOwn ? "#4CAF50" : isAdminMsg ? "#FFC107" : "#2196F3" }}>
+                                                            {mittenteVisualizzato}
+                                                            {isAdminMsg && " 👑"}
+                                                        </strong>
+                                                        <span style={{ fontSize: "0.7rem", color: "#ccc" }}>
+                                                            {new Date(msg.timestamp).toLocaleTimeString('it-IT', { 
+                                                                hour: '2-digit', minute: '2-digit' 
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ wordBreak: "break-word" }}>
+                                                        {msg.messaggio}
+                                                    </div>
+                                                    {(isOwn || isAdminUser()) && (
+                                                        <div style={{ textAlign: "right", marginTop: "5px" }}>
+                                                            <button 
+                                                                onClick={() => eliminaMessaggio(msg.id)}
+                                                                style={{ 
+                                                                    background: "rgba(244, 67, 54, 0.3)",
+                                                                    color: "#F44336",
+                                                                    border: "none",
+                                                                    padding: "2px 8px",
+                                                                    borderRadius: "4px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "0.7rem"
+                                                                }}
+                                                            >
+                                                                Elimina
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                                
+                                <div style={{ display: "flex", gap: "10px" }}>
+                                    <input 
+                                        type="text"
+                                        placeholder="Scrivi un messaggio..."
+                                        value={nuovoMessaggio}
+                                        onChange={(e) => setNuovoMessaggio(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && inviaMessaggio()}
+                                        style={{ flex: 1 }}
+                                    />
+                                    <button 
+                                        onClick={inviaMessaggio}
+                                        style={{ 
+                                            background: "#4CAF50",
+                                            color: "white",
+                                            border: "none",
+                                            padding: "15px 20px",
+                                            borderRadius: "8px",
+                                            cursor: "pointer",
+                                            fontWeight: "bold"
+                                        }}
+                                    >
+                                        Invia
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "pagelle" && (
+                            <div>
+                                <h2>📝 Sistema Pagelle</h2>
+                                
+                                {/* FORM AGGIUNTA PAGELLA (SOLO ADMIN) */}
+                                {isAdminUser() && (
+                                    <div className="pagella-form">
+                                        <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>Aggiungi Nuova Pagella</h3>
+                                        
+                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "15px" }}>
+                                            <select 
+                                                value={nuovaPagella.giocatore}
+                                                onChange={(e) => setNuovaPagella(prev => ({ ...prev, giocatore: e.target.value }))}
+                                                className="giocatore-select"
+                                            >
+                                                <option value="">Seleziona Giocatore</option>
+                                                {giocatori.map(g => (
+                                                    <option key={g.id} value={g.nome}>{g.nome}</option>
+                                                ))}
+                                            </select>
+                                            
+                                            <select 
+                                                value={nuovaPagella.voto}
+                                                onChange={(e) => setNuovaPagella(prev => ({ ...prev, voto: e.target.value }))}
+                                                className="voto-select"
+                                            >
+                                                <option value="">Voto</option>
+                                                {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(voto => (
+                                                    <option key={voto} value={voto}>{voto}</option>
+                                                ))}
+                                            </select>
+                                            
+                                            <select 
+                                                value={nuovaPagella.fazione}
+                                                onChange={(e) => setNuovaPagella(prev => ({ ...prev, fazione: e.target.value }))}
+                                                className="fazione-select"
+                                            >
+                                                <option value="nessuna">Nessuna Fazione</option>
+                                                <option value="bianca">Armata Bianca</option>
+                                                <option value="nera">Armata Nera</option>
+                                                <option value="rossa">Armata Rossa</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <textarea 
+                                            placeholder="Commento (opzionale)"
+                                            value={nuovaPagella.commento}
+                                            onChange={(e) => setNuovaPagella(prev => ({ ...prev, commento: e.target.value }))}
+                                            rows="3"
+                                        />
+                                        
+                                        <div className="pagella-actions">
+                                            <button 
+                                                onClick={aggiungiPagella}
+                                                style={{ 
+                                                    background: "#4CAF50",
+                                                    color: "white",
+                                                    border: "none",
+                                                    padding: "12px 20px",
+                                                    borderRadius: "8px",
+                                                    cursor: "pointer",
+                                                    fontWeight: "bold"
+                                                }}
+                                            >
+                                                ➕ Aggiungi Pagella
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* LISTA PAGELLE */}
+                                <h3 style={{ marginTop: "30px", marginBottom: "15px" }}>Ultime Pagelle</h3>
+                                {pagelle.length === 0 ? (
+                                    <div className="empty-state">
+                                        <div className="icon">📝</div>
+                                        <p>Nessuna pagella ancora.</p>
+                                    </div>
+                                ) : (
+                                    pagelle.map(pagella => (
+                                        <div key={pagella.id} className={`pagella-card ${getClasseFazione(pagella.fazione)}`}>
+                                            <div className="pagella-header">
+                                                <div>
+                                                    <div className="pagella-giocatore">
+                                                        {pagella.giocatore}
+                                                        {isCurrentUser(pagella.giocatore) && <span className="current-user-badge">TU</span>}
+                                                        {getBadgeFazione(pagella.fazione)}
+                                                    </div>
+                                                    <div className="pagella-data">
+                                                        Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
+                                                        {pagella.modificato_il && ` (modificato il ${pagella.modificato_il})`}
+                                                    </div>
+                                                </div>
+                                                <div className="pagella-voto">
+                                                    {pagella.voto}/10
+                                                </div>
+                                            </div>
+                                            
+                                            {pagella.commento && (
+                                                <div className="pagella-commento">
+                                                    "{pagella.commento}"
+                                                </div>
+                                            )}
+                                            
+                                            {/* MODIFICA PAGELLA (SOLO ADMIN) */}
+                                            {pagellaInModifica === pagella.id ? (
+                                                <div className="modifica-pagella-form">
+                                                    <h4 style={{ marginBottom: "10px", color: "#FFC107" }}>Modifica Pagella</h4>
+                                                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "10px" }}>
+                                                        <select 
+                                                            value={modificaPagella.voto}
+                                                            onChange={(e) => setModificaPagella(prev => ({ ...prev, voto: e.target.value }))}
+                                                            className="voto-select"
+                                                        >
+                                                            <option value="">Voto</option>
+                                                            {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(voto => (
+                                                                <option key={voto} value={voto}>{voto}</option>
+                                                            ))}
+                                                        </select>
+                                                        
+                                                        <select 
+                                                            value={modificaPagella.fazione}
+                                                            onChange={(e) => setModificaPagella(prev => ({ ...prev, fazione: e.target.value }))}
+                                                            className="fazione-select"
+                                                        >
+                                                            <option value="nessuna">Nessuna Fazione</option>
+                                                            <option value="bianca">Armata Bianca</option>
+                                                            <option value="nera">Armata Nera</option>
+                                                            <option value="rossa">Armata Rossa</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <textarea 
+                                                        placeholder="Commento"
+                                                        value={modificaPagella.commento}
+                                                        onChange={(e) => setModificaPagella(prev => ({ ...prev, commento: e.target.value }))}
+                                                        rows="3"
+                                                    />
+                                                    
+                                                    <div className="modifica-actions">
+                                                        <button 
+                                                            onClick={salvaModificaPagella}
+                                                            style={{ 
+                                                                background: "#4CAF50",
+                                                                color: "white",
+                                                                border: "none",
+                                                                padding: "8px 15px",
+                                                                borderRadius: "6px",
+                                                                cursor: "pointer"
+                                                            }}
+                                                        >
+                                                            💾 Salva
+                                                        </button>
+                                                        <button 
+                                                            onClick={annullaModificaPagella}
+                                                            style={{ 
+                                                                background: "#F44336",
+                                                                color: "white",
+                                                                border: "none",
+                                                                padding: "8px 15px",
+                                                                borderRadius: "6px",
+                                                                cursor: "pointer"
+                                                            }}
+                                                        >
+                                                            ❌ Annulla
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="pagella-actions">
+                                                    {isAdminUser() && (
+                                                        <>
+                                                            <button 
+                                                                onClick={() => avviaModificaPagella(pagella)}
+                                                                style={{ 
+                                                                    background: "#FFC107",
+                                                                    color: "black",
+                                                                    border: "none",
+                                                                    padding: "8px 15px",
+                                                                    borderRadius: "6px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "0.8rem"
+                                                                }}
+                                                            >
+                                                                ✏️ Modifica
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => eliminaPagella(pagella.id, pagella.giocatore)}
+                                                                style={{ 
+                                                                    background: "#F44336",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    padding: "8px 15px",
+                                                                    borderRadius: "6px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "0.8rem"
+                                                                }}
+                                                            >
+                                                                🗑️ Elimina
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === "presenze" && (
+                            <div>
+                                <h2>📊 Partite Giocate & Statistiche</h2>
+                                
+                                <div className="stats-grid">
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#4CAF50", margin: "0 0 10px 0", fontSize: "1rem" }}>✅ Partite Vinte</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
+                                            {giocatori.reduce((sum, g) => sum + (g.partite_vinte || 0), 0)}
+                                        </p>
+                                    </div>
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#F44336", margin: "0 0 10px 0", fontSize: "1rem" }}>❌ Partite Perse</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
+                                            {giocatori.reduce((sum, g) => sum + (g.partite_perse || 0), 0)}
+                                        </p>
+                                    </div>
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#FFC107", margin: "0 0 10px 0", fontSize: "1rem" }}>⚡ Partite Pareggiate</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
+                                            {giocatori.reduce((sum, g) => sum + (g.partite_pareggiate || 0), 0)}
+                                        </p>
+                                    </div>
+                                    <div className="stat-card">
+                                        <h3 style={{ color: "#2196F3", margin: "0 0 10px 0", fontSize: "1rem" }}>📊 Totale Partite</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
+                                            {stats.totalePresenze}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="classifica-grid">
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>✅ Classifica Vittorie</h3>
+                                        {classificaVittorie.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">✅</div>
+                                                <p>Nessuna partita vinta ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaVittorie.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.partite_vinte || 0} vittorie
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#F44336" }}>❌ Classifica Sconfitte</h3>
+                                        {classificaPerse.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">❌</div>
+                                                <p>Nessuna partita persa ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaPerse.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.partite_perse || 0} sconfitte
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>📊 Classifica Presenze</h3>
+                                        {classificaPresenze.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">📊</div>
+                                                <p>Nessuna presenza ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaPresenze.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.presenze || 0} partite
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#9C27B0" }}>🎯 Percentuale Vittorie (Top 3)</h3>
+                                        {classificaPercentualeVittorie.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">🎯</div>
+                                                <p>Dati insufficienti.</p>
+                                            </div>
+                                        ) : (
+                                            classificaPercentualeVittorie.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.percentuale}%
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* CONTROLLI ADMIN PER PRESENZE E PARTITE */}
+                                {isAdminUser() && (
+                                    <div style={{ marginTop: "40px" }}>
+                                        <h3 style={{ marginBottom: "20px", color: "#FFC107" }}>👑 Controlli Admin - Gestione Partite</h3>
+                                        {giocatori.map(giocatore => (
+                                            <div key={giocatore.id} className="player-card">
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <h4 style={{ margin: "0 0 10px 0" }}>
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                        </h4>
+                                                        <div style={{ display: "flex", gap: "15px", fontSize: "0.9rem", color: "#ccc" }}>
+                                                            <span>📊 Partite: {giocatore.presenze || 0}</span>
+                                                            <span>✅ Vittorie: {giocatore.partite_vinte || 0}</span>
+                                                            <span>❌ Sconfitte: {giocatore.partite_perse || 0}</span>
+                                                            <span>🎯 %Vitt: {calcolaPercentualeVittorie(giocatore)}%</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+                                                        <input 
+                                                            id={`presenze-${giocatore.id}`}
+                                                            type="number" 
+                                                            placeholder="±Presenze" 
+                                                            className="number-input"
+                                                        />
+                                                        <button 
+                                                            onClick={() => aggiungiPresenza(giocatore.id, document.getElementById(`presenze-${giocatore.id}`).value)}
+                                                            style={{ 
+                                                                padding: "8px 12px", 
+                                                                background: "#2196F3",
+                                                                color: "white",
+                                                                border: "none",
+                                                                borderRadius: "8px",
+                                                                cursor: "pointer",
+                                                                fontSize: "12px"
+                                                            }}
+                                                        >
+                                                            ±📊
+                                                        </button>
+                                                        
+                                                        <input 
+                                                            id={`vinte-${giocatore.id}`}
+                                                            type="number" 
+                                                            placeholder="±Vinte" 
+                                                            className="number-input"
+                                                        />
+                                                        <button 
+                                                            onClick={() => aggiungiPartitaVinta(giocatore.id, document.getElementById(`vinte-${giocatore.id}`).value)}
+                                                            style={{ 
+                                                                padding: "8px 12px", 
+                                                                background: "#4CAF50",
+                                                                color: "white",
+                                                                border: "none",
+                                                                borderRadius: "8px",
+                                                                cursor: "pointer",
+                                                                fontSize: "12px"
+                                                            }}
+                                                        >
+                                                            ±✅
+                                                        </button>
+                                                        
+                                                        <input 
+                                                            id={`perse-${giocatore.id}`}
+                                                            type="number" 
+                                                            placeholder="±Perse" 
+                                                            className="number-input"
+                                                        />
+                                                        <button 
+                                                            onClick={() => aggiungiPartitaPersa(giocatore.id, document.getElementById(`perse-${giocatore.id}`).value)}
+                                                            style={{ 
+                                                                padding: "8px 12px", 
+                                                                background: "#F44336",
+                                                                color: "white",
+                                                                border: "none",
+                                                                borderRadius: "8px",
+                                                                cursor: "pointer",
+                                                                fontSize: "12px"
+                                                            }}
+                                                        >
+                                                            ±❌
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === "mioscore" && (
+                            <div>
+                                <h2>⭐ Il Mio Score Personale</h2>
+                                
+                                <div className="score-header">
+                                    <div className="score-avatar">
+                                        {getCurrentUserName().charAt(0).toUpperCase()}
+                                    </div>
+                                    <h3 style={{ color: "#4CAF50", marginBottom: "5px" }}>{getCurrentUserName()}</h3>
+                                    <p style={{ color: "#ccc" }}>Il tuo profilo personale nella Arena Cup</p>
+                                </div>
+
+                                <div className="score-stats-grid">
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">📊 Partite Giocate</div>
+                                        <div className="score-stat-value">{getCurrentGiocatore().presenze || 0}</div>
+                                        <div className="progress-bar">
+                                            <div 
+                                                className="progress-fill vinte" 
+                                                style={{ width: `${((getCurrentGiocatore().presenze || 0) / Math.max(1, stats.totalePresenze)) * 100}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">⚽ Gol Segnati</div>
+                                        <div className="score-stat-value" style={{ color: "#FFD700" }}>
+                                            {getCurrentGiocatore().gol || 0}
+                                        </div>
+                                        <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                                            Media: {getCurrentGiocatore().presenze ? ((getCurrentGiocatore().gol || 0) / getCurrentGiocatore().presenze).toFixed(2) : "0.00"} a partita
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">🎯 Assist</div>
+                                        <div className="score-stat-value" style={{ color: "#4CAF50" }}>
+                                            {getCurrentGiocatore().assist || 0}
+                                        </div>
+                                        <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                                            Media: {getCurrentGiocatore().presenze ? ((getCurrentGiocatore().assist || 0) / getCurrentGiocatore().presenze).toFixed(2) : "0.00"} a partita
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">⭐ Media Voto</div>
+                                        <div className="score-stat-value" style={{ color: "#2196F3" }}>
+                                            {getCurrentGiocatore().media_calcolata ? getCurrentGiocatore().media_calcolata.toFixed(2) : "0.00"}
+                                        </div>
+                                        <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                                            {getCurrentGiocatore().voti ? getCurrentGiocatore().voti.length : 0} valutazioni
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="score-stats-grid">
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">🏆 MVP</div>
+                                        <div className="score-stat-value" style={{ color: "#FFC107" }}>
+                                            {getCurrentGiocatore().mvp_count || 0}
+                                        </div>
+                                        <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                                            {getCurrentGiocatore().presenze ? `1 ogni ${Math.ceil((getCurrentGiocatore().presenze || 1) / (getCurrentGiocatore().mvp_count || 1))} partite` : "Nessuna partita"}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">🧤 Punti Portiere</div>
+                                        <div className="score-stat-value" style={{ color: "#0096FF" }}>
+                                            {calcolaPunteggioBenjiPrice(getCurrentGiocatore())}
+                                        </div>
+                                        <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                                            {getCurrentGiocatore().partite_portiere || 0} partite in porta
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">✅ Partite Vinte</div>
+                                        <div className="score-stat-value" style={{ color: "#4CAF50" }}>
+                                            {getCurrentGiocatore().partite_vinte || 0}
+                                        </div>
+                                        <div className="progress-bar">
+                                            <div 
+                                                className="progress-fill vinte" 
+                                                style={{ width: `${calcolaPercentualeVittorie(getCurrentGiocatore())}%` }}
+                                            ></div>
+                                        </div>
+                                        <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                                            {calcolaPercentualeVittorie(getCurrentGiocatore())}% vittorie
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">❌ Partite Perse</div>
+                                        <div className="score-stat-value" style={{ color: "#F44336" }}>
+                                            {getCurrentGiocatore().partite_perse || 0}
+                                        </div>
+                                        <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                                            {((getCurrentGiocatore().partite_perse || 0) / (getCurrentGiocatore().presenze || 1) * 100).toFixed(1)}% partite
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* LE MIE ULTIME PAGELLE */}
+                                <div style={{ marginTop: "40px" }}>
+                                    <h3 style={{ marginBottom: "20px", color: "#FFC107" }}>📝 Le Mie Ultime Pagelle</h3>
+                                    {getMiePagelle().length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="icon">📝</div>
+                                            <p>Nessuna pagella ancora.</p>
+                                            <p style={{ fontSize: "0.9rem", marginTop: "10px" }}>Le tue valutazioni appariranno qui!</p>
+                                        </div>
+                                    ) : (
+                                        getMiePagelle().slice(0, 5).map(pagella => (
+                                            <div key={pagella.id} className={`pagella-card ${getClasseFazione(pagella.fazione)}`}>
+                                                <div className="pagella-header">
+                                                    <div>
+                                                        <div className="pagella-giocatore">
+                                                            {pagella.giocatore}
+                                                            {getBadgeFazione(pagella.fazione)}
+                                                        </div>
+                                                        <div className="pagella-data">
+                                                            Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
+                                                        </div>
+                                                    </div>
+                                                    <div className="pagella-voto">
+                                                        {pagella.voto}/10
+                                                    </div>
+                                                </div>
+                                                
+                                                {pagella.commento && (
+                                                    <div className="pagella-commento">
+                                                        "{pagella.commento}"
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                {/* STATISTICHE DETTAGLIATE */}
+                                <div style={{ marginTop: "40px" }}>
+                                    <h3 style={{ marginBottom: "20px", color: "#2196F3" }}>📈 Statistiche Dettagliate</h3>
+                                    <div className="stats-grid">
+                                        <div className="stat-card">
+                                            <h4 style={{ color: "#FFD700", margin: "0 0 10px 0", fontSize: "0.9rem" }}>⚽ Gol/Partita</h4>
+                                            <p style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold" }}>
+                                                {getCurrentGiocatore().presenze ? ((getCurrentGiocatore().gol || 0) / getCurrentGiocatore().presenze).toFixed(2) : "0.00"}
+                                            </p>
+                                        </div>
+                                        <div className="stat-card">
+                                            <h4 style={{ color: "#4CAF50", margin: "0 0 10px 0", fontSize: "0.9rem" }}>🎯 Assist/Partita</h4>
+                                            <p style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold" }}>
+                                                {getCurrentGiocatore().presenze ? ((getCurrentGiocatore().assist || 0) / getCurrentGiocatore().presenze).toFixed(2) : "0.00"}
+                                            </p>
+                                        </div>
+                                        <div className="stat-card">
+                                            <h4 style={{ color: "#FFC107", margin: "0 0 10px 0", fontSize: "0.9rem" }}>🏆 MVP/Partita</h4>
+                                            <p style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold" }}>
+                                                {getCurrentGiocatore().presenze ? ((getCurrentGiocatore().mvp_count || 0) / getCurrentGiocatore().presenze).toFixed(2) : "0.00"}
+                                            </p>
+                                        </div>
+                                        <div className="stat-card">
+                                            <h4 style={{ color: "#0096FF", margin: "0 0 10px 0", fontSize: "0.9rem" }}>🧤 Punti/Partita</h4>
+                                            <p style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold" }}>
+                                                {getCurrentGiocatore().partite_portiere ? (calcolaPunteggioBenjiPrice(getCurrentGiocatore()) / getCurrentGiocatore().partite_portiere).toFixed(1) : "0.0"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* MOBILE NAVIGATION */}
+                    <div className="app-bottom-nav">
+                        <button 
+                            className={`nav-button ${activeTab === "classifica" ? "active" : ""}`}
+                            onClick={() => setActiveTab("classifica")}
+                        >
+                            <span className="icon">🏆</span>
+                            <span>Classifica</span>
+                        </button>
+                        <button 
+                            className={`nav-button ${activeTab === "calendario" ? "active" : ""}`}
+                            onClick={() => setActiveTab("calendario")}
+                        >
+                            <span className="icon">🗓️</span>
+                            <span>Calendario</span>
+                            {notificheCalendario > 0 && (
+                                <span className="notification-badge small"></span>
+                            )}
+                        </button>
+                        <button 
+                            className={`nav-button ${activeTab === "presenze" ? "active" : ""}`}
+                            onClick={() => setActiveTab("presenze")}
+                        >
+                            <span className="icon">📊</span>
+                            <span>Partite</span>
+                        </button>
+                        <button 
+                            className={`nav-button ${activeTab === "mioscore" ? "active" : ""}`}
+                            onClick={() => setActiveTab("mioscore")}
+                        >
+                            <span className="icon">⭐</span>
+                            <span>Il Mio Score</span>
+                        </button>
+                        <button 
+                            className={`nav-button ${activeTab === "chat" ? "active" : ""}`}
+                            onClick={() => {
+                                setActiveTab("chat");
+                                setHaNuoviMessaggi(false);
+                                setNotificheChat(0);
+                            }}
+                        >
+                            <span className="icon">💬</span>
+                            <span>Chat</span>
+                            {notificheChat > 0 && (
+                                <span className="notification-badge">
+                                    {notificheChat > 9 ? '9+' : notificheChat}
+                                </span>
+                            )}
+                        </button>
+                        <button 
+                            className={`nav-button ${activeTab === "pagelle" ? "active" : ""}`}
+                            onClick={() => setActiveTab("pagelle")}
+                        >
+                            <span className="icon">📝</span>
+                            <span>Pagelle</span>
+                        </button>
+                        <button 
+                            className={`nav-button ${activeTab === "backup" ? "active" : ""}`}
+                            onClick={() => setActiveTab("backup")}
+                        >
+                            <span className="icon">💾</span>
+                            <span>Backup</span>
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
