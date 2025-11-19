@@ -787,6 +787,74 @@
         .progress-fill.perse { background: linear-gradient(90deg, #F44336, #d32f2f); }
         .progress-fill.pareggiate { background: linear-gradient(90deg, #FFC107, #FFA000); }
         
+        /* GESTIONE GIOCATORI STYLES */
+        .gestione-giocatori {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .aggiungi-giocatore-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .aggiungi-giocatore-input {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .lista-giocatori-admin {
+            margin-top: 20px;
+        }
+        
+        .giocatore-admin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .giocatore-admin-nome {
+            font-weight: bold;
+            flex: 1;
+        }
+        
+        .giocatore-admin-stats {
+            display: flex;
+            gap: 15px;
+            margin-right: 15px;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+        
+        .giocatore-admin-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-elimina {
+            background: #F44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .btn-elimina:hover {
+            background: #d32f2f;
+        }
+        
         /* DESKTOP STYLES MIGLIORATI */
         @media (min-width: 768px) {
             .stats-grid { 
@@ -1074,6 +1142,9 @@
                 fazione: "nessuna"
             });
 
+            // 🆕 STATO PER GESTIONE GIOCATORI
+            const [nuovoGiocatore, setNuovoGiocatore] = useState("");
+
             const chatContainerRef = useRef(null);
 
             // 🔐 PASSWORD ADMIN CORRETTE (NON VISIBILI)
@@ -1290,6 +1361,79 @@
                     chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
                 }
             }, [messaggi, activeTab]);
+
+            // 🆕 FUNZIONE PER AGGIUNGERE GIOCATORE
+            const aggiungiGiocatore = () => {
+                if (!isAdminUser()) return alert("Solo gli admin possono aggiungere giocatori!");
+                if (!nuovoGiocatore.trim()) return alert("Inserisci un nome per il giocatore!");
+                
+                // Controlla se il giocatore esiste già
+                const esisteGià = giocatori.some(g => 
+                    g.nome.toLowerCase() === nuovoGiocatore.toLowerCase()
+                );
+                
+                if (esisteGià) {
+                    alert("❌ Questo giocatore esiste già!");
+                    return;
+                }
+                
+                database.ref('giocatori').push({
+                    nome: nuovoGiocatore,
+                    gol: 0,
+                    assist: 0,
+                    voti: [],
+                    media_calcolata: 0,
+                    mvp_count: 0,
+                    presenze: 0,
+                    partite_vinte: 0,
+                    partite_perse: 0,
+                    partite_pareggiate: 0,
+                    partite_portiere: 0,
+                    parate: 0,
+                    gol_subiti: 0,
+                    rigori_parati: 0,
+                    uscite_vinte: 0,
+                    assist_portiere: 0,
+                    parate_difficili: 0,
+                    rinvii_buoni: 0,
+                    errori: 0,
+                    interventi_decisivi: 0,
+                    created_at: new Date().toLocaleString('it-IT')
+                }).then(() => {
+                    setNuovoGiocatore("");
+                    alert("✅ Giocatore aggiunto con successo!");
+                    
+                    showPushNotification(
+                        "👥 Nuovo Giocatore",
+                        `${nuovoGiocatore} è stato aggiunto alla Arena Cup!`,
+                        'chat'
+                    );
+                }).catch(error => {
+                    console.error("Errore aggiunta giocatore:", error);
+                    alert("❌ Errore durante l'aggiunta del giocatore");
+                });
+            };
+
+            // 🆕 FUNZIONE PER ELIMINARE GIOCATORE
+            const eliminaGiocatore = (id, nome) => {
+                if (!isAdminUser()) return alert("Solo gli admin possono eliminare giocatori!");
+                if (!confirm(`Sei sicuro di voler eliminare ${nome}? Questa azione è irreversibile!`)) return;
+                
+                database.ref(`giocatori/${id}`).remove()
+                    .then(() => {
+                        alert(`✅ Giocatore ${nome} eliminato con successo!`);
+                        
+                        showPushNotification(
+                            "👥 Giocatore Eliminato",
+                            `${nome} è stato rimosso dalla Arena Cup`,
+                            'chat'
+                        );
+                    })
+                    .catch(error => {
+                        console.error("Errore eliminazione giocatore:", error);
+                        alert("❌ Errore durante l'eliminazione del giocatore");
+                    });
+            };
 
             // 🧤 CALCOLO PUNTEGGIO BENJI PRICE
             const calcolaPunteggioBenjiPrice = (portiere) => {
@@ -1965,6 +2109,66 @@
                                         <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleMVP}</p>
                                     </div>
                                 </div>
+
+                                {/* 🆕 SEZIONE GESTIONE GIOCATORI (SOLO ADMIN) */}
+                                {isAdminUser() && (
+                                    <div className="gestione-giocatori">
+                                        <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>👥 Gestione Giocatori</h3>
+                                        
+                                        <div className="aggiungi-giocatore-form">
+                                            <input 
+                                                type="text"
+                                                placeholder="Nome del nuovo giocatore"
+                                                value={nuovoGiocatore}
+                                                onChange={(e) => setNuovoGiocatore(e.target.value)}
+                                                className="aggiungi-giocatore-input"
+                                                onKeyPress={(e) => e.key === 'Enter' && aggiungiGiocatore()}
+                                            />
+                                            <button 
+                                                onClick={aggiungiGiocatore}
+                                                style={{ 
+                                                    background: "#4CAF50", 
+                                                    color: "white",
+                                                    padding: "15px 20px"
+                                                }}
+                                            >
+                                                ➕ Aggiungi Giocatore
+                                            </button>
+                                        </div>
+
+                                        <div className="lista-giocatori-admin">
+                                            <h4 style={{ marginBottom: "15px", color: "#2196F3" }}>Lista Giocatori ({giocatori.length})</h4>
+                                            {giocatori.length === 0 ? (
+                                                <p style={{ textAlign: "center", color: "#888", padding: "20px" }}>
+                                                    Nessun giocatore ancora.
+                                                </p>
+                                            ) : (
+                                                giocatori.map(giocatore => (
+                                                    <div key={giocatore.id} className="giocatore-admin-item">
+                                                        <div className="giocatore-admin-nome">
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                        </div>
+                                                        <div className="giocatore-admin-stats">
+                                                            <span>⚽ {giocatore.gol || 0}</span>
+                                                            <span>🎯 {giocatore.assist || 0}</span>
+                                                            <span>⭐ {giocatore.media_calcolata ? giocatore.media_calcolata.toFixed(2) : "0.00"}</span>
+                                                            <span>📊 {giocatore.presenze || 0}</span>
+                                                        </div>
+                                                        <div className="giocatore-admin-actions">
+                                                            <button 
+                                                                onClick={() => eliminaGiocatore(giocatore.id, giocatore.nome)}
+                                                                className="btn-elimina"
+                                                            >
+                                                                🗑️ Elimina
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="classifica-grid">
                                     <div className="classifica-card">
