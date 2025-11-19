@@ -1074,9 +1074,6 @@
                 fazione: "nessuna"
             });
 
-            // 🆕 STATO PER NUOVO GIOCATORE
-            const [nuovoGiocatore, setNuovoGiocatore] = useState("");
-
             const chatContainerRef = useRef(null);
 
             // 🔐 PASSWORD ADMIN CORRETTE (NON VISIBILI)
@@ -1294,7 +1291,7 @@
                 }
             }, [messaggi, activeTab]);
 
-            // 🧤 CALCOLO PUNTEGGIO BENJI PRICE - MIGLIORATO CON BONUS
+            // 🧤 CALCOLO PUNTEGGIO BENJI PRICE
             const calcolaPunteggioBenjiPrice = (portiere) => {
                 let punteggio = 0;
                 punteggio += (portiere.parate || 0) * 3;
@@ -1306,17 +1303,6 @@
                 punteggio += (portiere.interventi_decisivi || 0) * 6;
                 punteggio -= (portiere.errori || 0) * 3;
                 punteggio += (portiere.partite_portiere || 0) * 2;
-                
-                // BONUS: Pulizia del campo
-                if (portiere.pulizia_campo) {
-                    punteggio += portiere.pulizia_campo * 5;
-                }
-                
-                // BONUS: Leadership
-                if (portiere.leadership) {
-                    punteggio += portiere.leadership * 3;
-                }
-                
                 return Math.max(0, punteggio);
             };
 
@@ -1576,93 +1562,6 @@
                     const azione = quantita >= 0 ? "aggiunte" : "rimosse";
                     alert(`❌ ${Math.abs(quantita)} partite perse ${azione}!`);
                     document.getElementById(`perse-${id}`).value = "";
-                });
-            };
-
-            // 🆕 AGGIUNGI NUOVO GIOCATORE (SOLO ADMIN E FABRIZIO)
-            const aggiungiGiocatore = () => {
-                if (!isAdminUser()) return alert("Solo gli admin possono aggiungere giocatori!");
-                if (!nuovoGiocatore.trim()) return alert("Inserisci il nome del giocatore!");
-                
-                // Controlla se il giocatore esiste già
-                const esisteGià = giocatori.some(g => 
-                    g.nome.toLowerCase() === nuovoGiocatore.toLowerCase()
-                );
-                
-                if (esisteGià) {
-                    alert("❌ Questo giocatore esiste già!");
-                    return;
-                }
-                
-                database.ref('giocatori').push({
-                    nome: nuovoGiocatore,
-                    gol: 0,
-                    assist: 0,
-                    voti: [],
-                    media_calcolata: 0,
-                    mvp_count: 0,
-                    presenze: 0,
-                    partite_vinte: 0,
-                    partite_perse: 0,
-                    partite_pareggiate: 0,
-                    parate: 0,
-                    gol_subiti: 0,
-                    rigori_parati: 0,
-                    uscite_vinte: 0,
-                    assist_portiere: 0,
-                    parate_difficili: 0,
-                    rinvii_buoni: 0,
-                    errori: 0,
-                    interventi_decisivi: 0,
-                    partite_portiere: 0,
-                    pulizia_campo: 0,
-                    leadership: 0
-                }).then(() => {
-                    setNuovoGiocatore("");
-                    alert("✅ Giocatore aggiunto!");
-                    
-                    showPushNotification(
-                        "👤 Nuovo Giocatore",
-                        `${nuovoGiocatore} è stato aggiunto alla Arena Cup!`,
-                        'chat'
-                    );
-                });
-            };
-
-            // 🆕 ELIMINA GIOCATORE (SOLO ADMIN E FABRIZIO)
-            const eliminaGiocatore = (id, nome) => {
-                if (!isAdminUser()) return alert("Solo gli admin possono eliminare giocatori!");
-                if (!confirm(`Sei sicuro di voler eliminare ${nome}? Questa azione è irreversibile!`)) return;
-                
-                database.ref(`giocatori/${id}`).remove()
-                    .then(() => {
-                        alert("🗑️ Giocatore eliminato!");
-                    })
-                    .catch(error => {
-                        console.error("Errore eliminazione giocatore:", error);
-                        alert("❌ Errore durante l'eliminazione del giocatore");
-                    });
-            };
-
-            // 🧤 AGGIUNGI BONUS PORTA (SOLO ADMIN E FABRIZIO)
-            const aggiungiBonusPorta = (id, tipo, quantitaInput) => {
-                if (!isAdminUser()) return alert("Solo gli admin possono gestire i bonus portieri!");
-                
-                const giocatore = giocatori.find(g => g.id === id);
-                if (!giocatore) return;
-                
-                const quantita = parseInt(quantitaInput);
-                if (isNaN(quantita)) return alert("Inserisci un numero valido!");
-                
-                const nuovoValore = Math.max(0, (giocatore[tipo] || 0) + quantita);
-                
-                database.ref(`giocatori/${id}`).update({
-                    [tipo]: nuovoValore
-                }).then(() => {
-                    const azione = quantita >= 0 ? "aggiunti" : "rimossi";
-                    const nomeBonus = tipo === 'pulizia_campo' ? 'punti pulizia campo' : 'punti leadership';
-                    alert(`🧤 ${Math.abs(quantita)} ${nomeBonus} ${azione}!`);
-                    document.getElementById(`${tipo}-${id}`).value = "";
                 });
             };
 
@@ -2169,40 +2068,6 @@
                                     </div>
                                 </div>
 
-                                {/* 🆕 SEZIONE AGGIUNGI GIOCATORE (SOLO ADMIN E FABRIZIO) */}
-                                {isAdminUser() && (
-                                    <div style={{ marginTop: "30px", padding: "20px", background: "rgba(255,255,255,0.1)", borderRadius: "15px" }}>
-                                        <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>👤 Gestione Giocatori</h3>
-                                        
-                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "15px" }}>
-                                            <input 
-                                                type="text"
-                                                placeholder="Nome nuovo giocatore"
-                                                value={nuovoGiocatore}
-                                                onChange={(e) => setNuovoGiocatore(e.target.value)}
-                                                style={{ flex: 1, padding: "12px", borderRadius: "8px", background: "rgba(255,255,255,0.9)", color: "#000" }}
-                                            />
-                                            <button 
-                                                onClick={aggiungiGiocatore}
-                                                style={{ 
-                                                    background: "#4CAF50", 
-                                                    color: "white",
-                                                    padding: "12px 20px",
-                                                    border: "none",
-                                                    borderRadius: "8px",
-                                                    cursor: "pointer",
-                                                    fontWeight: "bold"
-                                                }}
-                                            >
-                                                ➕ Aggiungi Giocatore
-                                            </button>
-                                        </div>
-                                        <p style={{ color: "#ccc", fontSize: "0.8rem" }}>
-                                            Aggiungi nuovi giocatori alla Arena Cup. I giocatori appariranno nella lista completa.
-                                        </p>
-                                    </div>
-                                )}
-
                                 {/* LISTA COMPLETA GIOCATORI CON TUTTE LE STATISTICHE */}
                                 <div style={{ marginTop: "40px" }}>
                                     <h3>👥 Lista Completa Giocatori</h3>
@@ -2256,8 +2121,6 @@
                                                                     <div className="mvp-stat">Partite: {giocatore.partite_portiere || 0}</div>
                                                                     {giocatore.rigori_parati > 0 && <div className="mvp-stat">Rigori: {giocatore.rigori_parati}</div>}
                                                                     {giocatore.parate_difficili > 0 && <div className="mvp-stat">Parate difficili: {giocatore.parate_difficili}</div>}
-                                                                    {giocatore.pulizia_campo > 0 && <div className="mvp-stat">Pulizia: {giocatore.pulizia_campo}</div>}
-                                                                    {giocatore.leadership > 0 && <div className="mvp-stat">Leadership: {giocatore.leadership}</div>}
                                                                 </div>
                                                             </div>
                                                         )}
@@ -2266,7 +2129,6 @@
                                                     {/* CONTROLLI ADMIN - FABRIZIO STESSI POTERI */}
                                                     {isAdminUser() && (
                                                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
-                                                            {/* CONTROLLI BASE */}
                                                             <input 
                                                                 id={`gol-${giocatore.id}`}
                                                                 type="number" 
@@ -2347,65 +2209,6 @@
                                                             >
                                                                 +🏆
                                                             </button>
-
-                                                            {/* BONUS PORTA */}
-                                                            <input 
-                                                                id={`pulizia_campo-${giocatore.id}`}
-                                                                type="number" 
-                                                                placeholder="±Pulizia" 
-                                                                className="number-input"
-                                                            />
-                                                            <button 
-                                                                onClick={() => aggiungiBonusPorta(giocatore.id, 'pulizia_campo', document.getElementById(`pulizia_campo-${giocatore.id}`).value)}
-                                                                style={{ 
-                                                                    padding: "8px 12px", 
-                                                                    background: "#9C27B0",
-                                                                    color: "white",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer",
-                                                                    fontSize: "12px"
-                                                                }}
-                                                            >
-                                                                ±🧹
-                                                            </button>
-
-                                                            <input 
-                                                                id={`leadership-${giocatore.id}`}
-                                                                type="number" 
-                                                                placeholder="±Leader" 
-                                                                className="number-input"
-                                                            />
-                                                            <button 
-                                                                onClick={() => aggiungiBonusPorta(giocatore.id, 'leadership', document.getElementById(`leadership-${giocatore.id}`).value)}
-                                                                style={{ 
-                                                                    padding: "8px 12px", 
-                                                                    background: "#E91E63",
-                                                                    color: "white",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer",
-                                                                    fontSize: "12px"
-                                                                }}
-                                                            >
-                                                                ±👑
-                                                            </button>
-
-                                                            {/* ELIMINA GIOCATORE */}
-                                                            <button 
-                                                                onClick={() => eliminaGiocatore(giocatore.id, giocatore.nome)}
-                                                                style={{ 
-                                                                    padding: "8px 12px", 
-                                                                    background: "#F44336",
-                                                                    color: "white",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer",
-                                                                    fontSize: "12px"
-                                                                }}
-                                                            >
-                                                                🗑️
-                                                            </button>
                                                         </div>
                                                     )}
                                                 </div>
@@ -2416,9 +2219,882 @@
                             </div>
                         )}
 
-                        {/* GLI ALTRI TAB RESTANO INVARIATI */}
-                        {/* ... resto del codice invariato ... */}
-                        
+                        {/* TAB CALENDARIO - CON PRENOTAZIONI FUNZIONANTI */}
+                        {activeTab === "calendario" && (
+                            <div>
+                                <h2>🗓️ Calendario Partite</h2>
+                                
+                                {partite.length === 0 ? (
+                                    <div className="empty-state">
+                                        <div className="icon">🗓️</div>
+                                        <p>Nessuna partita programmata.</p>
+                                    </div>
+                                ) : (
+                                    partite
+                                        .sort((a, b) => new Date(a.data) - new Date(b.data))
+                                        .map(partita => {
+                                            const stato = getStatoPartita(partita);
+                                            const nomeVisualizzato = getCurrentUserName();
+                                            
+                                            const confermati = partita.confermati || [];
+                                            const isConfermato = confermati.includes(nomeVisualizzato);
+                                            const limite = partita.triangolare ? 15 : 10;
+                                            
+                                            return (
+                                                <div key={partita.id} className="match-card">
+                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
+                                                        <div style={{ flex: 1 }}>
+                                                            <h3 style={{ margin: "0 0 10px 0", color: "#4CAF50" }}>
+                                                                {formattaData(partita.data)}
+                                                                {partita.triangolare && <span style={{ background: "#FFC107", color: "black", padding: "2px 8px", borderRadius: "10px", fontSize: "0.7rem", marginLeft: "10px" }}>TRIANGOLARE</span>}
+                                                            </h3>
+                                                            <p style={{ margin: "5px 0", color: "#ccc" }}>
+                                                                🕒 {partita.ora} • 📍 {partita.luogo}
+                                                            </p>
+                                                            <p style={{ margin: "5px 0", color: stato.colore, fontWeight: "bold" }}>
+                                                                {stato.testo} • {confermati.length}/{limite} confermati
+                                                            </p>
+                                                            {partita.risultato && (
+                                                                <p style={{ margin: "5px 0", color: "#FFD700", fontWeight: "bold" }}>
+                                                                🏆 Risultato: {partita.risultato}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                                                            <button 
+                                                                onClick={() => togglePrenotazionePartita(partita.id)}
+                                                                style={{ 
+                                                                    background: isConfermato ? "#F44336" : "#4CAF50",
+                                                                    color: "white",
+                                                                    padding: "10px 15px",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontWeight: "bold"
+                                                                }}
+                                                            >
+                                                                {isConfermato ? "❌ Annulla" : "✅ Conferma"}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* CONTROLLI ADMIN E FABRIZIO PER PARTITE */}
+                                                    {isAdminUser() && (
+                                                        <div style={{ marginTop: "15px", padding: "15px", background: "rgba(255,255,255,0.05)", borderRadius: "10px" }}>
+                                                            <h4 style={{ margin: "0 0 10px 0", color: "#FFC107" }}>Controlli Admin</h4>
+                                                            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                                                                <select 
+                                                                    onChange={(e) => impostaRisultatoPartita(partita.id, e.target.value)}
+                                                                    style={{ padding: "8px", borderRadius: "5px", background: "rgba(255,255,255,0.9)", color: "#000" }}
+                                                                >
+                                                                    <option value="">Imposta risultato</option>
+                                                                    <option value="Vittoria Bianca">Vittoria Bianca</option>
+                                                                    <option value="Vittoria Nera">Vittoria Nera</option>
+                                                                    <option value="Vittoria Rossa">Vittoria Rossa</option>
+                                                                    <option value="Pareggio">Pareggio</option>
+                                                                </select>
+                                                                
+                                                                <button 
+                                                                    onClick={() => impostaTriangolare(partita.id, !partita.triangolare)}
+                                                                    style={{ 
+                                                                        background: partita.triangolare ? "#F44336" : "#4CAF50",
+                                                                        color: "white",
+                                                                        padding: "8px 12px",
+                                                                        border: "none",
+                                                                        borderRadius: "5px",
+                                                                        cursor: "pointer"
+                                                                    }}
+                                                                >
+                                                                    {partita.triangolare ? "❌ Normale" : "✅ Triangolare"}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="confermato-list">
+                                                        <h4 style={{ margin: "15px 0 10px 0", color: "#4CAF50" }}>
+                                                            Giocatori Confermati ({confermati.length})
+                                                        </h4>
+                                                        {confermati.length > 0 ? (
+                                                            confermati.map((nome, index) => (
+                                                                <div 
+                                                                    key={index} 
+                                                                    className={`confermato-item ${nome === nomeVisualizzato ? 'current-user' : ''}`}
+                                                                >
+                                                                    {nome} {nome === nomeVisualizzato && " (TU)"}
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <p style={{ color: "#888", fontStyle: "italic" }}>
+                                                                Nessun giocatore confermato ancora.
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                )}
+                            </div>
+                        )}
+
+                        {/* NUOVO TAB: PARTITE GIOCATE CON CLASSIFICHE VINTE E PERSE */}
+                        {activeTab === "presenze" && (
+                            <div>
+                                <h2>📊 Partite Giocate</h2>
+
+                                {/* TOP 3 PERCENTUALE VITTORIE */}
+                                <div className="classifica-card" style={{ marginBottom: "20px" }}>
+                                    <h3 style={{ marginBottom: "15px", color: "#FFD700" }}>🏆 Top 3 Percentuale Vittorie</h3>
+                                    {classificaPercentualeVittorie.length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="icon">📊</div>
+                                            <p>Nessuna statistica vittorie ancora.</p>
+                                        </div>
+                                    ) : (
+                                        classificaPercentualeVittorie.map((giocatore, index) => (
+                                            <div key={giocatore.id} className="classifica-item">
+                                                <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                    {index + 1}
+                                                </div>
+                                                <div className="classifica-nome">
+                                                    {giocatore.nome}
+                                                    {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                </div>
+                                                <div className="classifica-valore">
+                                                    {giocatore.percentuale}%
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                <div className="classifica-grid">
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#9C27B0" }}>📊 Classifica Partite Giocate</h3>
+                                        {classificaPresenze.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">📊</div>
+                                                <p>Nessuna partita giocata ancora.</p>
+                                        </div>
+                                        ) : (
+                                            classificaPresenze.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.presenze || 0}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>✅ Classifica Partite Vinte</h3>
+                                        {classificaVittorie.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">✅</div>
+                                                <p>Nessuna partita vinta ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaVittorie.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.partite_vinte || 0} ✅
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#F44336" }}>❌ Classifica Partite Perse</h3>
+                                        {classificaPerse.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">❌</div>
+                                                <p>Nessuna partita persa ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaPerse.map((giocatore, index) => (
+                                                <div key={giocatore.id} className="classifica-item">
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.partite_perse || 0} ❌
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* LISTA COMPLETA GIOCATORI CON CONTROLLI PRESENZE (SOLO ADMIN E FABRIZIO) */}
+                                {isAdminUser() && (
+                                    <div style={{ marginTop: "30px" }}>
+                                        <h3>👥 Gestione Partite Giocate</h3>
+                                        {giocatori.length === 0 ? (
+                                            <p style={{ textAlign: "center", color: "#888", padding: "20px" }}>
+                                                Nessun giocatore ancora.
+                                            </p>
+                                        ) : (
+                                            giocatori.map(giocatore => (
+                                                <div key={giocatore.id} className="player-card">
+                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
+                                                        <div style={{ flex: 1 }}>
+                                                            <h4 style={{ margin: "0 0 5px 0", fontSize: "1.1rem" }}>
+                                                                {giocatore.nome}
+                                                                {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                                {(giocatore.presenze || 0) > 0 && (
+                                                                    <span className="presenze-badge">{giocatore.presenze} partite</span>
+                                                                )}
+                                                            </h4>
+                                                            <div style={{ display: "flex", gap: "15px", fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                                                                <span>✅ {giocatore.partite_vinte || 0} vinte</span>
+                                                                <span>❌ {giocatore.partite_perse || 0} perse</span>
+                                                                <span>⚡ {giocatore.partite_pareggiate || 0} pareggiate</span>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+                                                            {/* PRESENZE */}
+                                                            <input 
+                                                                id={`presenze-${giocatore.id}`}
+                                                                type="number" 
+                                                                placeholder="±Presenze" 
+                                                                className="number-input"
+                                                            />
+                                                            <button 
+                                                                onClick={() => aggiungiPresenza(giocatore.id, document.getElementById(`presenze-${giocatore.id}`).value)}
+                                                                style={{ 
+                                                                    padding: "8px 12px", 
+                                                                    background: "#9C27B0",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "12px"
+                                                                }}
+                                                            >
+                                                                ±📊
+                                                            </button>
+
+                                                            {/* PARTITE VINTE */}
+                                                            <input 
+                                                                id={`vinte-${giocatore.id}`}
+                                                                type="number" 
+                                                                placeholder="±Vinte" 
+                                                                className="number-input"
+                                                            />
+                                                            <button 
+                                                                onClick={() => aggiungiPartitaVinta(giocatore.id, document.getElementById(`vinte-${giocatore.id}`).value)}
+                                                                style={{ 
+                                                                    padding: "8px 12px", 
+                                                                    background: "#4CAF50",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "12px"
+                                                                }}
+                                                            >
+                                                                ±✅
+                                                            </button>
+
+                                                            {/* PARTITE PERSE */}
+                                                            <input 
+                                                                id={`perse-${giocatore.id}`}
+                                                                type="number" 
+                                                                placeholder="±Perse" 
+                                                                className="number-input"
+                                                            />
+                                                            <button 
+                                                                onClick={() => aggiungiPartitaPersa(giocatore.id, document.getElementById(`perse-${giocatore.id}`).value)}
+                                                                style={{ 
+                                                                    padding: "8px 12px", 
+                                                                    background: "#F44336",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "8px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "12px"
+                                                                }}
+                                                            >
+                                                                ±❌
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 🆕 TAB: IL MIO SCORE - PAGINA PERSONALE CORRETTA */}
+                        {activeTab === "mioscore" && (
+                            <div>
+                                <div className="score-header">
+                                    <div className="score-avatar">
+                                        {loginForm.username.charAt(0).toUpperCase()}
+                                    </div>
+                                    <h2>⭐ Il Mio Score - {getCurrentUserName()}</h2>
+                                    <p style={{ color: "#ccc", marginTop: "5px" }}>
+                                        Il tuo rendimento personale nella Arena Cup
+                                    </p>
+                                </div>
+
+                                {/* STATISTICHE PERSONALI CORRETTE */}
+                                <div className="score-stats-grid">
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">📊 Partite Giocate</div>
+                                        <div className="score-stat-value">{getCurrentGiocatore().presenze || 0}</div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">⚽ Gol Segnati</div>
+                                        <div className="score-stat-value" style={{ color: "#FFD700" }}>
+                                            {getCurrentGiocatore().gol || 0}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">🎯 Assist</div>
+                                        <div className="score-stat-value" style={{ color: "#4CAF50" }}>
+                                            {getCurrentGiocatore().assist || 0}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">⭐ Media Voto</div>
+                                        <div className="score-stat-value" style={{ color: "#2196F3" }}>
+                                            {getCurrentGiocatore().media_calcolata ? getCurrentGiocatore().media_calcolata.toFixed(2) : "0.00"}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="score-stats-grid">
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">🏆 MVP</div>
+                                        <div className="score-stat-value" style={{ color: "#FFC107" }}>
+                                            {getCurrentGiocatore().mvp_count || 0}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">🧤 Punti Portiere</div>
+                                        <div className="score-stat-value" style={{ color: "#0096FF" }}>
+                                            {calcolaPunteggioBenjiPrice(getCurrentGiocatore())}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">✅ Partite Vinte</div>
+                                        <div className="score-stat-value" style={{ color: "#4CAF50" }}>
+                                            {getCurrentGiocatore().partite_vinte || 0}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="score-stat-card">
+                                        <div className="score-stat-label">❌ Partite Perse</div>
+                                        <div className="score-stat-value" style={{ color: "#F44336" }}>
+                                            {getCurrentGiocatore().partite_perse || 0}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* STATISTICHE DETTAGLIATE PARTITE */}
+                                <div className="score-stat-card" style={{ margin: "20px 0" }}>
+                                    <div className="score-stat-label">📈 Statistiche Partite</div>
+                                    <div style={{ marginTop: "15px" }}>
+                                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                                            <span>Partite Vinte:</span>
+                                            <span style={{ color: "#4CAF50", fontWeight: "bold" }}>{getCurrentGiocatore().partite_vinte || 0}</span>
+                                        </div>
+                                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                                            <span>Partite Perse:</span>
+                                            <span style={{ color: "#F44336", fontWeight: "bold" }}>{getCurrentGiocatore().partite_perse || 0}</span>
+                                        </div>
+                                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                                            <span>Partite Pareggiate:</span>
+                                            <span style={{ color: "#FFC107", fontWeight: "bold" }}>{getCurrentGiocatore().partite_pareggiate || 0}</span>
+                                        </div>
+                                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                                            <span>Percentuale Vittorie:</span>
+                                            <span style={{ color: "#9C27B0", fontWeight: "bold" }}>{calcolaPercentualeVittorie(getCurrentGiocatore())}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* STATISTICHE PORTA (se il giocatore è portiere) */}
+                                {(getCurrentGiocatore().parate > 0 || getCurrentGiocatore().partite_portiere > 0) && (
+                                    <div className="score-stat-card" style={{ margin: "20px 0" }}>
+                                        <div className="score-stat-label">🧤 Statistiche Portiere</div>
+                                        <div className="mvp-stats" style={{ justifyContent: "center", marginTop: "15px" }}>
+                                            <div className="mvp-stat">Parate: {getCurrentGiocatore().parate || 0}</div>
+                                            <div className="mvp-stat">Partite: {getCurrentGiocatore().partite_portiere || 0}</div>
+                                            {getCurrentGiocatore().rigori_parati > 0 && <div className="mvp-stat">Rigori: {getCurrentGiocatore().rigori_parati}</div>}
+                                            {getCurrentGiocatore().parate_difficili > 0 && <div className="mvp-stat">Parate difficili: {getCurrentGiocatore().parate_difficili}</div>}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* LE MIE ULTIME PAGELLE */}
+                                <div style={{ marginTop: "30px" }}>
+                                    <h3>📝 Le Mie Ultime Pagelle</h3>
+                                    {getMiePagelle().length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="icon">📝</div>
+                                            <p>Nessuna pagella ancora.</p>
+                                        </div>
+                                    ) : (
+                                        getMiePagelle().slice(0, 5).map(pagella => (
+                                            <div key={pagella.id} className={`pagella-card ${getClasseFazione(pagella.fazione)}`}>
+                                                <div className="pagella-header">
+                                                    <div>
+                                                        <div className="pagella-giocatore">
+                                                            {pagella.giocatore}
+                                                            {getBadgeFazione(pagella.fazione)}
+                                                        </div>
+                                                        <div className="pagella-data">
+                                                            Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
+                                                        </div>
+                                                    </div>
+                                                    <div className="pagella-voto">
+                                                        {pagella.voto}/10
+                                                    </div>
+                                                </div>
+                                                
+                                                {pagella.commento && (
+                                                    <div className="pagella-commento">
+                                                        "{pagella.commento}"
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB CHAT */}
+                        {activeTab === "chat" && (
+                            <div>
+                                <h2>💬 Chat di Gruppo</h2>
+                                
+                                <div 
+                                    ref={chatContainerRef}
+                                    style={{ 
+                                        height: "60vh", 
+                                        overflowY: "auto", 
+                                        marginBottom: "20px",
+                                        padding: "10px",
+                                        background: "rgba(255,255,255,0.05)",
+                                        borderRadius: "15px"
+                                    }}
+                                >
+                                    {messaggi.length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="icon">💬</div>
+                                            <p>Nessun messaggio ancora.</p>
+                                        </div>
+                                    ) : (
+                                        messaggi
+                                            .sort((a, b) => a.timestamp - b.timestamp)
+                                            .map(msg => {
+                                                const isOwnMessage = msg.mittente === loginForm.username;
+                                                const isAdminMessage = msg.mittente === "admin" || msg.mittente === "vitantonio" || msg.mittente === "fabrizio";
+                                                const mittenteVisualizzato = msg.mittente_visualizzato || 
+                                                    (msg.mittente === "admin" ? "Vitantonio" : 
+                                                     msg.mittente === "fabrizio" ? "Fabrizio" : msg.mittente);
+                                                
+                                                return (
+                                                    <div 
+                                                        key={msg.id} 
+                                                        className={`message-bubble ${isOwnMessage ? 'own-message' : ''} ${isAdminMessage ? 'admin-message' : ''}`}
+                                                    >
+                                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                                                            <strong style={{ color: isAdminMessage ? "#FFC107" : isOwnMessage ? "#4CAF50" : "#2196F3" }}>
+                                                                {mittenteVisualizzato}
+                                                                {isOwnMessage && " (TU)"}
+                                                            </strong>
+                                                            <small style={{ color: "#ccc", fontSize: "0.7rem" }}>
+                                                                {new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                                                            </small>
+                                                        </div>
+                                                        <div style={{ wordBreak: "break-word" }}>
+                                                            {msg.messaggio}
+                                                        </div>
+                                                        {(isAdminUser() || isOwnMessage) && (
+                                                            <div style={{ textAlign: "right", marginTop: "8px" }}>
+                                                                <button 
+                                                                    onClick={() => eliminaMessaggio(msg.id)}
+                                                                    style={{ 
+                                                                        background: "#F44336", 
+                                                                        color: "white", 
+                                                                        border: "none", 
+                                                                        padding: "5px 10px", 
+                                                                        borderRadius: "5px", 
+                                                                        fontSize: "0.7rem",
+                                                                        cursor: "pointer"
+                                                                    }}
+                                                                >
+                                                                    Elimina
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })
+                                    )}
+                                </div>
+                                
+                                <div style={{ display: "flex", gap: "10px" }}>
+                                    <input 
+                                        type="text"
+                                        placeholder="Scrivi un messaggio..." 
+                                        value={nuovoMessaggio}
+                                        onChange={(e) => setNuovoMessaggio(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && inviaMessaggio()}
+                                        style={{ flex: 1 }}
+                                    />
+                                    <button 
+                                        onClick={inviaMessaggio}
+                                        style={{ 
+                                            background: "#4CAF50", 
+                                            color: "white", 
+                                            padding: "15px 20px"
+                                        }}
+                                    >
+                                        Invia
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB PAGELLE - ORA FUNZIONANTE E COMPLETA */}
+                        {activeTab === "pagelle" && (
+                            <div>
+                                <h2>📝 Pagelle Giocatori</h2>
+                                
+                                {/* FORM PER AGGIUNGERE PAGELLA (SOLO ADMIN E FABRIZIO) */}
+                                {isAdminUser() && (
+                                    <div className="pagella-form">
+                                        <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>➕ Aggiungi Nuova Pagella</h3>
+                                        
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "15px" }}>
+                                            <select 
+                                                value={nuovaPagella.giocatore}
+                                                onChange={(e) => setNuovaPagella(prev => ({ ...prev, giocatore: e.target.value }))}
+                                                className="giocatore-select"
+                                            >
+                                                <option value="">Seleziona Giocatore</option>
+                                                {giocatori.map(g => (
+                                                    <option key={g.id} value={g.nome}>{g.nome}</option>
+                                                ))}
+                                            </select>
+                                            
+                                            <select 
+                                                value={nuovaPagella.voto}
+                                                onChange={(e) => setNuovaPagella(prev => ({ ...prev, voto: e.target.value }))}
+                                                className="voto-select"
+                                            >
+                                                <option value="">Voto</option>
+                                                {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(voto => (
+                                                    <option key={voto} value={voto}>{voto}</option>
+                                                ))}
+                                            </select>
+                                            
+                                            <select 
+                                                value={nuovaPagella.fazione}
+                                                onChange={(e) => setNuovaPagella(prev => ({ ...prev, fazione: e.target.value }))}
+                                                className="fazione-select"
+                                            >
+                                                <option value="nessuna">Nessuna Fazione</option>
+                                                <option value="bianca">Armata Bianca</option>
+                                                <option value="nera">Armata Nera</option>
+                                                <option value="rossa">Armata Rossa</option>
+                                            </select>
+                                            
+                                            <input 
+                                                type="date"
+                                                value={nuovaPagella.data}
+                                                onChange={(e) => setNuovaPagella(prev => ({ ...prev, data: e.target.value }))}
+                                            />
+                                        </div>
+                                        
+                                        <textarea 
+                                            placeholder="Commento (opzionale)"
+                                            value={nuovaPagella.commento}
+                                            onChange={(e) => setNuovaPagella(prev => ({ ...prev, commento: e.target.value }))}
+                                        />
+                                        
+                                        <div className="pagella-actions">
+                                            <button 
+                                                onClick={aggiungiPagella}
+                                                style={{ 
+                                                    background: "#4CAF50", 
+                                                    color: "white"
+                                                }}
+                                            >
+                                                ➕ Aggiungi Pagella
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* LISTA PAGELLE ESISTENTI */}
+                                <div style={{ marginTop: "30px" }}>
+                                    <h3>📋 Ultime Pagelle</h3>
+                                    
+                                    {pagelle.length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="icon">📝</div>
+                                            <p>Nessuna pagella ancora.</p>
+                                        </div>
+                                    ) : (
+                                        pagelle.map(pagella => (
+                                            <div key={pagella.id} className={`pagella-card ${getClasseFazione(pagella.fazione)}`}>
+                                                {pagellaInModifica === pagella.id ? (
+                                                    // MODIFICA PAGELLA
+                                                    <div className="modifica-pagella-form">
+                                                        <h4 style={{ marginBottom: "10px", color: "#FFC107" }}>✏️ Modifica Pagella</h4>
+                                                        
+                                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "10px" }}>
+                                                            <select 
+                                                                value={modificaPagella.voto}
+                                                                onChange={(e) => setModificaPagella(prev => ({ ...prev, voto: e.target.value }))}
+                                                                className="voto-select"
+                                                            >
+                                                                <option value="">Voto</option>
+                                                                {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(voto => (
+                                                                    <option key={voto} value={voto}>{voto}</option>
+                                                                ))}
+                                                            </select>
+                                                            
+                                                            <select 
+                                                                value={modificaPagella.fazione}
+                                                                onChange={(e) => setModificaPagella(prev => ({ ...prev, fazione: e.target.value }))}
+                                                                className="fazione-select"
+                                                            >
+                                                                <option value="nessuna">Nessuna Fazione</option>
+                                                                <option value="bianca">Armata Bianca</option>
+                                                                <option value="nera">Armata Nera</option>
+                                                                <option value="rossa">Armata Rossa</option>
+                                                            </select>
+                                                        </div>
+                                                        
+                                                        <textarea 
+                                                            placeholder="Commento"
+                                                            value={modificaPagella.commento}
+                                                            onChange={(e) => setModificaPagella(prev => ({ ...prev, commento: e.target.value }))}
+                                                        />
+                                                        
+                                                        <div className="modifica-actions">
+                                                            <button 
+                                                                onClick={salvaModificaPagella}
+                                                                style={{ 
+                                                                    background: "#4CAF50", 
+                                                                    color: "white"
+                                                                }}
+                                                            >
+                                                                💾 Salva
+                                                            </button>
+                                                            <button 
+                                                                onClick={annullaModificaPagella}
+                                                                style={{ 
+                                                                    background: "#F44336", 
+                                                                    color: "white"
+                                                                }}
+                                                            >
+                                                                ❌ Annulla
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    // VISUALIZZAZIONE PAGELLA
+                                                    <>
+                                                        <div className="pagella-header">
+                                                            <div>
+                                                                <div className="pagella-giocatore">
+                                                                    {pagella.giocatore}
+                                                                    {getBadgeFazione(pagella.fazione)}
+                                                                    {isCurrentUser(pagella.giocatore) && <span className="current-user-badge">TU</span>}
+                                                                </div>
+                                                                <div className="pagella-data">
+                                                                    Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
+                                                                    {pagella.modificato_il && ` • Modificato il ${pagella.modificato_il}`}
+                                                                </div>
+                                                            </div>
+                                                            <div className="pagella-voto">
+                                                                {pagella.voto}/10
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {pagella.commento && (
+                                                            <div className="pagella-commento">
+                                                                "{pagella.commento}"
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {/* AZIONI ADMIN E FABRIZIO */}
+                                                        {isAdminUser() && (
+                                                            <div className="pagella-actions">
+                                                                <button 
+                                                                    onClick={() => avviaModificaPagella(pagella)}
+                                                                    style={{ 
+                                                                        background: "#FFC107", 
+                                                                        color: "black"
+                                                                    }}
+                                                                >
+                                                                    ✏️ Modifica
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => eliminaPagella(pagella.id, pagella.giocatore)}
+                                                                    style={{ 
+                                                                        background: "#F44336", 
+                                                                        color: "white"
+                                                                    }}
+                                                                >
+                                                                    🗑️ Elimina
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB IMPOSTAZIONI */}
+                        {activeTab === "impostazioni" && (
+                            <div>
+                                <h2>⚙️ Impostazioni</h2>
+                                
+                                <div className="notification-settings">
+                                    <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>🔔 Notifiche</h3>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Notifiche Push</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Ricevi notifiche per nuovi messaggi e partite
+                                            </p>
+                                        </div>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={notificationsEnabled}
+                                                onChange={toggleNotifications}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Notifiche Chat</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Avvisami per nuovi messaggi in chat
+                                            </p>
+                                        </div>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={chatNotificationsEnabled}
+                                                onChange={toggleChatNotifications}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Notifiche Calendario</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Avvisami per nuove partite e prenotazioni
+                                            </p>
+                                        </div>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={calendarNotificationsEnabled}
+                                                onChange={toggleCalendarNotifications}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div className="notification-settings">
+                                    <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>📊 Statistiche App</h3>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Download App</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Numero di download dell'app
+                                            </p>
+                                        </div>
+                                        <span style={{ fontWeight: "bold", color: "#4CAF50" }}>
+                                            {statistiche.download}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="setting-item">
+                                        <div>
+                                            <strong>Utenti Unici</strong>
+                                            <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "#ccc" }}>
+                                                Numero di giocatori registrati
+                                            </p>
+                                        </div>
+                                        <span style={{ fontWeight: "bold", color: "#FFC107" }}>
+                                            {statistiche.utentiUnici}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="notification-settings">
+                                    <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>ℹ️ Informazioni</h3>
+                                    
+                                    <div style={{ padding: "15px 0" }}>
+                                        <p style={{ marginBottom: "10px" }}>
+                                            <strong>Versione App:</strong> 2.0.0
+                                        </p>
+                                        <p style={{ marginBottom: "10px" }}>
+                                            <strong>Sviluppatore:</strong> Vitantonio
+                                        </p>
+                                        <p style={{ marginBottom: "10px" }}>
+                                            <strong>Ultimo Aggiornamento:</strong> {new Date().toLocaleDateString('it-IT')}
+                                        </p>
+                                        <p>
+                                            <strong>Descrizione:</strong> App per la gestione del torneo di calcetto Arena Cup
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* MOBILE BOTTOM NAVIGATION */}
