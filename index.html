@@ -669,6 +669,152 @@
             text-align: left;
         }
 
+        /* NUOVO STILE PER TEXTAREA PIÙ GRANDE */
+        .pagella-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        /* 🏆 NUOVI STILI PER MVP ILLUMINATO */
+        .mvp-glow {
+            position: relative;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 193, 7, 0.25) 100%) !important;
+            border: 2px solid rgba(255, 215, 0, 0.3) !important;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), 0 0 40px rgba(255, 193, 7, 0.2);
+            animation: mvpPulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes mvpPulse {
+            0% {
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.3), 0 0 30px rgba(255, 193, 7, 0.15);
+                transform: scale(1);
+            }
+            100% {
+                box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), 0 0 50px rgba(255, 193, 7, 0.3);
+                transform: scale(1.02);
+            }
+        }
+
+        .mvp-glow-item {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 193, 7, 0.2) 100%) !important;
+            border-left: 4px solid #FFD700 !important;
+            animation: mvpItemPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes mvpItemPulse {
+            0%, 100% {
+                background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 193, 7, 0.2) 100%);
+            }
+            50% {
+                background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 193, 7, 0.25) 100%);
+            }
+        }
+
+        .mvp-crown {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #FFD700;
+            color: black;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+            animation: crownSpin 4s linear infinite;
+        }
+
+        @keyframes crownSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(5deg) scale(1.1); }
+            50% { transform: rotate(0deg) scale(1); }
+            75% { transform: rotate(-5deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        /* 🏆 STILI PER VINCITE NEL CALENDARIO */
+        .risultato-partita {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .risultato-vittoria {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(76, 175, 80, 0.3) 100%);
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .risultato-sconfitta {
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.2) 0%, rgba(244, 67, 54, 0.3) 100%);
+            border: 2px solid #F44336;
+            color: #F44336;
+        }
+
+        .risultato-pareggio {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.3) 100%);
+            border: 2px solid #FFC107;
+            color: #FFC107;
+        }
+
+        .fazione-vincente {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .fazione-bianca-vittoria {
+            background: linear-gradient(135deg, #FFFFFF 0%, #E0E0E0 100%);
+            color: #333;
+            border: 2px solid #FFFFFF;
+        }
+
+        .fazione-nera-vittoria {
+            background: linear-gradient(135deg, #333 0%, #000 100%);
+            color: white;
+            border: 2px solid #666;
+        }
+
+        .fazione-rossa-vittoria {
+            background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+            color: white;
+            border: 2px solid #F44336;
+        }
+
+        .badge-risultato {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .badge-vittoria { background: #4CAF50; color: white; }
+        .badge-sconfitta { background: #F44336; color: white; }
+        .badge-pareggio { background: #FFC107; color: black; }
+
         @media (min-width: 768px) {
             .desktop-nav {
                 display: flex;
@@ -736,6 +882,16 @@
             .btn-backup {
                 flex: 1;
                 min-width: 150px;
+            }
+
+            /* TEXTAREA PIÙ GRANDE SU DESKTOP */
+            .pagella-textarea {
+                min-height: 120px;
+            }
+
+            /* MVP GLOW DESKTOP */
+            .mvp-glow {
+                animation: mvpPulse 2s ease-in-out infinite alternate;
             }
         }
     </style>
@@ -957,6 +1113,52 @@
             const ADMIN_PASSWORD = "giulia85";
             const FABRIZIO_PASSWORD = "manetta2025";
 
+            // 🎯 FUNZIONI PERMESSI CORRETTE - FABRIZIO STESSI POTERI DI ADMIN
+            const isAdminUser = () => {
+                return loginForm.username === "admin" || loginForm.username === "vitantonio" || loginForm.username === "fabrizio";
+            };
+
+            // 📊 AGGIORNA MEDIA GIOCATORE quando si aggiunge/modifica pagella
+            const aggiornaMediaGiocatore = (nomeGiocatore) => {
+                const pagelleGiocatore = pagelle.filter(p => p.giocatore === nomeGiocatore);
+                if (pagelleGiocatore.length === 0) return;
+                
+                const media = pagelleGiocatore.reduce((sum, pagella) => sum + parseFloat(pagella.voto), 0) / pagelleGiocatore.length;
+                
+                // Trova il giocatore e aggiorna la media
+                const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
+                if (giocatore) {
+                    database.ref(`giocatori/${giocatore.id}`).update({
+                        media_calcolata: media.toFixed(2),
+                        voti: pagelleGiocatore.map(p => parseFloat(p.voto))
+                    });
+                }
+            };
+
+            // 🏆 FUNZIONE PER TROVARE IL MVP ATTUALE
+            const getCurrentMVP = () => {
+                if (giocatori.length === 0) return null;
+                
+                const mvp = giocatori.reduce((prev, current) => {
+                    const prevMVPCount = prev.mvp_count || 0;
+                    const currentMVPCount = current.mvp_count || 0;
+                    return currentMVPCount > prevMVPCount ? current : prev;
+                });
+                
+                return mvp.mvp_count > 0 ? mvp : null;
+            };
+
+            // 🏆 FUNZIONE PER RENDERIZZARE IL MVP CON EFFETTI SPECIALI
+            const renderMVPGlow = (giocatore, isListItem = false) => {
+                const currentMVP = getCurrentMVP();
+                const isMVP = currentMVP && currentMVP.id === giocatore.id;
+                
+                if (isMVP) {
+                    return isListItem ? 'mvp-glow-item' : 'mvp-glow';
+                }
+                return '';
+            };
+
             // 🔧 FUNZIONE LOGIN MIGLIORATA
             const handleLogin = (e) => {
                 if (e) e.preventDefault();
@@ -1054,10 +1256,7 @@
                         errori: data[key].errori || 0,
                         interventi_decisivi: data[key].interventi_decisivi || 0,
                         partite_portiere: data[key].partite_portiere || 0,
-                        presenze: data[key].presenze || 0,
-                        partite_vinte: data[key].partite_vinte || 0,
-                        partite_perse: data[key].partite_perse || 0,
-                        partite_pareggiate: data[key].partite_pareggiate || 0
+                        presenze: data[key].presenze || 0
                     })) : [];
                     setGiocatori(giocatoriArray);
                 });
@@ -1191,9 +1390,6 @@
                     media_calcolata: 0,
                     mvp_count: 0,
                     presenze: 0,
-                    partite_vinte: 0,
-                    partite_perse: 0,
-                    partite_pareggiate: 0,
                     partite_portiere: 0,
                     parate: 0,
                     gol_subiti: 0,
@@ -1447,13 +1643,6 @@
                 return Math.max(0, punteggio);
             };
 
-            // 📊 CALCOLO PERCENTUALE VITTORIE - CORRETTO
-            const calcolaPercentualeVittorie = (giocatore) => {
-                const totali = (giocatore.partite_vinte || 0) + (giocatore.partite_perse || 0) + (giocatore.partite_pareggiate || 0);
-                if (totali === 0) return 0;
-                return ((giocatore.partite_vinte || 0) / totali * 100).toFixed(1);
-            };
-
             // 🏆 CALCOLA CLASSIFICHE
             const classificaMarcatori = [...giocatori]
                 .filter(g => (g.gol || 0) > 0)
@@ -1486,30 +1675,11 @@
                 .sort((a, b) => (b.presenze || 0) - (a.presenze || 0))
                 .slice(0, 10);
 
-            // 🆕 CLASSIFICA PARTITE VINTE
-            const classificaVittorie = [...giocatori]
-                .filter(g => (g.partite_vinte || 0) > 0)
-                .sort((a, b) => (b.partite_vinte || 0) - (a.partite_vinte || 0))
+            // 🎯 CLASSIFICA MEDIA VOTO - SOLO CHI HA VOTI
+            const classificaMediaVoto = [...giocatori]
+                .filter(g => g.media_calcolata > 0 && g.voti && g.voti.length > 0)
+                .sort((a, b) => (b.media_calcolata || 0) - (a.media_calcolata || 0))
                 .slice(0, 10);
-
-            // 🆕 CLASSIFICA PARTITE PERSE
-            const classificaPerse = [...giocatori]
-                .filter(g => (g.partite_perse || 0) > 0)
-                .sort((a, b) => (b.partite_perse || 0) - (a.partite_perse || 0))
-                .slice(0, 10);
-
-            // 🆕 CLASSIFICA PERCENTUALE VITTORIE (TOP 3)
-            const classificaPercentualeVittorie = [...giocatori]
-                .filter(g => {
-                    const totali = (g.partite_vinte || 0) + (g.partite_perse || 0) + (g.partite_pareggiate || 0);
-                    return totali > 0;
-                })
-                .map(g => ({
-                    ...g,
-                    percentuale: calcolaPercentualeVittorie(g)
-                }))
-                .sort((a, b) => parseFloat(b.percentuale) - parseFloat(a.percentuale))
-                .slice(0, 3);
 
             const handleLogout = () => {
                 localStorage.removeItem("username");
@@ -1570,6 +1740,9 @@
                     });
                     alert("📝 Pagella aggiunta!");
                     
+                    // 🔥 AGGIORNA MEDIA GIOCATORE
+                    aggiornaMediaGiocatore(nuovaPagella.giocatore);
+                    
                     showPushNotification(
                         "📝 Nuova Pagella Aggiunta",
                         `${getCurrentUserName()} ha valutato ${nuovaPagella.giocatore} con ${nuovaPagella.voto}/10`,
@@ -1606,6 +1779,12 @@
                     setPagellaInModifica(null);
                     setModificaPagella({ voto: "", commento: "", fazione: "nessuna" });
                     alert("✅ Pagella modificata!");
+                    
+                    // 🔥 AGGIORNA MEDIA GIOCATORE
+                    const pagellaModificata = pagelle.find(p => p.id === pagellaInModifica);
+                    if (pagellaModificata) {
+                        aggiornaMediaGiocatore(pagellaModificata.giocatore);
+                    }
                 }).catch(error => {
                     console.error("Errore modifica pagella:", error);
                     alert("❌ Errore nella modifica della pagella");
@@ -1620,7 +1799,10 @@
             const eliminaPagella = (id, giocatore) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono eliminare pagelle!");
                 if (!confirm(`Eliminare la pagella di ${giocatore}?`)) return;
-                database.ref(`pagelle/${id}`).remove();
+                database.ref(`pagelle/${id}`).remove().then(() => {
+                    // 🔥 AGGIORNA MEDIA GIOCATORE
+                    aggiornaMediaGiocatore(giocatore);
+                });
             };
 
             // 🎯 FUNZIONE PER OTTENERE CLASSE FAZIONE
@@ -1643,6 +1825,71 @@
                 }
             };
 
+            // 🏆 FUNZIONE PER RENDERIZZARE IL RISULTATO DELLA PARTITA
+            const renderRisultatoPartita = (partita) => {
+                if (!partita.risultato) return null;
+
+                let risultatoClass = '';
+                let risultatoText = '';
+                let fazioneVincente = null;
+                let fazionePerdente = null;
+
+                switch(partita.risultato) {
+                    case 'Vittoria':
+                        risultatoClass = 'risultato-vittoria';
+                        risultatoText = '✅ VITTORIA';
+                        fazioneVincente = partita.fazione_vincente;
+                        fazionePerdente = partita.fazione_perdente;
+                        break;
+                    case 'Sconfitta':
+                        risultatoClass = 'risultato-sconfitta';
+                        risultatoText = '❌ SCONFITTA';
+                        fazioneVincente = partita.fazione_vincente;
+                        break;
+                    case 'Pareggio':
+                        risultatoClass = 'risultato-pareggio';
+                        risultatoText = '⚡ PAREGGIO';
+                        break;
+                    default:
+                        return null;
+                }
+
+                return (
+                    <div className={`risultato-partita ${risultatoClass}`}>
+                        <div style={{ fontSize: '1.2rem', marginBottom: '8px' }}>
+                            {risultatoText}
+                        </div>
+                        {fazioneVincente && (
+                            <div style={{ marginBottom: '5px' }}>
+                                <strong>Armata Vincente: </strong>
+                                <span className={`fazione-vincente ${
+                                    fazioneVincente === 'bianca' ? 'fazione-bianca-vittoria' :
+                                    fazioneVincente === 'nera' ? 'fazione-nera-vittoria' :
+                                    'fazione-rossa-vittoria'
+                                }`}>
+                                    {fazioneVincente === 'bianca' ? '⚪ BIANCA' :
+                                     fazioneVincente === 'nera' ? '⚫ NERA' : '🔴 ROSSA'}
+                                </span>
+                            </div>
+                        )}
+                        {fazionePerdente && (
+                            <div>
+                                <strong>Armata Perdente: </strong>
+                                <span style={{ 
+                                    padding: '5px 10px', 
+                                    borderRadius: '15px', 
+                                    background: 'rgba(0,0,0,0.3)',
+                                    color: '#ccc'
+                                }}>
+                                    {fazionePerdente === 'bianca' ? '⚪ BIANCA' :
+                                     fazionePerdente === 'nera' ? '⚫ NERA' : '🔴 ROSSA'}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
             // ⚽ AGGIUNGI/RIMUOVI PRESENZA (SOLO ADMIN E FABRIZIO)
             const aggiungiPresenza = (id, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le presenze!");
@@ -1661,48 +1908,6 @@
                     const azione = quantita >= 0 ? "aggiunte" : "rimosse";
                     alert(`📊 ${Math.abs(quantita)} presenze ${azione}!`);
                     document.getElementById(`presenze-${id}`).value = "";
-                });
-            };
-
-            // ⚽ AGGIUNGI/RIMUOVI PARTITE VINTE (SOLO ADMIN E FABRIZIO)
-            const aggiungiPartitaVinta = (id, quantitaInput) => {
-                if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le partite vinte!");
-                
-                const giocatore = giocatori.find(g => g.id === id);
-                if (!giocatore) return;
-                
-                const quantita = parseInt(quantitaInput);
-                if (isNaN(quantita)) return alert("Inserisci un numero valido!");
-                
-                const nuovoValore = Math.max(0, (giocatore.partite_vinte || 0) + quantita);
-                
-                database.ref(`giocatori/${id}`).update({
-                    partite_vinte: nuovoValore
-                }).then(() => {
-                    const azione = quantita >= 0 ? "aggiunte" : "rimosse";
-                    alert(`✅ ${Math.abs(quantita)} partite vinte ${azione}!`);
-                    document.getElementById(`vinte-${id}`).value = "";
-                });
-            };
-
-            // ⚽ AGGIUNGI/RIMUOVI PARTITE PERSE (SOLO ADMIN E FABRIZIO)
-            const aggiungiPartitaPersa = (id, quantitaInput) => {
-                if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le partite perse!");
-                
-                const giocatore = giocatori.find(g => g.id === id);
-                if (!giocatore) return;
-                
-                const quantita = parseInt(quantitaInput);
-                if (isNaN(quantita)) return alert("Inserisci un numero valido!");
-                
-                const nuovoValore = Math.max(0, (giocatore.partite_perse || 0) + quantita);
-                
-                database.ref(`giocatori/${id}`).update({
-                    partite_perse: nuovoValore
-                }).then(() => {
-                    const azione = quantita >= 0 ? "aggiunte" : "rimosse";
-                    alert(`❌ ${Math.abs(quantita)} partite perse ${azione}!`);
-                    document.getElementById(`perse-${id}`).value = "";
                 });
             };
 
@@ -1758,15 +1963,45 @@
                 });
             };
 
-            // 🎯 IMPOSTA VINCITORE/PERDENTE PARTITA (SOLO ADMIN E FABRIZIO)
+            // 🎯 IMPOSTA VINCITORE/PERDENTE PARTITA CON FAZIONI (SOLO ADMIN E FABRIZIO)
             const impostaRisultatoPartita = (partitaId, risultato) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono impostare i risultati!");
                 
-                database.ref(`partite/${partitaId}`).update({
-                    risultato: risultato
-                }).then(() => {
-                    alert(`✅ Risultato impostato: ${risultato}`);
-                });
+                if (risultato === "Vittoria" || risultato === "Sconfitta") {
+                    // Chiedi quale armata ha vinto
+                    const fazioneVincente = prompt("Quale armata ha vinto? (bianca/nera/rossa)");
+                    if (!fazioneVincente || !['bianca', 'nera', 'rossa'].includes(fazioneVincente.toLowerCase())) {
+                        alert("Devi inserire un'armata valida: bianca, nera o rossa");
+                        return;
+                    }
+                    
+                    // Determina la fazione perdente in base al risultato
+                    let fazionePerdente;
+                    if (risultato === "Vittoria") {
+                        fazionePerdente = prompt("Quale armata ha perso? (bianca/nera/rossa)");
+                        if (!fazionePerdente || !['bianca', 'nera', 'rossa'].includes(fazionePerdente.toLowerCase())) {
+                            alert("Devi inserire un'armata valida: bianca, nera o rossa");
+                            return;
+                        }
+                    }
+                    
+                    database.ref(`partite/${partitaId}`).update({
+                        risultato: risultato,
+                        fazione_vincente: fazioneVincente.toLowerCase(),
+                        fazione_perdente: fazionePerdente ? fazionePerdente.toLowerCase() : null
+                    }).then(() => {
+                        alert(`✅ Risultato impostato: ${risultato}\nArmata vincente: ${fazioneVincente}${fazionePerdente ? `\nArmata perdente: ${fazionePerdente}` : ''}`);
+                    });
+                } else {
+                    // Pareggio - nessuna fazione vincente/perdente
+                    database.ref(`partite/${partitaId}`).update({
+                        risultato: risultato,
+                        fazione_vincente: null,
+                        fazione_perdente: null
+                    }).then(() => {
+                        alert(`✅ Risultato impostato: ${risultato}`);
+                    });
+                }
             };
 
             // 🎯 IMPOSTA PARTITA TRIANGOLARE (SOLO ADMIN E FABRIZIO)
@@ -1877,12 +2112,14 @@
                 media_calcolata: calcolaMedia(g.voti)
             }));
 
+            // 🎯 MEDIA GENERALE - SOLO CHI HA VOTI
+            const giocatoriConVoti = giocatori.filter(g => g.voti && g.voti.length > 0);
             const stats = {
                 totaleGol: giocatoriConMedia.reduce((sum, g) => sum + (g.gol || 0), 0),
                 totaleAssist: giocatoriConMedia.reduce((sum, g) => sum + (g.assist || 0), 0),
                 totaleGiocatori: giocatoriConMedia.length,
-                mediaGenerale: giocatoriConMedia.length > 0 ? 
-                    giocatoriConMedia.reduce((sum, g) => sum + (g.media_calcolata || 0), 0) / giocatoriConMedia.length : 0,
+                mediaGenerale: giocatoriConVoti.length > 0 ? 
+                    giocatoriConVoti.reduce((sum, g) => sum + (g.media_calcolata || 0), 0) / giocatoriConVoti.length : 0,
                 totaleMVP: giocatoriConMedia.reduce((sum, g) => sum + (g.mvp_count || 0), 0),
                 totalePortieri: giocatori.filter(g => g.partite_portiere > 0).length,
                 totalePresenze: giocatoriConMedia.reduce((sum, g) => sum + (g.presenze || 0), 0)
@@ -1912,11 +2149,6 @@
 
             const isCurrentUser = (nomeGiocatore) => {
                 return nomeGiocatore === loginForm.username;
-            };
-
-            // 🎯 FUNZIONI PERMESSI CORRETTE - FABRIZIO STESSI POTERI DI ADMIN
-            const isAdminUser = () => {
-                return loginForm.username === "admin" || loginForm.username === "vitantonio" || loginForm.username === "fabrizio";
             };
 
             const getCurrentUserName = () => {
@@ -2081,12 +2313,15 @@
                             >
                                 📝 Pagelle
                             </button>
-                            <button
-                                className={`desktop-nav-button ${activeTab === "backup" ? "active" : ""}`}
-                                onClick={() => setActiveTab("backup")}
-                            >
-                                💾 Backup
-                            </button>
+                            {/* BACKUP VISIBILE SOLO PER ADMIN E FABRIZIO */}
+                            {isAdminUser() && (
+                                <button
+                                    className={`desktop-nav-button ${activeTab === "backup" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("backup")}
+                                >
+                                    💾 Backup
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -2094,6 +2329,29 @@
                         {activeTab === "classifica" && (
                             <div>
                                 <h2>🏆 Classifiche</h2>
+                                
+                                {/* 🏆 MVP ATTUALE CON EFFETTO SPECIALE */}
+                                {getCurrentMVP() && (
+                                    <div className={`player-card mvp-glow`} style={{ position: 'relative' }}>
+                                        <div className="mvp-crown">👑</div>
+                                        <div style={{ textAlign: 'center', padding: '10px' }}>
+                                            <h3 style={{ color: '#FFD700', marginBottom: '10px', fontSize: '1.3rem' }}>
+                                                🏆 MVP ATTUALE
+                                            </h3>
+                                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#FFC107' }}>
+                                                {getCurrentMVP().nome}
+                                            </div>
+                                            <div style={{ fontSize: '1rem', color: '#ccc', marginTop: '5px' }}>
+                                                {getCurrentMVP().mvp_count} MVP totali
+                                            </div>
+                                            <div className="mvp-stats" style={{ justifyContent: 'center', marginTop: '10px' }}>
+                                                <div className="mvp-stat">⚽ {getCurrentMVP().gol || 0} gol</div>
+                                                <div className="mvp-stat">🎯 {getCurrentMVP().assist || 0} assist</div>
+                                                <div className="mvp-stat">⭐ {getCurrentMVP().media_calcolata ? getCurrentMVP().media_calcolata.toFixed(2) : '0.00'}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                                 
                                 <div className="stats-grid">
                                     <div className="stat-card">
@@ -2107,6 +2365,9 @@
                                     <div className="stat-card">
                                         <h3 style={{ color: "#2196F3", margin: "0 0 10px 0", fontSize: "1rem" }}>⭐ Media Generale</h3>
                                         <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.mediaGenerale.toFixed(2)}</p>
+                                        <p style={{ margin: "5px 0 0 0", fontSize: "0.7rem", color: "#ccc" }}>
+                                            ({giocatoriConVoti.length} giocatori con voti)
+                                        </p>
                                     </div>
                                     <div className="stat-card">
                                         <h3 style={{ color: "#FFC107", margin: "0 0 10px 0", fontSize: "1rem" }}>🏆 MVP Totali</h3>
@@ -2184,13 +2445,16 @@
                                             </div>
                                         ) : (
                                             classificaMarcatori.map((giocatore, index) => (
-                                                <div key={giocatore.id} className="classifica-item">
+                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
                                                     <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
                                                         {index + 1}
                                                     </div>
                                                     <div className="classifica-nome">
                                                         {giocatore.nome}
                                                         {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                        )}
                                                     </div>
                                                     <div className="classifica-valore">
                                                         {giocatore.gol || 0} gol
@@ -2209,13 +2473,16 @@
                                             </div>
                                         ) : (
                                             classificaAssist.map((giocatore, index) => (
-                                                <div key={giocatore.id} className="classifica-item">
+                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
                                                     <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
                                                         {index + 1}
                                                     </div>
                                                     <div className="classifica-nome">
                                                         {giocatore.nome}
                                                         {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                        )}
                                                     </div>
                                                     <div className="classifica-valore">
                                                         {giocatore.assist || 0} assist
@@ -2234,13 +2501,16 @@
                                             </div>
                                         ) : (
                                             classificaMVP.map((giocatore, index) => (
-                                                <div key={giocatore.id} className="classifica-item">
+                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
                                                     <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
                                                         {index + 1}
                                                     </div>
                                                     <div className="classifica-nome">
                                                         {giocatore.nome}
                                                         {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                        )}
                                                     </div>
                                                     <div className="classifica-valore">
                                                         {giocatore.mvp_count || 0} MVP
@@ -2251,24 +2521,27 @@
                                     </div>
 
                                     <div className="classifica-card">
-                                        <h3 style={{ marginBottom: "15px", color: "#0096FF" }}>🧤 Top Benji Price</h3>
-                                        {classificaBenjiPrice.length === 0 ? (
+                                        <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>⭐ Top Media Voto</h3>
+                                        {classificaMediaVoto.length === 0 ? (
                                             <div className="empty-state">
-                                                <div className="icon">🧤</div>
-                                                <p>Nessuna statistica portieri ancora.</p>
+                                                <div className="icon">⭐</div>
+                                                <p>Nessuna media voto ancora.</p>
                                             </div>
                                         ) : (
-                                            classificaBenjiPrice.map((giocatore, index) => (
-                                                <div key={giocatore.id} className="classifica-item">
+                                            classificaMediaVoto.map((giocatore, index) => (
+                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
                                                     <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
                                                         {index + 1}
                                                     </div>
                                                     <div className="classifica-nome">
                                                         {giocatore.nome}
                                                         {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                        )}
                                                     </div>
                                                     <div className="classifica-valore">
-                                                        {giocatore.punteggio_benji} pts
+                                                        {giocatore.media_calcolata ? giocatore.media_calcolata.toFixed(2) : "0.00"}
                                                     </div>
                                                 </div>
                                             ))
@@ -2285,7 +2558,7 @@
                                         </p>
                                     ) : (
                                         giocatori.map(giocatore => (
-                                            <div key={giocatore.id} className={`player-card ${isCurrentUser(giocatore.nome) ? 'current-user' : ''}`}>
+                                            <div key={giocatore.id} className={`player-card ${isCurrentUser(giocatore.nome) ? 'current-user' : ''} ${renderMVPGlow(giocatore)}`}>
                                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
                                                     <div style={{ flex: 1 }}>
                                                         <h4 style={{ margin: "0 0 10px 0", fontSize: "1.2rem" }}>
@@ -2296,6 +2569,20 @@
                                                             )}
                                                             {(giocatore.presenze || 0) > 0 && (
                                                                 <span className="presenze-badge">{giocatore.presenze} partite</span>
+                                                            )}
+                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                <span style={{ 
+                                                                    background: '#FFD700', 
+                                                                    color: 'black', 
+                                                                    padding: '2px 8px', 
+                                                                    borderRadius: '4px', 
+                                                                    fontSize: '0.7rem', 
+                                                                    marginLeft: '8px', 
+                                                                    fontWeight: 'bold',
+                                                                    animation: 'pulse 2s infinite'
+                                                                }}>
+                                                                    👑 MVP ATTUALE
+                                                                </span>
                                                             )}
                                                         </h4>
                                                         
@@ -2427,155 +2714,145 @@
                             </div>
                         )}
 
-                        {/* 🆕 TAB BACKUP - SISTEMA COMPLETO DI BACKUP */}
-                        {activeTab === "backup" && (
+                        {/* 🆕 TAB BACKUP - SISTEMA COMPLETO DI BACKUP - SOLO PER ADMIN */}
+                        {activeTab === "backup" && isAdminUser() && (
                             <div>
                                 <h2>💾 Sistema di Backup</h2>
                                 
-                                {isAdminUser() ? (
-                                    <>
-                                        {/* INFORMAZIONI BACKUP */}
-                                        <div className="backup-info">
-                                            <h3 style={{ color: "#FFC107", marginBottom: "10px" }}>ℹ️ Informazioni Backup</h3>
-                                            <p>Il sistema di backup ti permette di:</p>
-                                            <ul style={{ margin: "10px 0", paddingLeft: "20px" }}>
-                                                <li>📥 <strong>Esportare</strong> tutti i dati in un file JSON</li>
-                                                <li>📤 <strong>Importare</strong> dati da un backup precedente</li>
-                                                <li>🔄 <strong>Ripristinare</strong> i dati dal backup caricato</li>
-                                                <li>🗑️ <strong>Pulire</strong> tutti i dati (azione irreversibile)</li>
-                                            </ul>
-                                            <p style={{ color: "#FFD700", fontWeight: "bold" }}>
-                                                ⚠️ Solo gli admin possono utilizzare queste funzionalità
-                                            </p>
-                                        </div>
+                                {/* INFORMAZIONI BACKUP */}
+                                <div className="backup-info">
+                                    <h3 style={{ color: "#FFC107", marginBottom: "10px" }}>ℹ️ Informazioni Backup</h3>
+                                    <p>Il sistema di backup ti permette di:</p>
+                                    <ul style={{ margin: "10px 0", paddingLeft: "20px" }}>
+                                        <li>📥 <strong>Esportare</strong> tutti i dati in un file JSON</li>
+                                        <li>📤 <strong>Importare</strong> dati da un backup precedente</li>
+                                        <li>🔄 <strong>Ripristinare</strong> i dati dal backup caricato</li>
+                                        <li>🗑️ <strong>Pulire</strong> tutti i dati (azione irreversibile)</li>
+                                    </ul>
+                                    <p style={{ color: "#FFD700", fontWeight: "bold" }}>
+                                        ⚠️ Solo gli admin possono utilizzare queste funzionalità
+                                    </p>
+                                </div>
 
-                                        {/* STATISTICHE DATI CORRENTI */}
-                                        <div className="backup-section">
-                                            <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>📊 Dati Correnti</h3>
+                                {/* STATISTICHE DATI CORRENTI */}
+                                <div className="backup-section">
+                                    <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>📊 Dati Correnti</h3>
+                                    <div className="backup-stats">
+                                        <div className="backup-stat">
+                                            <div style={{ fontSize: "0.8rem", color: "#ccc" }}>👥 Giocatori</div>
+                                            <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#FFD700" }}>
+                                                {giocatori.length}
+                                            </div>
+                                        </div>
+                                        <div className="backup-stat">
+                                            <div style={{ fontSize: "0.8rem", color: "#ccc" }}>💬 Messaggi</div>
+                                            <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#4CAF50" }}>
+                                                {messaggi.length}
+                                            </div>
+                                        </div>
+                                        <div className="backup-stat">
+                                            <div style={{ fontSize: "0.8rem", color: "#ccc" }}>🗓️ Partite</div>
+                                            <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#2196F3" }}>
+                                                {partite.length}
+                                            </div>
+                                        </div>
+                                        <div className="backup-stat">
+                                            <div style={{ fontSize: "0.8rem", color: "#ccc" }}>📝 Pagelle</div>
+                                            <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#9C27B0" }}>
+                                                {pagelle.length}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* AZIONI BACKUP */}
+                                <div className="backup-section">
+                                    <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>🛠️ Azioni Backup</h3>
+                                    
+                                    <div className="backup-actions">
+                                        <button 
+                                            onClick={esportaBackup}
+                                            className="btn-backup export"
+                                        >
+                                            📥 Esporta Backup
+                                        </button>
+                                        
+                                        <label htmlFor="file-input" className="file-input-label">
+                                            📤 Importa Backup
+                                        </label>
+                                        <input 
+                                            id="file-input"
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept=".json"
+                                            onChange={importaBackup}
+                                            className="file-input"
+                                        />
+                                        
+                                        {backupData && (
+                                            <button 
+                                                onClick={ripristinaDati}
+                                                className="btn-backup restore"
+                                            >
+                                                🔄 Ripristina Dati
+                                            </button>
+                                        )}
+                                        
+                                        <button 
+                                            onClick={puliziaDati}
+                                            className="btn-backup danger"
+                                        >
+                                            🗑️ Pulizia Dati
+                                        </button>
+                                    </div>
+
+                                    {/* PREVIEW BACKUP CARICATO */}
+                                    {backupData && (
+                                        <div className="backup-info" style={{ background: "rgba(76, 175, 80, 0.1)", borderLeftColor: "#4CAF50" }}>
+                                            <h4 style={{ color: "#4CAF50", marginBottom: "10px" }}>✅ Backup Caricato</h4>
+                                            <p><strong>Data creazione:</strong> {new Date(backupData.metadata.data_creazione).toLocaleString('it-IT')}</p>
+                                            <p><strong>Creato da:</strong> {backupData.metadata.creato_da}</p>
+                                            <p><strong>Versione:</strong> {backupData.metadata.versione}</p>
                                             <div className="backup-stats">
                                                 <div className="backup-stat">
-                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>👥 Giocatori</div>
-                                                    <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#FFD700" }}>
-                                                        {giocatori.length}
+                                                    <div style={{ fontSize: "0.7rem", color: "#ccc" }}>👥 Giocatori</div>
+                                                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#FFD700" }}>
+                                                        {backupData.metadata.totale_dati.giocatori}
                                                     </div>
                                                 </div>
                                                 <div className="backup-stat">
-                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>💬 Messaggi</div>
-                                                    <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#4CAF50" }}>
-                                                        {messaggi.length}
+                                                    <div style={{ fontSize: "0.7rem", color: "#ccc" }}>💬 Messaggi</div>
+                                                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#4CAF50" }}>
+                                                        {backupData.metadata.totale_dati.messaggi}
                                                     </div>
                                                 </div>
                                                 <div className="backup-stat">
-                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>🗓️ Partite</div>
-                                                    <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#2196F3" }}>
-                                                        {partite.length}
+                                                    <div style={{ fontSize: "0.7rem", color: "#ccc" }}>🗓️ Partite</div>
+                                                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#2196F3" }}>
+                                                        {backupData.metadata.totale_dati.partite}
                                                     </div>
                                                 </div>
                                                 <div className="backup-stat">
-                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>📝 Pagelle</div>
-                                                    <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#9C27B0" }}>
-                                                        {pagelle.length}
+                                                    <div style={{ fontSize: "0.7rem", color: "#ccc" }}>📝 Pagelle</div>
+                                                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#9C27B0" }}>
+                                                        {backupData.metadata.totale_dati.pagelle}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
+                                    )}
+                                </div>
 
-                                        {/* AZIONI BACKUP */}
-                                        <div className="backup-section">
-                                            <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>🛠️ Azioni Backup</h3>
-                                            
-                                            <div className="backup-actions">
-                                                <button 
-                                                    onClick={esportaBackup}
-                                                    className="btn-backup export"
-                                                >
-                                                    📥 Esporta Backup
-                                                </button>
-                                                
-                                                <label htmlFor="file-input" className="file-input-label">
-                                                    📤 Importa Backup
-                                                </label>
-                                                <input 
-                                                    id="file-input"
-                                                    ref={fileInputRef}
-                                                    type="file"
-                                                    accept=".json"
-                                                    onChange={importaBackup}
-                                                    className="file-input"
-                                                />
-                                                
-                                                {backupData && (
-                                                    <button 
-                                                        onClick={ripristinaDati}
-                                                        className="btn-backup restore"
-                                                    >
-                                                        🔄 Ripristina Dati
-                                                    </button>
-                                                )}
-                                                
-                                                <button 
-                                                    onClick={puliziaDati}
-                                                    className="btn-backup danger"
-                                                >
-                                                    🗑️ Pulizia Dati
-                                                </button>
-                                            </div>
-
-                                            {/* PREVIEW BACKUP CARICATO */}
-                                            {backupData && (
-                                                <div className="backup-info" style={{ background: "rgba(76, 175, 80, 0.1)", borderLeftColor: "#4CAF50" }}>
-                                                    <h4 style={{ color: "#4CAF50", marginBottom: "10px" }}>✅ Backup Caricato</h4>
-                                                    <p><strong>Data creazione:</strong> {new Date(backupData.metadata.data_creazione).toLocaleString('it-IT')}</p>
-                                                    <p><strong>Creato da:</strong> {backupData.metadata.creato_da}</p>
-                                                    <p><strong>Versione:</strong> {backupData.metadata.versione}</p>
-                                                    <div className="backup-stats">
-                                                        <div className="backup-stat">
-                                                            <div style={{ fontSize: "0.7rem", color: "#ccc" }}>👥 Giocatori</div>
-                                                            <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#FFD700" }}>
-                                                                {backupData.metadata.totale_dati.giocatori}
-                                                            </div>
-                                                        </div>
-                                                        <div className="backup-stat">
-                                                            <div style={{ fontSize: "0.7rem", color: "#ccc" }}>💬 Messaggi</div>
-                                                            <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#4CAF50" }}>
-                                                                {backupData.metadata.totale_dati.messaggi}
-                                                            </div>
-                                                        </div>
-                                                        <div className="backup-stat">
-                                                            <div style={{ fontSize: "0.7rem", color: "#ccc" }}>🗓️ Partite</div>
-                                                            <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#2196F3" }}>
-                                                                {backupData.metadata.totale_dati.partite}
-                                                            </div>
-                                                        </div>
-                                                        <div className="backup-stat">
-                                                            <div style={{ fontSize: "0.7rem", color: "#ccc" }}>📝 Pagelle</div>
-                                                            <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#9C27B0" }}>
-                                                                {backupData.metadata.totale_dati.pagelle}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* ISTRUZIONI */}
-                                        <div className="backup-section">
-                                            <h3 style={{ marginBottom: "15px", color: "#FF9800" }}>📋 Istruzioni</h3>
-                                            <div style={{ lineHeight: "1.6" }}>
-                                                <p><strong>📥 Esporta Backup:</strong> Scarica un file JSON con tutti i dati attuali</p>
-                                                <p><strong>📤 Importa Backup:</strong> Carica un file JSON di backup precedente</p>
-                                                <p><strong>🔄 Ripristina Dati:</strong> Sovrascrive i dati attuali con il backup caricato</p>
-                                                <p><strong>🗑️ Pulizia Dati:</strong> Cancella TUTTI i dati (doppia conferma richiesta)</p>
-                                            </div>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="empty-state">
-                                        <div className="icon">🔒</div>
-                                        <h3>Accesso Negato</h3>
-                                        <p>Solo gli amministratori possono accedere al sistema di backup.</p>
+                                {/* ISTRUZIONI */}
+                                <div className="backup-section">
+                                    <h3 style={{ marginBottom: "15px", color: "#FF9800" }}>📋 Istruzioni</h3>
+                                    <div style={{ lineHeight: "1.6" }}>
+                                        <p><strong>📥 Esporta Backup:</strong> Scarica un file JSON con tutti i dati attuali</p>
+                                        <p><strong>📤 Importa Backup:</strong> Carica un file JSON di backup precedente</p>
+                                        <p><strong>🔄 Ripristina Dati:</strong> Sovrascrive i dati attuali con il backup caricato</p>
+                                        <p><strong>🗑️ Pulizia Dati:</strong> Cancella TUTTI i dati (doppia conferma richiesta)</p>
                                     </div>
-                                )}
+                                </div>
                             </div>
                         )}
 
@@ -2627,20 +2904,6 @@
                                             <div className="score-stat-label">🧤 Punti Portiere</div>
                                             <div className="score-stat-value" style={{ color: "#0096FF" }}>
                                                 {calcolaPunteggioBenjiPrice(getCurrentGiocatore())}
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="score-stat-card">
-                                            <div className="score-stat-label">✅ Partite Vinte</div>
-                                            <div className="score-stat-value" style={{ color: "#4CAF50" }}>
-                                                {getCurrentGiocatore().partite_vinte || 0}
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="score-stat-card">
-                                            <div className="score-stat-label">❌ Partite Perse</div>
-                                            <div className="score-stat-value" style={{ color: "#F44336" }}>
-                                                {getCurrentGiocatore().partite_perse || 0}
                                             </div>
                                         </div>
                                     </div>
@@ -2925,7 +3188,19 @@
                                         const isConfermato = confermati.includes(nomeVisualizzato);
                                         
                                         return (
-                                            <div key={partita.id} className="match-card">
+                                            <div key={partita.id} className="match-card" style={{ position: 'relative' }}>
+                                                {/* BADGE RISULTATO */}
+                                                {partita.risultato && (
+                                                    <div className={`badge-risultato ${
+                                                        partita.risultato === 'Vittoria' ? 'badge-vittoria' :
+                                                        partita.risultato === 'Sconfitta' ? 'badge-sconfitta' :
+                                                        'badge-pareggio'
+                                                    }`}>
+                                                        {partita.risultato === 'Vittoria' ? '✅' : 
+                                                         partita.risultato === 'Sconfitta' ? '❌' : '⚡'}
+                                                    </div>
+                                                )}
+                                                
                                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
                                                     <div style={{ flex: 1 }}>
                                                         <h3 style={{ margin: "0 0 10px 0", color: "#4CAF50" }}>
@@ -2998,6 +3273,9 @@
                                                     </div>
                                                 </div>
                                                 
+                                                {/* 🏆 VISUALIZZAZIONE RISULTATO PARTITA */}
+                                                {renderRisultatoPartita(partita)}
+                                                
                                                 {/* LISTA CONFERMATI */}
                                                 <div className="confermato-list">
                                                     <h4 style={{ margin: "15px 0 10px 0", color: "#FFC107" }}>Giocatori Confermati:</h4>
@@ -3015,7 +3293,7 @@
                                                     )}
                                                 </div>
                                                 
-                                                {/* CONTROLLI ADMIN PER RISULTATO */}
+                                                {/* CONTROLLI ADMIN PER RISULTATO CON FAZIONI */}
                                                 {isAdminUser() && (
                                                     <div style={{ marginTop: "15px", paddingTop: "15px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
                                                         <h4 style={{ marginBottom: "10px", color: "#FFC107" }}>Controlli Admin:</h4>
@@ -3198,7 +3476,7 @@
                                                 className="voto-select"
                                             >
                                                 <option value="">Voto</option>
-                                                {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(voto => (
+                                                {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(voto => (
                                                     <option key={voto} value={voto}>{voto}</option>
                                                 ))}
                                             </select>
@@ -3215,11 +3493,13 @@
                                             </select>
                                         </div>
                                         
+                                        {/* TEXTAREA PIÙ GRANDE PER COMMENTI */}
                                         <textarea 
                                             placeholder="Commento (opzionale)"
                                             value={nuovaPagella.commento}
                                             onChange={(e) => setNuovaPagella(prev => ({ ...prev, commento: e.target.value }))}
-                                            rows="3"
+                                            rows="4"
+                                            className="pagella-textarea"
                                         />
                                         
                                         <div className="pagella-actions">
@@ -3285,7 +3565,7 @@
                                                             className="voto-select"
                                                         >
                                                             <option value="">Voto</option>
-                                                            {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(voto => (
+                                                            {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(voto => (
                                                                 <option key={voto} value={voto}>{voto}</option>
                                                             ))}
                                                         </select>
@@ -3302,11 +3582,13 @@
                                                         </select>
                                                     </div>
                                                     
+                                                    {/* TEXTAREA PIÙ GRANDE PER MODIFICA */}
                                                     <textarea 
                                                         placeholder="Commento"
                                                         value={modificaPagella.commento}
                                                         onChange={(e) => setModificaPagella(prev => ({ ...prev, commento: e.target.value }))}
-                                                        rows="3"
+                                                        rows="4"
+                                                        className="pagella-textarea"
                                                     />
                                                     
                                                     <div className="modifica-actions">
@@ -3382,88 +3664,12 @@
 
                         {activeTab === "presenze" && (
                             <div>
-                                <h2>📊 Partite Giocate & Statistiche</h2>
+                                <h2>📊 Partite Giocate</h2>
                                 
-                                <div className="stats-grid">
-                                    <div className="stat-card">
-                                        <h3 style={{ color: "#4CAF50", margin: "0 0 10px 0", fontSize: "1rem" }}>✅ Partite Vinte</h3>
-                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
-                                            {giocatori.reduce((sum, g) => sum + (g.partite_vinte || 0), 0)}
-                                        </p>
-                                    </div>
-                                    <div className="stat-card">
-                                        <h3 style={{ color: "#F44336", margin: "0 0 10px 0", fontSize: "1rem" }}>❌ Partite Perse</h3>
-                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
-                                            {giocatori.reduce((sum, g) => sum + (g.partite_perse || 0), 0)}
-                                        </p>
-                                    </div>
-                                    <div className="stat-card">
-                                        <h3 style={{ color: "#FFC107", margin: "0 0 10px 0", fontSize: "1rem" }}>⚡ Partite Pareggiate</h3>
-                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
-                                            {giocatori.reduce((sum, g) => sum + (g.partite_pareggiate || 0), 0)}
-                                        </p>
-                                    </div>
-                                    <div className="stat-card">
-                                        <h3 style={{ color: "#2196F3", margin: "0 0 10px 0", fontSize: "1rem" }}>📊 Totale Partite</h3>
-                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>
-                                            {stats.totalePresenze}
-                                        </p>
-                                    </div>
-                                </div>
-
+                                {/* TOP CLASSIFICHE PRESENZE, GOL E MEDIA */}
                                 <div className="classifica-grid">
                                     <div className="classifica-card">
-                                        <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>✅ Classifica Vittorie</h3>
-                                        {classificaVittorie.length === 0 ? (
-                                            <div className="empty-state">
-                                                <div className="icon">✅</div>
-                                                <p>Nessuna partita vinta ancora.</p>
-                                            </div>
-                                        ) : (
-                                            classificaVittorie.map((giocatore, index) => (
-                                                <div key={giocatore.id} className="classifica-item">
-                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                        {index + 1}
-                                                    </div>
-                                                    <div className="classifica-nome">
-                                                        {giocatore.nome}
-                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                    </div>
-                                                    <div className="classifica-valore">
-                                                        {giocatore.partite_vinte || 0} vittorie
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-
-                                    <div className="classifica-card">
-                                        <h3 style={{ marginBottom: "15px", color: "#F44336" }}>❌ Classifica Sconfitte</h3>
-                                        {classificaPerse.length === 0 ? (
-                                            <div className="empty-state">
-                                                <div className="icon">❌</div>
-                                                <p>Nessuna partita persa ancora.</p>
-                                            </div>
-                                        ) : (
-                                            classificaPerse.map((giocatore, index) => (
-                                                <div key={giocatore.id} className="classifica-item">
-                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                        {index + 1}
-                                                    </div>
-                                                    <div className="classifica-nome">
-                                                        {giocatore.nome}
-                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                    </div>
-                                                    <div className="classifica-valore">
-                                                        {giocatore.partite_perse || 0} sconfitte
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-
-                                    <div className="classifica-card">
-                                        <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>📊 Classifica Presenze</h3>
+                                        <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>📊 Top Presenze</h3>
                                         {classificaPresenze.length === 0 ? (
                                             <div className="empty-state">
                                                 <div className="icon">📊</div>
@@ -3471,13 +3677,16 @@
                                             </div>
                                         ) : (
                                             classificaPresenze.map((giocatore, index) => (
-                                                <div key={giocatore.id} className="classifica-item">
+                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
                                                     <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
                                                         {index + 1}
                                                     </div>
                                                     <div className="classifica-nome">
                                                         {giocatore.nome}
                                                         {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                        )}
                                                     </div>
                                                     <div className="classifica-valore">
                                                         {giocatore.presenze || 0} partite
@@ -3488,24 +3697,83 @@
                                     </div>
 
                                     <div className="classifica-card">
-                                        <h3 style={{ marginBottom: "15px", color: "#9C27B0" }}>🎯 Percentuale Vittorie (Top 3)</h3>
-                                        {classificaPercentualeVittorie.length === 0 ? (
+                                        <h3 style={{ marginBottom: "15px", color: "#FFD700" }}>⚽ Top Marcatori</h3>
+                                        {classificaMarcatori.length === 0 ? (
                                             <div className="empty-state">
-                                                <div className="icon">🎯</div>
-                                                <p>Dati insufficienti.</p>
+                                                <div className="icon">⚽</div>
+                                                <p>Nessun gol segnato ancora.</p>
                                             </div>
                                         ) : (
-                                            classificaPercentualeVittorie.map((giocatore, index) => (
-                                                <div key={giocatore.id} className="classifica-item">
+                                            classificaMarcatori.map((giocatore, index) => (
+                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
                                                     <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
                                                         {index + 1}
                                                     </div>
                                                     <div className="classifica-nome">
                                                         {giocatore.nome}
                                                         {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                        )}
                                                     </div>
                                                     <div className="classifica-valore">
-                                                        {giocatore.percentuale}%
+                                                        {giocatore.gol || 0} gol
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>🎯 Top Assist</h3>
+                                        {classificaAssist.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">🎯</div>
+                                                <p>Nessun assist ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaAssist.map((giocatore, index) => (
+                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.assist || 0} assist
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>⭐ Top Media Voto</h3>
+                                        {classificaMediaVoto.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">⭐</div>
+                                                <p>Nessuna media voto ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaMediaVoto.map((giocatore, index) => (
+                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.media_calcolata ? giocatore.media_calcolata.toFixed(2) : "0.00"}
                                                     </div>
                                                 </div>
                                             ))
@@ -3513,23 +3781,33 @@
                                     </div>
                                 </div>
 
-                                {/* CONTROLLI ADMIN PER PRESENZE E PARTITE */}
+                                {/* CONTROLLI ADMIN PER PRESENZE */}
                                 {isAdminUser() && (
                                     <div style={{ marginTop: "40px" }}>
                                         <h3 style={{ marginBottom: "20px", color: "#FFC107" }}>👑 Controlli Admin - Gestione Partite</h3>
                                         {giocatori.map(giocatore => (
-                                            <div key={giocatore.id} className="player-card">
+                                            <div key={giocatore.id} className={`player-card ${renderMVPGlow(giocatore)}`}>
                                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
                                                     <div style={{ flex: 1 }}>
                                                         <h4 style={{ margin: "0 0 10px 0" }}>
                                                             {giocatore.nome}
                                                             {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                <span style={{ 
+                                                                    background: '#FFD700', 
+                                                                    color: 'black', 
+                                                                    padding: '2px 8px', 
+                                                                    borderRadius: '4px', 
+                                                                    fontSize: '0.7rem', 
+                                                                    marginLeft: '8px', 
+                                                                    fontWeight: 'bold'
+                                                                }}>
+                                                                    👑 MVP ATTUALE
+                                                                </span>
+                                                            )}
                                                         </h4>
                                                         <div style={{ display: "flex", gap: "15px", fontSize: "0.9rem", color: "#ccc" }}>
                                                             <span>📊 Partite: {giocatore.presenze || 0}</span>
-                                                            <span>✅ Vittorie: {giocatore.partite_vinte || 0}</span>
-                                                            <span>❌ Sconfitte: {giocatore.partite_perse || 0}</span>
-                                                            <span>🎯 %Vitt: {calcolaPercentualeVittorie(giocatore)}%</span>
                                                         </div>
                                                     </div>
                                                     
@@ -3553,48 +3831,6 @@
                                                             }}
                                                         >
                                                             ±📊
-                                                        </button>
-                                                        
-                                                        <input 
-                                                            id={`vinte-${giocatore.id}`}
-                                                            type="number" 
-                                                            placeholder="±Vinte" 
-                                                            className="number-input"
-                                                        />
-                                                        <button 
-                                                            onClick={() => aggiungiPartitaVinta(giocatore.id, document.getElementById(`vinte-${giocatore.id}`).value)}
-                                                            style={{ 
-                                                                padding: "8px 12px", 
-                                                                background: "#4CAF50",
-                                                                color: "white",
-                                                                border: "none",
-                                                                borderRadius: "8px",
-                                                                cursor: "pointer",
-                                                                fontSize: "12px"
-                                                            }}
-                                                        >
-                                                            ±✅
-                                                        </button>
-                                                        
-                                                        <input 
-                                                            id={`perse-${giocatore.id}`}
-                                                            type="number" 
-                                                            placeholder="±Perse" 
-                                                            className="number-input"
-                                                        />
-                                                        <button 
-                                                            onClick={() => aggiungiPartitaPersa(giocatore.id, document.getElementById(`perse-${giocatore.id}`).value)}
-                                                            style={{ 
-                                                                padding: "8px 12px", 
-                                                                background: "#F44336",
-                                                                color: "white",
-                                                                border: "none",
-                                                                borderRadius: "8px",
-                                                                cursor: "pointer",
-                                                                fontSize: "12px"
-                                                            }}
-                                                        >
-                                                            ±❌
                                                         </button>
                                                     </div>
                                                 </div>
@@ -3621,12 +3857,6 @@
                                     <div className="score-stat-card">
                                         <div className="score-stat-label">📊 Partite Giocate</div>
                                         <div className="score-stat-value">{getCurrentGiocatore().presenze || 0}</div>
-                                        <div className="progress-bar">
-                                            <div 
-                                                className="progress-fill vinte" 
-                                                style={{ width: `${((getCurrentGiocatore().presenze || 0) / Math.max(1, stats.totalePresenze)) * 100}%` }}
-                                            ></div>
-                                        </div>
                                     </div>
                                     
                                     <div className="score-stat-card">
@@ -3678,32 +3908,6 @@
                                         </div>
                                         <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
                                             {getCurrentGiocatore().partite_portiere || 0} partite in porta
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="score-stat-card">
-                                        <div className="score-stat-label">✅ Partite Vinte</div>
-                                        <div className="score-stat-value" style={{ color: "#4CAF50" }}>
-                                            {getCurrentGiocatore().partite_vinte || 0}
-                                        </div>
-                                        <div className="progress-bar">
-                                            <div 
-                                                className="progress-fill vinte" 
-                                                style={{ width: `${calcolaPercentualeVittorie(getCurrentGiocatore())}%` }}
-                                            ></div>
-                                        </div>
-                                        <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
-                                            {calcolaPercentualeVittorie(getCurrentGiocatore())}% vittorie
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="score-stat-card">
-                                        <div className="score-stat-label">❌ Partite Perse</div>
-                                        <div className="score-stat-value" style={{ color: "#F44336" }}>
-                                            {getCurrentGiocatore().partite_perse || 0}
-                                        </div>
-                                        <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
-                                            {((getCurrentGiocatore().partite_perse || 0) / (getCurrentGiocatore().presenze || 1) * 100).toFixed(1)}% partite
                                         </div>
                                     </div>
                                 </div>
@@ -3835,13 +4039,16 @@
                             <span className="icon">📝</span>
                             <span>Pagelle</span>
                         </button>
-                        <button 
-                            className={`nav-button ${activeTab === "backup" ? "active" : ""}`}
-                            onClick={() => setActiveTab("backup")}
-                        >
-                            <span className="icon">💾</span>
-                            <span>Backup</span>
-                        </button>
+                        {/* BACKUP VISIBILE SOLO PER ADMIN E FABRIZIO */}
+                        {isAdminUser() && (
+                            <button 
+                                className={`nav-button ${activeTab === "backup" ? "active" : ""}`}
+                                onClick={() => setActiveTab("backup")}
+                            >
+                                <span className="icon">💾</span>
+                                <span>Backup</span>
+                            </button>
+                        )}
                     </div>
                 </div>
             );
