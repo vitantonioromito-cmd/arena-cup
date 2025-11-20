@@ -1439,77 +1439,89 @@
 
             // 🆕 FUNZIONI BACKUP COMPLETE
 
-            // 📥 ESPORTA BACKUP
-            const esportaBackup = () => {
-                if (!isAdminUser()) return alert("Solo gli admin possono esportare backup!");
-                
-                // Recupera tutti i dati dal database
-                Promise.all([
-                    database.ref('giocatori').once('value'),
-                    database.ref('messaggi').once('value'),
-                    database.ref('partite').once('value'),
-                    database.ref('pagelle').once('value'),
-                    database.ref('statistiche').once('value')
-                ]).then(([giocatoriSnap, messaggiSnap, partiteSnap, pagelleSnap, statisticheSnap]) => {
-                    
-                    const backup = {
-                        metadata: {
-                            versione: "2.0.0",
-                            data_creazione: new Date().toISOString(),
-                            creato_da: getCurrentUserName(),
-                            totale_dati: {
-                                giocatori: giocatoriSnap.numChildren(),
-                                messaggi: messaggiSnap.numChildren(),
-                                partite: partiteSnap.numChildren(),
-                                pagelle: pagelleSnap.numChildren()
-                            }
-                        },
-                        dati: {
-                            giocatori: giocatoriSnap.val() || {},
-                            messaggi: messaggiSnap.val() || {},
-                            partite: partiteSnap.val() || {},
-                            pagelle: pagelleSnap.val() || {},
-                            statistiche: statisticheSnap.val() || {}
-                        }
-                    };
+           // 📥 ESPORTA BACKUP - VERSIONE CORRETTA
+const esportaBackup = () => {
+    if (!isAdminUser()) return alert("Solo gli admin possono esportare backup!");
+    
+    // Recupera tutti i dati dal database
+    Promise.all([
+        database.ref('giocatori').once('value'),
+        database.ref('messaggi').once('value'),
+        database.ref('partite').once('value'),
+        database.ref('pagelle').once('value'),
+        database.ref('statistiche').once('value')
+    ]).then(([giocatoriSnap, messaggiSnap, partiteSnap, pagelleSnap, statisticheSnap]) => {
+        
+        // 🛠️ CORREZIONE: Conta gli elementi in modo corretto
+        const giocatoriData = giocatoriSnap.val() || {};
+        const messaggiData = messaggiSnap.val() || {};
+        const partiteData = partiteSnap.val() || {};
+        const pagelleData = pagelleSnap.val() || {};
+        
+        // Conta gli elementi REALI
+        const countGiocatori = Object.keys(giocatoriData).length;
+        const countMessaggi = Object.keys(messaggiData).length;
+        const countPartite = Object.keys(partiteData).length;
+        const countPagelle = Object.keys(pagelleData).length;
+        
+        const backup = {
+            metadata: {
+                versione: "2.0.0",
+                data_creazione: new Date().toISOString(),
+                creato_da: getCurrentUserName(),
+                totale_dati: {
+                    giocatori: countGiocatori,
+                    messaggi: countMessaggi,
+                    partite: countPartite,
+                    pagelle: countPagelle
+                }
+            },
+            dati: {
+                giocatori: giocatoriData,
+                messaggi: messaggiData,
+                partite: partiteData,
+                pagelle: pagelleData,
+                statistiche: statisticheSnap.val() || {}
+            }
+        };
 
-                    // Aggiorna statistiche backup
-                    setBackupStats({
-                        giocatori: giocatoriSnap.numChildren(),
-                        messaggi: messaggiSnap.val() ? Object.keys(messaggiSnap.val()).length : 0,
-                        partite: partiteSnap.numChildren(),
-                        pagelle: pagelleSnap.numChildren(),
-                        statistiche: statisticheSnap.val() ? 1 : 0
-                    });
+        // Aggiorna statistiche backup CORRETTE
+        setBackupStats({
+            giocatori: countGiocatori,
+            messaggi: countMessaggi,
+            partite: countPartite,
+            pagelle: countPagelle,
+            statistiche: statisticheSnap.val() ? 1 : 0
+        });
 
-                    // Salva in stato per preview
-                    setBackupData(backup);
+        // Salva in stato per preview
+        setBackupData(backup);
 
-                    // Crea e scarica file
-                    const dataStr = JSON.stringify(backup, null, 2);
-                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(dataBlob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `arena-cup-backup-${new Date().toISOString().split('T')[0]}.json`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
+        // Crea e scarica file
+        const dataStr = JSON.stringify(backup, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `arena-cup-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
 
-                    alert(`✅ Backup esportato con successo!\n\nStatistiche:\n👥 ${backupStats.giocatori} giocatori\n💬 ${backupStats.messaggi} messaggi\n🗓️ ${backupStats.partite} partite\n📝 ${backupStats.pagelle} pagelle`);
+        alert(`✅ Backup esportato con successo!\n\nStatistiche:\n👥 ${countGiocatori} giocatori\n💬 ${countMessaggi} messaggi\n🗓️ ${countPartite} partite\n📝 ${countPagelle} pagelle`);
 
-                    showPushNotification(
-                        "💾 Backup Esportato",
-                        `Backup creato con ${backupStats.giocatori} giocatori, ${backupStats.messaggi} messaggi, ${backupStats.partite} partite`,
-                        'backup'
-                    );
+        showPushNotification(
+            "💾 Backup Esportato",
+            `Backup creato con ${countGiocatori} giocatori, ${countMessaggi} messaggi, ${countPartite} partite`,
+            'backup'
+        );
 
-                }).catch(error => {
-                    console.error("Errore esportazione backup:", error);
-                    alert("❌ Errore durante l'esportazione del backup");
-                });
-            };
+    }).catch(error => {
+        console.error("Errore esportazione backup:", error);
+        alert("❌ Errore durante l'esportazione del backup");
+    });
+};
 
             // 📤 IMPORT BACKUP
             const importaBackup = (event) => {
