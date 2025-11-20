@@ -1707,24 +1707,32 @@ const esportaBackup = () => {
 
             // 🎯 CLASSIFICA MEDIA VOTO - SOLO CHI HA VOTI
             // 🎯 CLASSIFICA MEDIA VOTO - CALCOLO IN TEMPO REALE
-const classificaMediaVoto = giocatori
-    .map(giocatore => {
-        const pagelleGiocatore = pagelle.filter(p => p.giocatore === giocatore.nome);
-        if (pagelleGiocatore.length === 0) {
-            return { ...giocatore, mediaReale: 0 };
-        }
-        
-        const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
-            const voto = parseFloat(pagella.voto);
-            return sum + (isNaN(voto) ? 0 : voto);
-        }, 0);
-        
-        const mediaReale = sommaVoti / pagelleGiocatore.length;
-        return { ...giocatore, mediaReale };
-    })
-    .filter(g => g.mediaReale > 0)
-    .sort((a, b) => b.mediaReale - a.mediaReale)
-    .slice(0, 10);
+// 🎯 CLASSIFICA MEDIA VOTO - CALCOLO IN TEMPO REALE CON USEMEMO
+const classificaMediaVoto = React.useMemo(() => {
+    console.log("📊 Ricalcolo media voto...", pagelle.length);
+    
+    return giocatori
+        .map(giocatore => {
+            const pagelleGiocatore = pagelle.filter(p => p.giocatore === giocatore.nome);
+            if (pagelleGiocatore.length === 0) {
+                return { ...giocatore, mediaReale: 0 };
+            }
+            
+            const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
+                const voto = parseFloat(pagella.voto);
+                console.log(`📝 ${giocatore.nome}: voto ${voto} da ${pagella.autore}`);
+                return sum + (isNaN(voto) ? 0 : voto);
+            }, 0);
+            
+            const mediaReale = sommaVoti / pagelleGiocatore.length;
+            console.log(`🎯 ${giocatore.nome}: ${pagelleGiocatore.length} pagelle, media ${mediaReale.toFixed(2)}`);
+            
+            return { ...giocatore, mediaReale };
+        })
+        .filter(g => g.mediaReale > 0)
+        .sort((a, b) => b.mediaReale - a.mediaReale)
+        .slice(0, 10);
+}, [giocatori, pagelle]);
 
             const handleLogout = () => {
                 localStorage.removeItem("username");
@@ -2566,35 +2574,33 @@ const classificaMediaVoto = giocatori
                                         )}
                                     </div>
 
-                                    <div className="classifica-card">
-                                        <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>⭐ Top Media Voto</h3>
-                                        {classificaMediaVoto.length === 0 ? (
-                                            <div className="empty-state">
-                                                <div className="icon">⭐</div>
-                                                <p>Nessuna media voto ancora.</p>
-                                            </div>
-                                        ) : (
-                                            classificaMediaVoto.map((giocatore, index) => (
-                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
-                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                        {index + 1}
-                                                    </div>
-                                                    <div className="classifica-nome">
-                                                        {giocatore.nome}
-                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="classifica-valore">
-    {giocatore.mediaReale.toFixed(2)}
+<div className="classifica-card">
+    <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>⭐ Top Media Voto</h3>
+    {classificaMediaVoto.length === 0 ? (
+        <div className="empty-state">
+            <div className="icon">⭐</div>
+            <p>Nessuna media voto ancora.</p>
+        </div>
+    ) : (
+        classificaMediaVoto.map((giocatore, index) => (
+            <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
+                <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                    {index + 1}
+                </div>
+                <div className="classifica-nome">
+                    {giocatore.nome}
+                    {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                    {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                        <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                    )}
+                </div>
+                <div className="classifica-valore">
+                    {giocatore.mediaReale.toFixed(2)}
+                </div>
+            </div>
+        ))
+    )}
 </div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </div>
-
                                 {/* LISTA COMPLETA GIOCATORI CON TUTTE LE STATISTICHE */}
                                 <div style={{ marginTop: "40px" }}>
                                     <h3>👥 Lista Completa Giocatori</h3>
