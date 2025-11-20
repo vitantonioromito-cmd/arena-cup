@@ -1118,22 +1118,40 @@
                 return loginForm.username === "admin" || loginForm.username === "vitantonio" || loginForm.username === "fabrizio";
             };
 
-            // 📊 AGGIORNA MEDIA GIOCATORE quando si aggiunge/modifica pagella
-            const aggiornaMediaGiocatore = (nomeGiocatore) => {
-                const pagelleGiocatore = pagelle.filter(p => p.giocatore === nomeGiocatore);
-                if (pagelleGiocatore.length === 0) return;
-                
-                const media = pagelleGiocatore.reduce((sum, pagella) => sum + parseFloat(pagella.voto), 0) / pagelleGiocatore.length;
-                
-                // Trova il giocatore e aggiorna la media
-                const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
-                if (giocatore) {
-                    database.ref(`giocatori/${giocatore.id}`).update({
-                        media_calcolata: media.toFixed(2),
-                        voti: pagelleGiocatore.map(p => parseFloat(p.voto))
-                    });
-                }
-            };
+            // 📊 AGGIORNA MEDIA GIOCATORE - VERSIONE CORRETTA
+const aggiornaMediaGiocatore = (nomeGiocatore) => {
+    const pagelleGiocatore = pagelle.filter(p => p.giocatore === nomeGiocatore);
+    if (pagelleGiocatore.length === 0) {
+        // Se non ci sono pagelle, imposta media a 0
+        const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
+        if (giocatore) {
+            database.ref(`giocatori/${giocatore.id}`).update({
+                media_calcolata: 0,
+                voti: []
+            });
+        }
+        return;
+    }
+    
+    // Calcola la media CORRETTA
+    const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
+        const voto = parseFloat(pagella.voto);
+        return sum + (isNaN(voto) ? 0 : voto);
+    }, 0);
+    
+    const media = sommaVoti / pagelleGiocatore.length;
+    
+    // Trova il giocatore e aggiorna la media
+    const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
+    if (giocatore) {
+        database.ref(`giocatori/${giocatore.id}`).update({
+            media_calcolata: media.toFixed(2),
+            voti: pagelleGiocatore.map(p => parseFloat(p.voto))
+        }).then(() => {
+            console.log(`✅ Media aggiornata per ${nomeGiocatore}: ${media.toFixed(2)}`);
+        });
+    }
+};
 
             // 🏆 FUNZIONE PER TROVARE IL MVP ATTUALE
             const getCurrentMVP = () => {
@@ -1752,8 +1770,9 @@ const esportaBackup = () => {
                     });
                     alert("📝 Pagella aggiunta!");
                     
-                    // 🔥 AGGIORNA MEDIA GIOCATORE
-                    aggiornaMediaGiocatore(nuovaPagella.giocatore);
+                    setTimeout(() => {
+            aggiornaMediaGiocatore(nuovaPagella.giocatore);
+        }, 1000);
                     
                     showPushNotification(
                         "📝 Nuova Pagella Aggiunta",
