@@ -1119,39 +1119,39 @@
             };
 
             // 📊 AGGIORNA MEDIA GIOCATORE - VERSIONE CORRETTA
-const aggiornaMediaGiocatore = (nomeGiocatore) => {
-    const pagelleGiocatore = pagelle.filter(p => p.giocatore === nomeGiocatore);
-    if (pagelleGiocatore.length === 0) {
-        // Se non ci sono pagelle, imposta media a 0
-        const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
-        if (giocatore) {
-            database.ref(`giocatori/${giocatore.id}`).update({
-                media_calcolata: 0,
-                voti: []
-            });
-        }
-        return;
-    }
-    
-    // Calcola la media CORRETTA
-    const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
-        const voto = parseFloat(pagella.voto);
-        return sum + (isNaN(voto) ? 0 : voto);
-    }, 0);
-    
-    const media = sommaVoti / pagelleGiocatore.length;
-    
-    // Trova il giocatore e aggiorna la media
-    const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
-    if (giocatore) {
-        database.ref(`giocatori/${giocatore.id}`).update({
-            media_calcolata: media.toFixed(2),
-            voti: pagelleGiocatore.map(p => parseFloat(p.voto))
-        }).then(() => {
-            console.log(`✅ Media aggiornata per ${nomeGiocatore}: ${media.toFixed(2)}`);
-        });
-    }
-};
+            const aggiornaMediaGiocatore = (nomeGiocatore) => {
+                const pagelleGiocatore = pagelle.filter(p => p.giocatore === nomeGiocatore);
+                if (pagelleGiocatore.length === 0) {
+                    // Se non ci sono pagelle, imposta media a 0
+                    const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
+                    if (giocatore) {
+                        database.ref(`giocatori/${giocatore.id}`).update({
+                            media_calcolata: 0,
+                            voti: []
+                        });
+                    }
+                    return;
+                }
+                
+                // Calcola la media CORRETTA
+                const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
+                    const voto = parseFloat(pagella.voto);
+                    return sum + (isNaN(voto) ? 0 : voto);
+                }, 0);
+                
+                const media = sommaVoti / pagelleGiocatore.length;
+                
+                // Trova il giocatore e aggiorna la media
+                const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
+                if (giocatore) {
+                    database.ref(`giocatori/${giocatore.id}`).update({
+                        media_calcolata: media.toFixed(2),
+                        voti: pagelleGiocatore.map(p => parseFloat(p.voto))
+                    }).then(() => {
+                        console.log(`✅ Media aggiornata per ${nomeGiocatore}: ${media.toFixed(2)}`);
+                    });
+                }
+            };
 
             // 🏆 FUNZIONE PER TROVARE IL MVP ATTUALE
             const getCurrentMVP = () => {
@@ -1176,6 +1176,33 @@ const aggiornaMediaGiocatore = (nomeGiocatore) => {
                 }
                 return '';
             };
+
+            // 🎯 CLASSIFICA MEDIA VOTO - CALCOLO IN TEMPO REALE CON USEMEMO
+            const classificaMediaVoto = React.useMemo(() => {
+                console.log("📊 Ricalcolo media voto...", pagelle.length);
+                
+                return giocatori
+                    .map(giocatore => {
+                        const pagelleGiocatore = pagelle.filter(p => p.giocatore === giocatore.nome);
+                        if (pagelleGiocatore.length === 0) {
+                            return { ...giocatore, mediaReale: 0 };
+                        }
+                        
+                        const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
+                            const voto = parseFloat(pagella.voto);
+                            console.log(`📝 ${giocatore.nome}: voto ${voto} da ${pagella.autore}`);
+                            return sum + (isNaN(voto) ? 0 : voto);
+                        }, 0);
+                        
+                        const mediaReale = sommaVoti / pagelleGiocatore.length;
+                        console.log(`🎯 ${giocatore.nome}: ${pagelleGiocatore.length} pagelle, media ${mediaReale.toFixed(2)}`);
+                        
+                        return { ...giocatore, mediaReale };
+                    })
+                    .filter(g => g.mediaReale > 0)
+                    .sort((a, b) => b.mediaReale - a.mediaReale)
+                    .slice(0, 10);
+            }, [giocatori, pagelle]);
 
             // 🔧 FUNZIONE LOGIN MIGLIORATA
             const handleLogin = (e) => {
@@ -1457,89 +1484,89 @@ const aggiornaMediaGiocatore = (nomeGiocatore) => {
 
             // 🆕 FUNZIONI BACKUP COMPLETE
 
-           // 📥 ESPORTA BACKUP - VERSIONE CORRETTA
-const esportaBackup = () => {
-    if (!isAdminUser()) return alert("Solo gli admin possono esportare backup!");
-    
-    // Recupera tutti i dati dal database
-    Promise.all([
-        database.ref('giocatori').once('value'),
-        database.ref('messaggi').once('value'),
-        database.ref('partite').once('value'),
-        database.ref('pagelle').once('value'),
-        database.ref('statistiche').once('value')
-    ]).then(([giocatoriSnap, messaggiSnap, partiteSnap, pagelleSnap, statisticheSnap]) => {
-        
-        // 🛠️ CORREZIONE: Conta gli elementi in modo corretto
-        const giocatoriData = giocatoriSnap.val() || {};
-        const messaggiData = messaggiSnap.val() || {};
-        const partiteData = partiteSnap.val() || {};
-        const pagelleData = pagelleSnap.val() || {};
-        
-        // Conta gli elementi REALI
-        const countGiocatori = Object.keys(giocatoriData).length;
-        const countMessaggi = Object.keys(messaggiData).length;
-        const countPartite = Object.keys(partiteData).length;
-        const countPagelle = Object.keys(pagelleData).length;
-        
-        const backup = {
-            metadata: {
-                versione: "2.0.0",
-                data_creazione: new Date().toISOString(),
-                creato_da: getCurrentUserName(),
-                totale_dati: {
-                    giocatori: countGiocatori,
-                    messaggi: countMessaggi,
-                    partite: countPartite,
-                    pagelle: countPagelle
-                }
-            },
-            dati: {
-                giocatori: giocatoriData,
-                messaggi: messaggiData,
-                partite: partiteData,
-                pagelle: pagelleData,
-                statistiche: statisticheSnap.val() || {}
-            }
-        };
+            // 📥 ESPORTA BACKUP - VERSIONE CORRETTA
+            const esportaBackup = () => {
+                if (!isAdminUser()) return alert("Solo gli admin possono esportare backup!");
+                
+                // Recupera tutti i dati dal database
+                Promise.all([
+                    database.ref('giocatori').once('value'),
+                    database.ref('messaggi').once('value'),
+                    database.ref('partite').once('value'),
+                    database.ref('pagelle').once('value'),
+                    database.ref('statistiche').once('value')
+                ]).then(([giocatoriSnap, messaggiSnap, partiteSnap, pagelleSnap, statisticheSnap]) => {
+                    
+                    // 🛠️ CORREZIONE: Conta gli elementi in modo corretto
+                    const giocatoriData = giocatoriSnap.val() || {};
+                    const messaggiData = messaggiSnap.val() || {};
+                    const partiteData = partiteSnap.val() || {};
+                    const pagelleData = pagelleSnap.val() || {};
+                    
+                    // Conta gli elementi REALI
+                    const countGiocatori = Object.keys(giocatoriData).length;
+                    const countMessaggi = Object.keys(messaggiData).length;
+                    const countPartite = Object.keys(partiteData).length;
+                    const countPagelle = Object.keys(pagelleData).length;
+                    
+                    const backup = {
+                        metadata: {
+                            versione: "2.0.0",
+                            data_creazione: new Date().toISOString(),
+                            creato_da: getCurrentUserName(),
+                            totale_dati: {
+                                giocatori: countGiocatori,
+                                messaggi: countMessaggi,
+                                partite: countPartite,
+                                pagelle: countPagelle
+                            }
+                        },
+                        dati: {
+                            giocatori: giocatoriData,
+                            messaggi: messaggiData,
+                            partite: partiteData,
+                            pagelle: pagelleData,
+                            statistiche: statisticheSnap.val() || {}
+                        }
+                    };
 
-        // Aggiorna statistiche backup CORRETTE
-        setBackupStats({
-            giocatori: countGiocatori,
-            messaggi: countMessaggi,
-            partite: countPartite,
-            pagelle: countPagelle,
-            statistiche: statisticheSnap.val() ? 1 : 0
-        });
+                    // Aggiorna statistiche backup CORRETTE
+                    setBackupStats({
+                        giocatori: countGiocatori,
+                        messaggi: countMessaggi,
+                        partite: countPartite,
+                        pagelle: countPagelle,
+                        statistiche: statisticheSnap.val() ? 1 : 0
+                    });
 
-        // Salva in stato per preview
-        setBackupData(backup);
+                    // Salva in stato per preview
+                    setBackupData(backup);
 
-        // Crea e scarica file
-        const dataStr = JSON.stringify(backup, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `arena-cup-backup-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+                    // Crea e scarica file
+                    const dataStr = JSON.stringify(backup, null, 2);
+                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `arena-cup-backup-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
 
-        alert(`✅ Backup esportato con successo!\n\nStatistiche:\n👥 ${countGiocatori} giocatori\n💬 ${countMessaggi} messaggi\n🗓️ ${countPartite} partite\n📝 ${countPagelle} pagelle`);
+                    alert(`✅ Backup esportato con successo!\n\nStatistiche:\n👥 ${countGiocatori} giocatori\n💬 ${countMessaggi} messaggi\n🗓️ ${countPartite} partite\n📝 ${countPagelle} pagelle`);
 
-        showPushNotification(
-            "💾 Backup Esportato",
-            `Backup creato con ${countGiocatori} giocatori, ${countMessaggi} messaggi, ${countPartite} partite`,
-            'backup'
-        );
+                    showPushNotification(
+                        "💾 Backup Esportato",
+                        `Backup creato con ${countGiocatori} giocatori, ${countMessaggi} messaggi, ${countPartite} partite`,
+                        'backup'
+                    );
 
-    }).catch(error => {
-        console.error("Errore esportazione backup:", error);
-        alert("❌ Errore durante l'esportazione del backup");
-    });
-};
+                }).catch(error => {
+                    console.error("Errore esportazione backup:", error);
+                    alert("❌ Errore durante l'esportazione del backup");
+                });
+            };
 
             // 📤 IMPORT BACKUP
             const importaBackup = (event) => {
@@ -1705,35 +1732,6 @@ const esportaBackup = () => {
                 .sort((a, b) => (b.presenze || 0) - (a.presenze || 0))
                 .slice(0, 10);
 
-            // 🎯 CLASSIFICA MEDIA VOTO - SOLO CHI HA VOTI
-            // 🎯 CLASSIFICA MEDIA VOTO - CALCOLO IN TEMPO REALE
-// 🎯 CLASSIFICA MEDIA VOTO - CALCOLO IN TEMPO REALE CON USEMEMO
-const classificaMediaVoto = React.useMemo(() => {
-    console.log("📊 Ricalcolo media voto...", pagelle.length);
-    
-    return giocatori
-        .map(giocatore => {
-            const pagelleGiocatore = pagelle.filter(p => p.giocatore === giocatore.nome);
-            if (pagelleGiocatore.length === 0) {
-                return { ...giocatore, mediaReale: 0 };
-            }
-            
-            const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
-                const voto = parseFloat(pagella.voto);
-                console.log(`📝 ${giocatore.nome}: voto ${voto} da ${pagella.autore}`);
-                return sum + (isNaN(voto) ? 0 : voto);
-            }, 0);
-            
-            const mediaReale = sommaVoti / pagelleGiocatore.length;
-            console.log(`🎯 ${giocatore.nome}: ${pagelleGiocatore.length} pagelle, media ${mediaReale.toFixed(2)}`);
-            
-            return { ...giocatore, mediaReale };
-        })
-        .filter(g => g.mediaReale > 0)
-        .sort((a, b) => b.mediaReale - a.mediaReale)
-        .slice(0, 10);
-}, [giocatori, pagelle]);
-
             const handleLogout = () => {
                 localStorage.removeItem("username");
                 setIsLogged(false);
@@ -1793,9 +1791,10 @@ const classificaMediaVoto = React.useMemo(() => {
                     });
                     alert("📝 Pagella aggiunta!");
                     
+                    // 🔥 AGGIORNA MEDIA GIOCATORE - FORZATO
                     setTimeout(() => {
-            aggiornaMediaGiocatore(nuovaPagella.giocatore);
-        }, 1000);
+                        aggiornaMediaGiocatore(nuovaPagella.giocatore);
+                    }, 1000);
                     
                     showPushNotification(
                         "📝 Nuova Pagella Aggiunta",
@@ -2417,16 +2416,12 @@ const classificaMediaVoto = React.useMemo(() => {
                                         <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleAssist}</p>
                                     </div>
                                     <div className="stat-card">
-    <h4 style={{ color: "#2196F3", margin: "0 0 10px 0", fontSize: "0.9rem" }}>⭐ Media Voto</h4>
-    <p style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold" }}>
-        {(() => {
-            const miePagelle = pagelle.filter(p => p.giocatore === loginForm.username);
-            if (miePagelle.length === 0) return "0.00";
-            const media = miePagelle.reduce((sum, pagella) => sum + parseFloat(pagella.voto), 0) / miePagelle.length;
-            return media.toFixed(2);
-        })()}
-    </p>
-</div>
+                                        <h3 style={{ color: "#2196F3", margin: "0 0 10px 0", fontSize: "1rem" }}>⭐ Media Generale</h3>
+                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.mediaGenerale.toFixed(2)}</p>
+                                        <p style={{ margin: "5px 0 0 0", fontSize: "0.7rem", color: "#ccc" }}>
+                                            ({giocatoriConVoti.length} giocatori con voti)
+                                        </p>
+                                    </div>
                                     <div className="stat-card">
                                         <h3 style={{ color: "#FFC107", margin: "0 0 10px 0", fontSize: "1rem" }}>🏆 MVP Totali</h3>
                                         <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleMVP}</p>
@@ -2578,33 +2573,35 @@ const classificaMediaVoto = React.useMemo(() => {
                                         )}
                                     </div>
 
-<div className="classifica-card">
-    <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>⭐ Top Media Voto</h3>
-    {classificaMediaVoto.length === 0 ? (
-        <div className="empty-state">
-            <div className="icon">⭐</div>
-            <p>Nessuna media voto ancora.</p>
-        </div>
-    ) : (
-        classificaMediaVoto.map((giocatore, index) => (
-            <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
-                <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                    {index + 1}
-                </div>
-                <div className="classifica-nome">
-                    {giocatore.nome}
-                    {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                    {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                        <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
-                    )}
-                </div>
-                <div className="classifica-valore">
-                    {giocatore.mediaReale.toFixed(2)}
-                </div>
-            </div>
-        ))
-    )}
-</div>
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>⭐ Top Media Voto</h3>
+                                        {classificaMediaVoto.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">⭐</div>
+                                                <p>Nessuna media voto ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaMediaVoto.map((giocatore, index) => (
+                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
+                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="classifica-nome">
+                                                        {giocatore.nome}
+                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="classifica-valore">
+                                                        {giocatore.mediaReale.toFixed(2)}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
                                 {/* LISTA COMPLETA GIOCATORI CON TUTTE LE STATISTICHE */}
                                 <div style={{ marginTop: "40px" }}>
                                     <h3>👥 Lista Completa Giocatori</h3>
@@ -2943,7 +2940,12 @@ const classificaMediaVoto = React.useMemo(() => {
                                         <div className="score-stat-card">
                                             <div className="score-stat-label">⭐ Media Voto</div>
                                             <div className="score-stat-value" style={{ color: "#2196F3" }}>
-                                                {getCurrentGiocatore().media_calcolata ? getCurrentGiocatore().media_calcolata.toFixed(2) : "0.00"}
+                                                {(() => {
+                                                    const miePagelle = pagelle.filter(p => p.giocatore === loginForm.username);
+                                                    if (miePagelle.length === 0) return "0.00";
+                                                    const media = miePagelle.reduce((sum, pagella) => sum + parseFloat(pagella.voto), 0) / miePagelle.length;
+                                                    return media.toFixed(2);
+                                                })()}
                                             </div>
                                         </div>
                                     </div>
@@ -3829,7 +3831,7 @@ const classificaMediaVoto = React.useMemo(() => {
                                                         )}
                                                     </div>
                                                     <div className="classifica-valore">
-                                                        {giocatore.media_calcolata ? giocatore.media_calcolata.toFixed(2) : "0.00"}
+                                                        {giocatore.mediaReale.toFixed(2)}
                                                     </div>
                                                 </div>
                                             ))
@@ -3936,19 +3938,19 @@ const classificaMediaVoto = React.useMemo(() => {
                                     </div>
                                     
                                     <div className="score-stat-card">
-    <div className="score-stat-label">⭐ Media Voto</div>
-    <div className="score-stat-value" style={{ color: "#2196F3" }}>
-        {(() => {
-            const miePagelle = pagelle.filter(p => p.giocatore === loginForm.username);
-            if (miePagelle.length === 0) return "0.00";
-            const media = miePagelle.reduce((sum, pagella) => sum + parseFloat(pagella.voto), 0) / miePagelle.length;
-            return media.toFixed(2);
-        })()}
-    </div>
-    <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
-        {pagelle.filter(p => p.giocatore === loginForm.username).length} valutazioni
-    </div>
-</div>
+                                        <div className="score-stat-label">⭐ Media Voto</div>
+                                        <div className="score-stat-value" style={{ color: "#2196F3" }}>
+                                            {(() => {
+                                                const miePagelle = pagelle.filter(p => p.giocatore === loginForm.username);
+                                                if (miePagelle.length === 0) return "0.00";
+                                                const media = miePagelle.reduce((sum, pagella) => sum + parseFloat(pagella.voto), 0) / miePagelle.length;
+                                                return media.toFixed(2);
+                                            })()}
+                                        </div>
+                                        <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                                            {pagelle.filter(p => p.giocatore === loginForm.username).length} valutazioni
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="score-stats-grid">
@@ -4044,7 +4046,6 @@ const classificaMediaVoto = React.useMemo(() => {
                         )}
                     </div>
 
-                                                            {}
                     <div className="app-bottom-nav">
                         <button 
                             className={`nav-button ${activeTab === "classifica" ? "active" : ""}`}
