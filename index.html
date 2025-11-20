@@ -2417,12 +2417,16 @@ const classificaMediaVoto = React.useMemo(() => {
                                         <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleAssist}</p>
                                     </div>
                                     <div className="stat-card">
-                                        <h3 style={{ color: "#2196F3", margin: "0 0 10px 0", fontSize: "1rem" }}>⭐ Media Generale</h3>
-                                        <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.mediaGenerale.toFixed(2)}</p>
-                                        <p style={{ margin: "5px 0 0 0", fontSize: "0.7rem", color: "#ccc" }}>
-                                            ({giocatoriConVoti.length} giocatori con voti)
-                                        </p>
-                                    </div>
+    <h4 style={{ color: "#2196F3", margin: "0 0 10px 0", fontSize: "0.9rem" }}>⭐ Media Voto</h4>
+    <p style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold" }}>
+        {(() => {
+            const miePagelle = pagelle.filter(p => p.giocatore === loginForm.username);
+            if (miePagelle.length === 0) return "0.00";
+            const media = miePagelle.reduce((sum, pagella) => sum + parseFloat(pagella.voto), 0) / miePagelle.length;
+            return media.toFixed(2);
+        })()}
+    </p>
+</div>
                                     <div className="stat-card">
                                         <h3 style={{ color: "#FFC107", margin: "0 0 10px 0", fontSize: "1rem" }}>🏆 MVP Totali</h3>
                                         <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleMVP}</p>
@@ -3932,14 +3936,19 @@ const classificaMediaVoto = React.useMemo(() => {
                                     </div>
                                     
                                     <div className="score-stat-card">
-                                        <div className="score-stat-label">⭐ Media Voto</div>
-                                        <div className="score-stat-value" style={{ color: "#2196F3" }}>
-                                            {getCurrentGiocatore().media_calcolata ? getCurrentGiocatore().media_calcolata.toFixed(2) : "0.00"}
-                                        </div>
-                                        <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
-                                            {getCurrentGiocatore().voti ? getCurrentGiocatore().voti.length : 0} valutazioni
-                                        </div>
-                                    </div>
+    <div className="score-stat-label">⭐ Media Voto</div>
+    <div className="score-stat-value" style={{ color: "#2196F3" }}>
+        {(() => {
+            const miePagelle = pagelle.filter(p => p.giocatore === loginForm.username);
+            if (miePagelle.length === 0) return "0.00";
+            const media = miePagelle.reduce((sum, pagella) => sum + parseFloat(pagella.voto), 0) / miePagelle.length;
+            return media.toFixed(2);
+        })()}
+    </div>
+    <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+        {pagelle.filter(p => p.giocatore === loginForm.username).length} valutazioni
+    </div>
+</div>
                                 </div>
 
                                 <div className="score-stats-grid">
