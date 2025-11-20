@@ -1706,10 +1706,25 @@ const esportaBackup = () => {
                 .slice(0, 10);
 
             // 🎯 CLASSIFICA MEDIA VOTO - SOLO CHI HA VOTI
-            const classificaMediaVoto = [...giocatori]
-                .filter(g => g.media_calcolata > 0 && g.voti && g.voti.length > 0)
-                .sort((a, b) => (b.media_calcolata || 0) - (a.media_calcolata || 0))
-                .slice(0, 10);
+            // 🎯 CLASSIFICA MEDIA VOTO - CALCOLO IN TEMPO REALE
+const classificaMediaVoto = giocatori
+    .map(giocatore => {
+        const pagelleGiocatore = pagelle.filter(p => p.giocatore === giocatore.nome);
+        if (pagelleGiocatore.length === 0) {
+            return { ...giocatore, mediaReale: 0 };
+        }
+        
+        const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
+            const voto = parseFloat(pagella.voto);
+            return sum + (isNaN(voto) ? 0 : voto);
+        }, 0);
+        
+        const mediaReale = sommaVoti / pagelleGiocatore.length;
+        return { ...giocatore, mediaReale };
+    })
+    .filter(g => g.mediaReale > 0)
+    .sort((a, b) => b.mediaReale - a.mediaReale)
+    .slice(0, 10);
 
             const handleLogout = () => {
                 localStorage.removeItem("username");
@@ -2572,8 +2587,8 @@ const esportaBackup = () => {
                                                         )}
                                                     </div>
                                                     <div className="classifica-valore">
-                                                        {giocatore.media_calcolata ? giocatore.media_calcolata.toFixed(2) : "0.00"}
-                                                    </div>
+    {giocatore.mediaReale.toFixed(2)}
+</div>
                                                 </div>
                                             ))
                                         )}
