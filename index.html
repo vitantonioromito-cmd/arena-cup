@@ -1118,7 +1118,7 @@
                 return loginForm.username === "admin" || loginForm.username === "vitantonio" || loginForm.username === "fabrizio";
             };
 
-            // 📊 AGGIORNA MEDIA GIOCATORE - VERSIONE CORRETTA
+            // 📊 AGGIORNA MEDIA GIOCATORE - VERSIONE CORRETTA E COMPLETA
             const aggiornaMediaGiocatore = (nomeGiocatore) => {
                 const pagelleGiocatore = pagelle.filter(p => p.giocatore === nomeGiocatore);
                 if (pagelleGiocatore.length === 0) {
@@ -1151,6 +1151,51 @@
                         console.log(`✅ Media aggiornata per ${nomeGiocatore}: ${media.toFixed(2)}`);
                     });
                 }
+            };
+
+            // 🧤 FUNZIONI PER STATISTICHE PORTIERE (SOLO ADMIN E FABRIZIO)
+            const aggiungiStatPortiere = (id, tipo, quantitaInput) => {
+                if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le statistiche portiere!");
+                
+                const giocatore = giocatori.find(g => g.id === id);
+                if (!giocatore) return;
+                
+                const quantita = parseInt(quantitaInput);
+                if (isNaN(quantita)) return alert("Inserisci un numero valido!");
+                
+                const nuovoValore = Math.max(0, (giocatore[tipo] || 0) + quantita);
+                
+                database.ref(`giocatori/${id}`).update({
+                    [tipo]: nuovoValore
+                }).then(() => {
+                    const azione = quantita >= 0 ? "aggiunte" : "rimosse";
+                    const emoji = 
+                        tipo === 'parate' ? '🧤' :
+                        tipo === 'gol_subiti' ? '🥅' :
+                        tipo === 'rigori_parati' ? '🎯' :
+                        tipo === 'uscite_vinte' ? '🚀' :
+                        tipo === 'assist_portiere' ? '🎯' :
+                        tipo === 'parate_difficili' ? '🌟' :
+                        tipo === 'rinvii_buoni' ? '⚽' :
+                        tipo === 'errori' ? '❌' :
+                        tipo === 'interventi_decisivi' ? '🛡️' :
+                        tipo === 'partite_portiere' ? '📊' : '📈';
+                    
+                    const nomeStat = 
+                        tipo === 'parate' ? 'parate' :
+                        tipo === 'gol_subiti' ? 'gol subiti' :
+                        tipo === 'rigori_parati' ? 'rigori parati' :
+                        tipo === 'uscite_vinte' ? 'uscite vinte' :
+                        tipo === 'assist_portiere' ? 'assist da portiere' :
+                        tipo === 'parate_difficili' ? 'parate difficili' :
+                        tipo === 'rinvii_buoni' ? 'rinvii buoni' :
+                        tipo === 'errori' ? 'errori' :
+                        tipo === 'interventi_decisivi' ? 'interventi decisivi' :
+                        tipo === 'partite_portiere' ? 'partite da portiere' : 'statistiche';
+                    
+                    alert(`${emoji} ${Math.abs(quantita)} ${nomeStat} ${azione}!`);
+                    document.getElementById(`${tipo}-${id}`).value = "";
+                });
             };
 
             // 🏆 FUNZIONE PER TROVARE IL MVP ATTUALE
@@ -1402,6 +1447,11 @@
                     const pagelleArray = data ? Object.keys(data).map(key => ({ ...data[key], id: key })) : [];
                     pagelleArray.sort((a, b) => new Date(b.data) - new Date(a.data));
                     setPagelle(pagelleArray);
+                    
+                    // 🔄 AGGIORNA AUTOMATICAMENTE LE MEDIE DEI GIOCATORI
+                    giocatori.forEach(giocatore => {
+                        aggiornaMediaGiocatore(giocatore.nome);
+                    });
                 });
             }, [isLogged, activeTab, ultimoMessaggioVisto, loginForm.username]);
 
@@ -2757,6 +2807,31 @@
                                                             >
                                                                 +🏆
                                                             </button>
+
+                                                            {/* CONTROLLI STATISTICHE PORTIERE */}
+                                                            <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "5px" }}>
+                                                                <input 
+                                                                    id={`parate-${giocatore.id}`}
+                                                                    type="number" 
+                                                                    placeholder="Parate" 
+                                                                    className="number-input"
+                                                                    style={{ width: "60px" }}
+                                                                />
+                                                                <button 
+                                                                    onClick={() => aggiungiStatPortiere(giocatore.id, 'parate', document.getElementById(`parate-${giocatore.id}`).value)}
+                                                                    style={{ 
+                                                                        padding: "6px 8px", 
+                                                                        background: "#0096FF",
+                                                                        color: "white",
+                                                                        border: "none",
+                                                                        borderRadius: "6px",
+                                                                        cursor: "pointer",
+                                                                        fontSize: "10px"
+                                                                    }}
+                                                                >
+                                                                    ±🧤
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -4110,7 +4185,7 @@
                                 <span className="icon">💾</span>
                                 <span>Backup</span>
                             </button>
-                        )}
+                                                )}
                     </div>
                 </div>
             );
