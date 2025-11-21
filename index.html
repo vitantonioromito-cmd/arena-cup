@@ -1131,11 +1131,19 @@
                 return loginForm.username === "admin" || loginForm.username === "vitantonio" || loginForm.username === "fabrizio";
             };
 
-            // 🎯 FUNZIONE SICURA PER OTTENERE LA MEDIA
-            const getMediaSicura = (giocatore) => {
-                const media = parseFloat(giocatore?.media_calcolata);
-                return isNaN(media) ? "0.00" : media.toFixed(2);
-            };
+            // 🎯 FUNZIONE SICURA PER OTTENERE LA MEDIA - VERSIONE CORRETTA
+const getMediaSicura = (giocatore) => {
+    if (!giocatore) return "0.00";
+    
+    const media = parseFloat(giocatore.media_calcolata);
+    
+    // Controlla se è un numero valido e non NaN
+    if (isNaN(media) || !isFinite(media)) {
+        return "0.00";
+    }
+    
+    return media.toFixed(2);
+};
 
             // 📊 AGGIORNA MEDIA GIOCATORE - VERSIONE CORRETTA E COMPLETA
             const aggiornaMediaGiocatore = (nomeGiocatore) => {
