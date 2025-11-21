@@ -815,6 +815,19 @@
         .badge-sconfitta { background: #F44336; color: white; }
         .badge-pareggio { background: #FFC107; color: black; }
 
+        /* 🏆 BADGE COPPA PER GIOCATORI VINCENTI */
+        .badge-coppa {
+            background: linear-gradient(135deg, #FFD700 0%, #FFC107 100%);
+            color: black;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+            border: 1px solid #FFC107;
+            box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+        }
+
         @media (min-width: 768px) {
             .desktop-nav {
                 display: flex;
@@ -1120,7 +1133,8 @@
 
             // 🎯 FUNZIONE SICURA PER OTTENERE LA MEDIA
             const getMediaSicura = (giocatore) => {
-                return (parseFloat(giocatore?.media_calcolata) || 0).toFixed(2);
+                const media = parseFloat(giocatore?.media_calcolata);
+                return isNaN(media) ? "0.00" : media.toFixed(2);
             };
 
             // 📊 AGGIORNA MEDIA GIOCATORE - VERSIONE CORRETTA E COMPLETA
@@ -1235,15 +1249,20 @@
                 return '';
             };
 
-            // 🎯 CLASSIFICA MEDIA VOTO - CALCOLO IN TEMPO REALE CON USEMEMO
+            // 🎯 CLASSIFICA MEDIA VOTO - ESCLUDE CHI NON HA MAI GIOCATO
             const classificaMediaVoto = React.useMemo(() => {
                 console.log("📊 Ricalcolo media voto...", pagelle.length);
                 
                 return giocatori
                     .map(giocatore => {
+                        // Escludi giocatori che non hanno mai giocato (presenze = 0)
+                        if ((giocatore.presenze || 0) === 0) {
+                            return { ...giocatore, mediaReale: 0, escluso: true };
+                        }
+                        
                         const pagelleGiocatore = pagelle.filter(p => p.giocatore === giocatore.nome);
                         if (pagelleGiocatore.length === 0) {
-                            return { ...giocatore, mediaReale: 0 };
+                            return { ...giocatore, mediaReale: 0, escluso: true };
                         }
                         
                         const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
@@ -1257,10 +1276,28 @@
                         
                         return { ...giocatore, mediaReale };
                     })
-                    .filter(g => g.mediaReale > 0)
+                    .filter(g => g.mediaReale > 0 && !g.escluso)
                     .sort((a, b) => b.mediaReale - a.mediaReale)
                     .slice(0, 10);
             }, [giocatori, pagelle]);
+
+            // 🏆 FUNZIONE PER OTTENERE BADGE COPPA PER GIOCATORI VINCENTI
+            const getBadgeCoppa = (pagella) => {
+                if (!pagella.fazione || !pagella.data) return null;
+                
+                // Trova la partita corrispondente alla data della pagella
+                const partitaCorrispondente = partite.find(p => 
+                    p.data === pagella.data && 
+                    p.risultato === 'Vittoria' && 
+                    p.fazione_vincente === pagella.fazione
+                );
+                
+                if (partitaCorrispondente) {
+                    return <span className="badge-coppa">🏆 VINCITORE</span>;
+                }
+                
+                return null;
+            };
 
             // 🔧 FUNZIONE LOGIN MIGLIORATA
             const handleLogin = (e) => {
@@ -1789,7 +1826,7 @@
                 .sort((a, b) => b.punteggio_benji - a.punteggio_benji)
                 .slice(0, 10);
 
-            // 🎯 CLASSIFICA PRESENZE/PARTITE GIOCATE
+            // 🎯 CLASSIFICA PRESENZE/PARTITE GIOCATE - ESCLUDE CHI NON HA MAI GIOCATO
             const classificaPresenze = [...giocatori]
                 .filter(g => (g.presenze || 0) > 0)
                 .sort((a, b) => (b.presenze || 0) - (a.presenze || 0))
@@ -2228,14 +2265,16 @@
                 media_calcolata: calcolaMedia(g.voti)
             }));
 
-            // 🎯 MEDIA GENERALE - SOLO CHI HA VOTI
-            const giocatoriConVoti = giocatori.filter(g => g.voti && g.voti.length > 0);
+            // 🎯 MEDIA GENERALE - SOLO CHI HA VOTI E HA GIOCATO ALMENO UNA PARTITA
+            const giocatoriConVoti = giocatori.filter(g => 
+                g.voti && g.voti.length > 0 && (g.presenze || 0) > 0
+            );
             const stats = {
                 totaleGol: giocatoriConMedia.reduce((sum, g) => sum + (g.gol || 0), 0),
                 totaleAssist: giocatoriConMedia.reduce((sum, g) => sum + (g.assist || 0), 0),
                 totaleGiocatori: giocatoriConMedia.length,
                 mediaGenerale: giocatoriConVoti.length > 0 ? 
-                    giocatoriConVoti.reduce((sum, g) => sum + (g.media_calcolata || 0), 0) / giocatoriConVoti.length : 0,
+                    giocatoriConVoti.reduce((sum, g) => sum + (parseFloat(g.media_calcolata) || 0), 0) / giocatoriConVoti.length : 0,
                 totaleMVP: giocatoriConMedia.reduce((sum, g) => sum + (g.mvp_count || 0), 0),
                 totalePortieri: giocatori.filter(g => g.partite_portiere > 0).length,
                 totalePresenze: giocatoriConMedia.reduce((sum, g) => sum + (g.presenze || 0), 0)
@@ -3065,6 +3104,7 @@
                                                             <div className="pagella-giocatore">
                                                                 {pagella.giocatore}
                                                                 {getBadgeFazione(pagella.fazione)}
+                                                                {getBadgeCoppa(pagella)}
                                                             </div>
                                                             <div className="pagella-data">
                                                                 Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
@@ -3678,6 +3718,7 @@
                                                         {pagella.giocatore}
                                                         {isCurrentUser(pagella.giocatore) && <span className="current-user-badge">TU</span>}
                                                         {getBadgeFazione(pagella.fazione)}
+                                                        {getBadgeCoppa(pagella)}
                                                     </div>
                                                     <div className="pagella-data">
                                                         Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
@@ -4070,6 +4111,7 @@
                                                         <div className="pagella-giocatore">
                                                             {pagella.giocatore}
                                                             {getBadgeFazione(pagella.fazione)}
+                                                            {getBadgeCoppa(pagella)}
                                                         </div>
                                                         <div className="pagella-data">
                                                             Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
