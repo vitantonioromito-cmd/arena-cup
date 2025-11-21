@@ -1118,6 +1118,11 @@
                 return loginForm.username === "admin" || loginForm.username === "vitantonio" || loginForm.username === "fabrizio";
             };
 
+            // 🎯 FUNZIONE SICURA PER OTTENERE LA MEDIA
+            const getMediaSicura = (giocatore) => {
+                return (parseFloat(giocatore?.media_calcolata) || 0).toFixed(2);
+            };
+
             // 📊 AGGIORNA MEDIA GIOCATORE - VERSIONE CORRETTA E COMPLETA
             const aggiornaMediaGiocatore = (nomeGiocatore) => {
                 const pagelleGiocatore = pagelle.filter(p => p.giocatore === nomeGiocatore);
@@ -1198,7 +1203,7 @@
                 });
             };
 
-            // 🏆 FUNZIONE PER TROVARE IL MVP ATTUALE
+            // 🏆 FUNZIONE PER TROVARE IL MVP ATTUALE - VERSIONE CORRETTA
             const getCurrentMVP = () => {
                 if (giocatori.length === 0) return null;
                 
@@ -1208,7 +1213,15 @@
                     return currentMVPCount > prevMVPCount ? current : prev;
                 });
                 
-                return mvp.mvp_count > 0 ? mvp : null;
+                // CONVERTI media_calcolata IN NUMERO per sicurezza
+                if (mvp && mvp.mvp_count > 0) {
+                    return {
+                        ...mvp,
+                        media_calcolata: parseFloat(mvp.media_calcolata) || 0
+                    };
+                }
+                
+                return null;
             };
 
             // 🏆 FUNZIONE PER RENDERIZZARE IL MVP CON EFFETTI SPECIALI
@@ -2450,7 +2463,7 @@
                                             <div className="mvp-stats" style={{ justifyContent: 'center', marginTop: '10px' }}>
                                                 <div className="mvp-stat">⚽ {getCurrentMVP().gol || 0} gol</div>
                                                 <div className="mvp-stat">🎯 {getCurrentMVP().assist || 0} assist</div>
-                                                <div className="mvp-stat">⭐ {getCurrentMVP().media_calcolata ? getCurrentMVP().media_calcolata.toFixed(2) : '0.00'}</div>
+                                                <div className="mvp-stat">⭐ {getCurrentMVP() ? getMediaSicura(getCurrentMVP()) : '0.00'}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -2520,7 +2533,7 @@
                                                         <div className="giocatore-admin-stats">
                                                             <span>⚽ {giocatore.gol || 0}</span>
                                                             <span>🎯 {giocatore.assist || 0}</span>
-                                                            <span>⭐ {giocatore.media_calcolata ? giocatore.media_calcolata.toFixed(2) : "0.00"}</span>
+                                                            <span>⭐ {getMediaSicura(giocatore)}</span>
                                                             <span>📊 {giocatore.presenze || 0}</span>
                                                         </div>
                                                         <div className="giocatore-admin-actions">
@@ -2705,7 +2718,7 @@
                                                             <div style={{ textAlign: "center" }}>
                                                                 <div style={{ fontSize: "0.8rem", color: "#ccc" }}>⭐ Media</div>
                                                                 <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#2196F3" }}>
-                                                                    {giocatore.media_calcolata ? giocatore.media_calcolata.toFixed(2) : "0.00"}
+                                                                    {getMediaSicura(giocatore)}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -3015,12 +3028,7 @@
                                         <div className="score-stat-card">
                                             <div className="score-stat-label">⭐ Media Voto</div>
                                             <div className="score-stat-value" style={{ color: "#2196F3" }}>
-                                                {(() => {
-                                                    const miePagelle = pagelle.filter(p => p.giocatore === loginForm.username);
-                                                    if (miePagelle.length === 0) return "0.00";
-                                                    const media = miePagelle.reduce((sum, pagella) => sum + parseFloat(pagella.voto), 0) / miePagelle.length;
-                                                    return media.toFixed(2);
-                                                })()}
+                                                {getMediaSicura(getCurrentGiocatore())}
                                             </div>
                                         </div>
                                     </div>
@@ -3089,7 +3097,7 @@
 
                                         {/* STATISTICHE DATI CORRENTI */}
                                         <div style={{ margin: "20px 0" }}>
-                                            <h4 style={{ marginBottom: "15px", color: "#4CAF50" }}>📊 Dati Correnti</h4>
+                                            <h4 style={{ marginBottom: "15px", color: "#4CAF50" }}>📊 Dati CorrentI</h4>
                                             <div className="backup-stats">
                                                 <div className="backup-stat">
                                                     <div style={{ fontSize: "0.8rem", color: "#ccc" }}>👥 Giocatori</div>
@@ -4015,12 +4023,7 @@
                                     <div className="score-stat-card">
                                         <div className="score-stat-label">⭐ Media Voto</div>
                                         <div className="score-stat-value" style={{ color: "#2196F3" }}>
-                                            {(() => {
-                                                const miePagelle = pagelle.filter(p => p.giocatore === loginForm.username);
-                                                if (miePagelle.length === 0) return "0.00";
-                                                const media = miePagelle.reduce((sum, pagella) => sum + parseFloat(pagella.voto), 0) / miePagelle.length;
-                                                return media.toFixed(2);
-                                            })()}
+                                            {getMediaSicura(getCurrentGiocatore())}
                                         </div>
                                         <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
                                             {pagelle.filter(p => p.giocatore === loginForm.username).length} valutazioni
@@ -4185,7 +4188,7 @@
                                 <span className="icon">💾</span>
                                 <span>Backup</span>
                             </button>
-                                                )}
+                        )}
                     </div>
                 </div>
             );
