@@ -1517,7 +1517,7 @@
             }
         };
 
-        // 🆕 COMPONENTE GESTIONE FOTO PROFILO OTTIMIZZATO PER MOBILE
+        // 🆕 COMPONENTE GESTIONE FOTO PROFILO OTTIMIZZATO PER MOBILE - VERSIONE CORRETTA
         const FotoProfiloManager = ({ giocatore, onFotoCambiata, size = "medium" }) => {
             const [showModal, setShowModal] = useState(false);
             const [fotoSelezionata, setFotoSelezionata] = useState(null);
@@ -1525,6 +1525,7 @@
             const [modalitaCamera, setModalitaCamera] = useState(false);
             const [caricamento, setCaricamento] = useState(false);
             const [errore, setErrore] = useState(null);
+            const [fotoUrl, setFotoUrl] = useState(null);
             
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
@@ -1553,8 +1554,6 @@
                 }
             };
 
-            const [fotoUrl, setFotoUrl] = useState(null);
-
             useEffect(() => {
                 caricaFotoProfilo().then(url => setFotoUrl(url));
             }, [giocatore.id]);
@@ -1574,9 +1573,17 @@
                         await new Promise((resolve) => {
                             if (videoRef.current) {
                                 videoRef.current.onloadedmetadata = () => {
-                                    videoRef.current.play();
-                                    resolve();
+                                    videoRef.current.play().then(() => {
+                                        console.log('✅ Video camera avviato');
+                                        resolve();
+                                    }).catch(e => {
+                                        console.warn('⚠️ Errore play video:', e);
+                                        resolve(); // Continua comunque
+                                    });
                                 };
+                                
+                                // Timeout di sicurezza
+                                setTimeout(resolve, 3000);
                             } else {
                                 resolve();
                             }
@@ -1609,6 +1616,7 @@
                     // Ferma lo stream della camera
                     if (streamRef.current) {
                         streamRef.current.getTracks().forEach(track => track.stop());
+                        streamRef.current = null;
                     }
                     
                     console.log('✅ Foto scattata con successo');
@@ -1640,6 +1648,7 @@
                     reader.onload = (e) => {
                         setAnteprimaFoto(e.target.result);
                         setFotoSelezionata(e.target.result);
+                        setModalitaCamera(false);
                     };
                     reader.onerror = () => {
                         setErrore('❌ Errore durante la lettura del file');
@@ -1741,6 +1750,7 @@
                 // Ferma lo stream della camera se attivo
                 if (streamRef.current) {
                     streamRef.current.getTracks().forEach(track => track.stop());
+                    streamRef.current = null;
                 }
             };
 
@@ -1880,6 +1890,7 @@
                                                     setModalitaCamera(false);
                                                     if (streamRef.current) {
                                                         streamRef.current.getTracks().forEach(track => track.stop());
+                                                        streamRef.current = null;
                                                     }
                                                 }}
                                             >
@@ -1910,7 +1921,6 @@
                                     type="file"
                                     ref={fileInputRef}
                                     accept="image/*"
-                                    capture="environment"
                                     onChange={gestisciCaricamentoFoto}
                                     style={{ display: 'none' }}
                                 />
@@ -2007,9 +2017,6 @@
         };
 
         // 🛠️ IL RESTO DEL CODICE REACT RIMANE IDENTICO...
-        // [TUTTO IL RESTO DEL CODICE REACT CHE HAI FORNITO RIMANE INVARIATO]
-        // ... continuazione di tutto il codice React esistente...
-
         function App() {
             const [loginForm, setLoginForm] = useState({
                 username: localStorage.getItem("username") || "",
