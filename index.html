@@ -25,6 +25,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     
     <style>
         * { 
@@ -828,6 +829,185 @@
             box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
         }
 
+        /* 🆕 STILI PER FOTO PROFILO */
+        .foto-profilo-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .foto-profilo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #4CAF50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .foto-profilo-small {
+            width: 35px;
+            height: 35px;
+            font-size: 0.9rem;
+        }
+
+        .foto-profilo-large {
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+        }
+
+        .foto-profilo-placeholder {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .aggiungi-foto-btn {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .modal-foto {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-foto-content {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-foto-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-foto {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-foto.scatta {
+            background: #2196F3;
+        }
+
+        .btn-foto.carica {
+            background: #4CAF50;
+        }
+
+        .btn-foto.annulla {
+            background: #F44336;
+        }
+
+        .btn-foto.rimuovi {
+            background: #FF9800;
+        }
+
+        .anteprima-foto {
+            width: 200px;
+            height: 200px;
+            border-radius: 10px;
+            object-fit: cover;
+            margin: 15px auto;
+            border: 3px solid #4CAF50;
+            display: none;
+        }
+
+        .video-camera {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background: #000;
+            border-radius: 10px;
+            margin: 15px auto;
+            display: none;
+        }
+
+        .controlli-camera {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .btn-rimuovi-mvp {
+            background: #F44336;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+
+        .btn-rimuovi-mvp:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .classifica-item-con-foto {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .classifica-foto {
+            margin-right: 10px;
+        }
+
+        .classifica-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
         @media (min-width: 768px) {
             .desktop-nav {
                 display: flex;
@@ -905,6 +1085,25 @@
             /* MVP GLOW DESKTOP */
             .mvp-glow {
                 animation: mvpPulse 2s ease-in-out infinite alternate;
+            }
+
+            /* FOTO PROFILO DESKTOP */
+            .foto-profilo {
+                width: 60px;
+                height: 60px;
+                font-size: 1.4rem;
+            }
+
+            .foto-profilo-small {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .foto-profilo-large {
+                width: 100px;
+                height: 100px;
+                font-size: 2.5rem;
             }
         }
     </style>
@@ -1057,6 +1256,338 @@
 
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const storage = firebase.storage();
+
+        // 🆕 COMPONENTE GESTIONE FOTO PROFILO
+        const FotoProfiloManager = ({ giocatore, onFotoCambiata, size = "medium" }) => {
+            const [showModal, setShowModal] = useState(false);
+            const [fotoSelezionata, setFotoSelezionata] = useState(null);
+            const [anteprimaFoto, setAnteprimaFoto] = useState(null);
+            const [modalitaCamera, setModalitaCamera] = useState(false);
+            
+            const videoRef = useRef(null);
+            const canvasRef = useRef(null);
+            const streamRef = useRef(null);
+            const fileInputRef = useRef(null);
+
+            const dimensioni = {
+                small: "foto-profilo-small",
+                medium: "foto-profilo",
+                large: "foto-profilo-large"
+            };
+
+            const classeDimensione = dimensioni[size] || dimensioni.medium;
+
+            // 🆕 CARICA FOTO PROFILO DA FIREBASE STORAGE
+            const caricaFotoProfilo = async () => {
+                try {
+                    const fotoUrl = await storage.ref(`profili/${giocatore.id}.jpg`).getDownloadURL();
+                    return fotoUrl;
+                } catch (error) {
+                    // Se non esiste la foto, restituisci null
+                    return null;
+                }
+            };
+
+            const [fotoUrl, setFotoUrl] = useState(null);
+
+            useEffect(() => {
+                caricaFotoProfilo().then(url => setFotoUrl(url));
+            }, [giocatore.id]);
+
+            // 🆕 INIZIALIZZA FOTOCAMERA
+            const inizializzaCamera = async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'user' } 
+                    });
+                    streamRef.current = stream;
+                    videoRef.current.srcObject = stream;
+                    setModalitaCamera(true);
+                } catch (error) {
+                    console.error("Errore accesso camera:", error);
+                    alert("Impossibile accedere alla fotocamera. Controlla i permessi.");
+                }
+            };
+
+            // 🆕 SCATTA FOTO
+            const scattaFoto = () => {
+                const video = videoRef.current;
+                const canvas = canvasRef.current;
+                const context = canvas.getContext('2d');
+                
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0);
+                
+                const fotoDataUrl = canvas.toDataURL('image/jpeg');
+                setAnteprimaFoto(fotoDataUrl);
+                setFotoSelezionata(fotoDataUrl);
+                setModalitaCamera(false);
+                
+                // Ferma lo stream della camera
+                if (streamRef.current) {
+                    streamRef.current.getTracks().forEach(track => track.stop());
+                }
+            };
+
+            // 🆕 CARICA FOTO DA DISPOSITIVO
+            const gestisciCaricamentoFoto = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        setAnteprimaFoto(e.target.result);
+                        setFotoSelezionata(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            // 🆕 SALVA FOTO SU FIREBASE STORAGE
+            const salvaFoto = async () => {
+                if (!fotoSelezionata) return;
+                
+                try {
+                    // Converti base64 in blob
+                    const response = await fetch(fotoSelezionata);
+                    const blob = await response.blob();
+                    
+                    // Upload su Firebase Storage
+                    const uploadTask = storage.ref(`profili/${giocatore.id}.jpg`).put(blob);
+                    
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            // Progresso upload
+                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            console.log(`Upload: ${progress}%`);
+                        },
+                        (error) => {
+                            console.error("Errore upload:", error);
+                            alert("Errore nel salvataggio della foto");
+                        },
+                        async () => {
+                            // Upload completato
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            setFotoUrl(downloadURL);
+                            setShowModal(false);
+                            setFotoSelezionata(null);
+                            setAnteprimaFoto(null);
+                            
+                            // Aggiorna URL foto nel database giocatore
+                            await database.ref(`giocatori/${giocatore.id}`).update({
+                                foto_profilo: downloadURL
+                            });
+                            
+                            if (onFotoCambiata) {
+                                onFotoCambiata(downloadURL);
+                            }
+                            
+                            alert("✅ Foto profilo aggiornata con successo!");
+                        }
+                    );
+                    
+                } catch (error) {
+                    console.error("Errore salvataggio foto:", error);
+                    alert("Errore nel salvataggio della foto");
+                }
+            };
+
+            // 🆕 RIMUOVI FOTO
+            const rimuoviFoto = async () => {
+                try {
+                    // Elimina da Storage
+                    await storage.ref(`profili/${giocatore.id}.jpg`).delete();
+                    
+                    // Elimina riferimento dal database
+                    await database.ref(`giocatori/${giocatore.id}`).update({
+                        foto_profilo: null
+                    });
+                    
+                    setFotoUrl(null);
+                    setShowModal(false);
+                    
+                    if (onFotoCambiata) {
+                        onFotoCambiata(null);
+                    }
+                    
+                    alert("✅ Foto profilo rimossa!");
+                } catch (error) {
+                    console.error("Errore rimozione foto:", error);
+                    alert("Errore nella rimozione della foto");
+                }
+            };
+
+            // 🆕 CHIUDI MODAL E PULISCI
+            const chiudiModal = () => {
+                setShowModal(false);
+                setFotoSelezionata(null);
+                setAnteprimaFoto(null);
+                setModalitaCamera(false);
+                
+                // Ferma lo stream della camera se attivo
+                if (streamRef.current) {
+                    streamRef.current.getTracks().forEach(track => track.stop());
+                }
+            };
+
+            return (
+                <div className="foto-profilo-container">
+                    {fotoUrl ? (
+                        <img 
+                            src={fotoUrl} 
+                            alt={`Foto di ${giocatore.nome}`}
+                            className={`${classeDimensione} foto-profilo`}
+                            onClick={() => setShowModal(true)}
+                            style={{ cursor: 'pointer' }}
+                        />
+                    ) : (
+                        <div 
+                            className={`${classeDimensione} foto-profilo foto-profilo-placeholder`}
+                            onClick={() => setShowModal(true)}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {giocatore.nome.charAt(0).toUpperCase()}
+                        </div>
+                    )}
+                    
+                    <button 
+                        className="aggiungi-foto-btn"
+                        onClick={() => setShowModal(true)}
+                        title="Cambia foto profilo"
+                    >
+                        📷
+                    </button>
+
+                    {/* MODAL GESTIONE FOTO */}
+                    {showModal && (
+                        <div className="modal-foto">
+                            <div className="modal-foto-content">
+                                <h3>📷 Foto Profilo di {giocatore.nome}</h3>
+                                
+                                {/* ANTEPRIMA FOTO ESISTENTE */}
+                                {fotoUrl && !anteprimaFoto && (
+                                    <div style={{ textAlign: 'center', margin: '15px 0' }}>
+                                        <p>Foto attuale:</p>
+                                        <img 
+                                            src={fotoUrl} 
+                                            alt="Foto attuale"
+                                            className="anteprima-foto"
+                                            style={{ display: 'block' }}
+                                        />
+                                    </div>
+                                )}
+                                
+                                {/* VIDEO CAMERA */}
+                                {modalitaCamera && (
+                                    <>
+                                        <video 
+                                            ref={videoRef}
+                                            autoPlay
+                                            playsInline
+                                            className="video-camera"
+                                            style={{ display: 'block' }}
+                                        />
+                                        <div className="controlli-camera">
+                                            <button 
+                                                className="btn-foto scatta"
+                                                onClick={scattaFoto}
+                                            >
+                Scatta Foto
+                                            </button>
+                                            <button 
+                                                className="btn-foto annulla"
+                                                onClick={() => setModalitaCamera(false)}
+                                            >
+                                                Annulla
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                                
+                                {/* ANTEPRIMA NUOVA FOTO */}
+                                {anteprimaFoto && (
+                                    <img 
+                                        src={anteprimaFoto} 
+                                        alt="Anteprima nuova foto"
+                                        className="anteprima-foto"
+                                        style={{ display: 'block' }}
+                                    />
+                                )}
+                                
+                                {/* CANVAS NASCOSTO PER SCATTARE FOTO */}
+                                <canvas ref={canvasRef} style={{ display: 'none' }} />
+                                
+                                {/* INPUT FILE NASCOSTO */}
+                                <input 
+                                    type="file"
+                                    ref={fileInputRef}
+                                    accept="image/*"
+                                    onChange={gestisciCaricamentoFoto}
+                                    style={{ display: 'none' }}
+                                />
+                                
+                                {/* AZIONI */}
+                                <div className="modal-foto-actions">
+                                    {!modalitaCamera && !anteprimaFoto && (
+                                        <>
+                                            <button 
+                                                className="btn-foto scatta"
+                                                onClick={inizializzaCamera}
+                                            >
+                                                📸 Scatta Foto
+                                            </button>
+                                            <button 
+                                                className="btn-foto carica"
+                                                onClick={() => fileInputRef.current?.click()}
+                                            >
+                                                📁 Carica da Device
+                                            </button>
+                                        </>
+                                    )}
+                                    
+                                    {anteprimaFoto && (
+                                        <>
+                                            <button 
+                                                className="btn-foto carica"
+                                                onClick={salvaFoto}
+                                            >
+                                                💾 Salva Foto
+                                            </button>
+                                            <button 
+                                                className="btn-foto annulla"
+                                                onClick={() => {
+                                                    setAnteprimaFoto(null);
+                                                    setFotoSelezionata(null);
+                                                }}
+                                            >
+                                                🔄 Riprova
+                                            </button>
+                                        </>
+                                    )}
+                                    
+                                    {fotoUrl && (
+                                        <button 
+                                            className="btn-foto rimuovi"
+                                            onClick={rimuoviFoto}
+                                        >
+                                            🗑️ Rimuovi Foto
+                                        </button>
+                                    )}
+                                    
+                                    <button 
+                                        className="btn-foto annulla"
+                                        onClick={chiudiModal}
+                                    >
+                                        ❌ Annulla
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
 
         function App() {
             const [loginForm, setLoginForm] = useState({
@@ -1132,18 +1663,18 @@
             };
 
             // 🎯 FUNZIONE SICURA PER OTTENERE LA MEDIA - VERSIONE CORRETTA
-const getMediaSicura = (giocatore) => {
-    if (!giocatore) return "0.00";
-    
-    const media = parseFloat(giocatore.media_calcolata);
-    
-    // Controlla se è un numero valido e non NaN
-    if (isNaN(media) || !isFinite(media)) {
-        return "0.00";
-    }
-    
-    return media.toFixed(2);
-};
+            const getMediaSicura = (giocatore) => {
+                if (!giocatore) return "0.00";
+                
+                const media = parseFloat(giocatore.media_calcolata);
+                
+                // Controlla se è un numero valido e non NaN
+                if (isNaN(media) || !isFinite(media)) {
+                    return "0.00";
+                }
+                
+                return media.toFixed(2);
+            };
 
             // 📊 AGGIORNA MEDIA GIOCATORE - VERSIONE CORRETTA E COMPLETA
             const aggiornaMediaGiocatore = (nomeGiocatore) => {
@@ -1255,6 +1786,36 @@ const getMediaSicura = (giocatore) => {
                     return isListItem ? 'mvp-glow-item' : 'mvp-glow';
                 }
                 return '';
+            };
+
+            // 🆕 FUNZIONE RIMUOVI MVP (SOLO ADMIN)
+            const rimuoviMVP = (id) => {
+                if (!isAdminUser()) return alert("Solo gli admin possono rimuovere MVP!");
+                
+                const giocatore = giocatori.find(g => g.id === id);
+                if (!giocatore) return;
+                
+                const nuovoCount = Math.max(0, (giocatore.mvp_count || 0) - 1);
+                
+                if (nuovoCount === giocatore.mvp_count) {
+                    alert("❌ Il giocatore non ha MVP da rimuovere!");
+                    return;
+                }
+                
+                database.ref(`giocatori/${id}`).update({
+                    mvp_count: nuovoCount
+                }).then(() => {
+                    alert("➖🏆 MVP rimosso correttamente!");
+                    
+                    showPushNotification(
+                        "➖🏆 MVP Rimosso",
+                        `Un MVP è stato rimosso da ${giocatore.nome}`,
+                        'mvp'
+                    );
+                }).catch(error => {
+                    console.error("Errore rimozione MVP:", error);
+                    alert("❌ Errore nella rimozione dell'MVP");
+                });
             };
 
             // 🎯 CLASSIFICA MEDIA VOTO - ESCLUDE CHI NON HA MAI GIOCATO
@@ -1404,7 +1965,8 @@ const getMediaSicura = (giocatore) => {
                         errori: data[key].errori || 0,
                         interventi_decisivi: data[key].interventi_decisivi || 0,
                         partite_portiere: data[key].partite_portiere || 0,
-                        presenze: data[key].presenze || 0
+                        presenze: data[key].presenze || 0,
+                        foto_profilo: data[key].foto_profilo || null
                     })) : [];
                     setGiocatori(giocatoriArray);
                 });
@@ -1553,6 +2115,7 @@ const getMediaSicura = (giocatore) => {
                     rinvii_buoni: 0,
                     errori: 0,
                     interventi_decisivi: 0,
+                    foto_profilo: null,
                     created_at: new Date().toLocaleString('it-IT')
                 }).then(() => {
                     setNuovoGiocatore("");
@@ -1573,6 +2136,15 @@ const getMediaSicura = (giocatore) => {
             const eliminaGiocatore = (id, nome) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono eliminare giocatori!");
                 if (!confirm(`Sei sicuro di voler eliminare ${nome}? Questa azione è irreversibile!`)) return;
+                
+                // 🆕 ELIMINA ANCHE LA FOTO PROFILO SE ESISTE
+                try {
+                    storage.ref(`profili/${id}.jpg`).delete().catch(() => {
+                        console.log("Nessuna foto profilo da eliminare");
+                    });
+                } catch (error) {
+                    console.log("Errore eliminazione foto profilo:", error);
+                }
                 
                 database.ref(`giocatori/${id}`).remove()
                     .then(() => {
@@ -2608,19 +3180,25 @@ const getMediaSicura = (giocatore) => {
                                             </div>
                                         ) : (
                                             classificaMarcatori.map((giocatore, index) => (
-                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
-                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                        {index + 1}
+                                                <div key={giocatore.id} className={`classifica-item-con-foto ${renderMVPGlow(giocatore, true)}`}>
+                                                    <div className="classifica-foto">
+                                                        <FotoProfiloManager 
+                                                            giocatore={giocatore} 
+                                                            size="small"
+                                                            onFotoCambiata={() => window.location.reload()}
+                                                        />
                                                     </div>
-                                                    <div className="classifica-nome">
-                                                        {giocatore.nome}
-                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="classifica-valore">
-                                                        {giocatore.gol || 0} gol
+                                                    <div className="classifica-info">
+                                                        <div className="classifica-nome">
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="classifica-valore">
+                                                            {giocatore.gol || 0} gol
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
@@ -2636,19 +3214,25 @@ const getMediaSicura = (giocatore) => {
                                             </div>
                                         ) : (
                                             classificaAssist.map((giocatore, index) => (
-                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
-                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                        {index + 1}
+                                                <div key={giocatore.id} className={`classifica-item-con-foto ${renderMVPGlow(giocatore, true)}`}>
+                                                    <div className="classifica-foto">
+                                                        <FotoProfiloManager 
+                                                            giocatore={giocatore} 
+                                                            size="small"
+                                                            onFotoCambiata={() => window.location.reload()}
+                                                        />
                                                     </div>
-                                                    <div className="classifica-nome">
-                                                        {giocatore.nome}
-                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="classifica-valore">
-                                                        {giocatore.assist || 0} assist
+                                                    <div className="classifica-info">
+                                                        <div className="classifica-nome">
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="classifica-valore">
+                                                            {giocatore.assist || 0} assist
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
@@ -2664,19 +3248,25 @@ const getMediaSicura = (giocatore) => {
                                             </div>
                                         ) : (
                                             classificaMVP.map((giocatore, index) => (
-                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
-                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                        {index + 1}
+                                                <div key={giocatore.id} className={`classifica-item-con-foto ${renderMVPGlow(giocatore, true)}`}>
+                                                    <div className="classifica-foto">
+                                                        <FotoProfiloManager 
+                                                            giocatore={giocatore} 
+                                                            size="small"
+                                                            onFotoCambiata={() => window.location.reload()}
+                                                        />
                                                     </div>
-                                                    <div className="classifica-nome">
-                                                        {giocatore.nome}
-                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="classifica-valore">
-                                                        {giocatore.mvp_count || 0} MVP
+                                                    <div className="classifica-info">
+                                                        <div className="classifica-nome">
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="classifica-valore">
+                                                            {giocatore.mvp_count || 0} MVP
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
@@ -2692,19 +3282,25 @@ const getMediaSicura = (giocatore) => {
                                             </div>
                                         ) : (
                                             classificaMediaVoto.map((giocatore, index) => (
-                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
-                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                        {index + 1}
+                                                <div key={giocatore.id} className={`classifica-item-con-foto ${renderMVPGlow(giocatore, true)}`}>
+                                                    <div className="classifica-foto">
+                                                        <FotoProfiloManager 
+                                                            giocatore={giocatore} 
+                                                            size="small"
+                                                            onFotoCambiata={() => window.location.reload()}
+                                                        />
                                                     </div>
-                                                    <div className="classifica-nome">
-                                                        {giocatore.nome}
-                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="classifica-valore">
-                                                        {giocatore.mediaReale.toFixed(2)}
+                                                    <div className="classifica-info">
+                                                        <div className="classifica-nome">
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="classifica-valore">
+                                                            {giocatore.mediaReale.toFixed(2)}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
@@ -2712,7 +3308,7 @@ const getMediaSicura = (giocatore) => {
                                     </div>
                                 </div>
 
-                                {/* LISTA COMPLETA GIOCATORI CON TUTTE LE STATISTICHE */}
+                                {/* LISTA COMPLETA GIOCATORI CON TUTTE LE STATISTICHE E FOTO PROFILO */}
                                 <div style={{ marginTop: "40px" }}>
                                     <h3>👥 Lista Completa Giocatori</h3>
                                     {giocatori.length === 0 ? (
@@ -2723,65 +3319,74 @@ const getMediaSicura = (giocatore) => {
                                         giocatori.map(giocatore => (
                                             <div key={giocatore.id} className={`player-card ${isCurrentUser(giocatore.nome) ? 'current-user' : ''} ${renderMVPGlow(giocatore)}`}>
                                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
-                                                    <div style={{ flex: 1 }}>
-                                                        <h4 style={{ margin: "0 0 10px 0", fontSize: "1.2rem" }}>
-                                                            {giocatore.nome}
-                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                            {(giocatore.mvp_count || 0) > 0 && (
-                                                                <span className="mvp-badge">{giocatore.mvp_count} MVP</span>
-                                                            )}
-                                                            {(giocatore.presenze || 0) > 0 && (
-                                                                <span className="presenze-badge">{giocatore.presenze} partite</span>
-                                                            )}
-                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                                                                <span style={{ 
-                                                                    background: '#FFD700', 
-                                                                    color: 'black', 
-                                                                    padding: '2px 8px', 
-                                                                    borderRadius: '4px', 
-                                                                    fontSize: '0.7rem', 
-                                                                    marginLeft: '8px', 
-                                                                    fontWeight: 'bold',
-                                                                    animation: 'pulse 2s infinite'
-                                                                }}>
-                                                                    👑 MVP ATTUALE
-                                                                </span>
-                                                            )}
-                                                        </h4>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', gap: '15px' }}>
+                                                        {/* FOTO PROFILO */}
+                                                        <FotoProfiloManager 
+                                                            giocatore={giocatore}
+                                                            size="medium"
+                                                            onFotoCambiata={() => window.location.reload()}
+                                                        />
                                                         
-                                                        <div className="stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", margin: "10px 0" }}>
-                                                            <div style={{ textAlign: "center" }}>
-                                                                <div style={{ fontSize: "0.8rem", color: "#ccc" }}>⚽ Gol</div>
-                                                                <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#FFD700" }}>
-                                                                    {giocatore.gol || 0}
+                                                        <div style={{ flex: 1 }}>
+                                                            <h4 style={{ margin: "0 0 10px 0", fontSize: "1.2rem" }}>
+                                                                {giocatore.nome}
+                                                                {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                                {(giocatore.mvp_count || 0) > 0 && (
+                                                                    <span className="mvp-badge">{giocatore.mvp_count} MVP</span>
+                                                                )}
+                                                                {(giocatore.presenze || 0) > 0 && (
+                                                                    <span className="presenze-badge">{giocatore.presenze} partite</span>
+                                                                )}
+                                                                {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                    <span style={{ 
+                                                                        background: '#FFD700', 
+                                                                        color: 'black', 
+                                                                        padding: '2px 8px', 
+                                                                        borderRadius: '4px', 
+                                                                        fontSize: '0.7rem', 
+                                                                        marginLeft: '8px', 
+                                                                        fontWeight: 'bold',
+                                                                        animation: 'pulse 2s infinite'
+                                                                    }}>
+                                                                        👑 MVP ATTUALE
+                                                                    </span>
+                                                                )}
+                                                            </h4>
+                                                            
+                                                            <div className="stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", margin: "10px 0" }}>
+                                                                <div style={{ textAlign: "center" }}>
+                                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>⚽ Gol</div>
+                                                                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#FFD700" }}>
+                                                                        {giocatore.gol || 0}
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{ textAlign: "center" }}>
+                                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>🎯 Assist</div>
+                                                                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#4CAF50" }}>
+                                                                        {giocatore.assist || 0}
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{ textAlign: "center" }}>
+                                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>⭐ Media</div>
+                                                                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#2196F3" }}>
+                                                                        {getMediaSicura(giocatore)}
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                            <div style={{ textAlign: "center" }}>
-                                                                <div style={{ fontSize: "0.8rem", color: "#ccc" }}>🎯 Assist</div>
-                                                                <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#4CAF50" }}>
-                                                                    {giocatore.assist || 0}
-                                                                </div>
-                                                            </div>
-                                                            <div style={{ textAlign: "center" }}>
-                                                                <div style={{ fontSize: "0.8rem", color: "#ccc" }}>⭐ Media</div>
-                                                                <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#2196F3" }}>
-                                                                    {getMediaSicura(giocatore)}
-                                                                </div>
-                                                            </div>
-                                                        </div>
 
-                                                        {/* STATISTICHE PORTA (se presenti) */}
-                                                        {(giocatore.parate > 0 || giocatore.partite_portiere > 0) && (
-                                                            <div style={{ marginTop: "10px", padding: "10px", background: "rgba(0, 150, 255, 0.1)", borderRadius: "8px" }}>
-                                                                <h5 style={{ margin: "0 0 8px 0", color: "#0096FF", fontSize: "0.9rem" }}>🧤 Statistiche Portiere</h5>
-                                                                <div className="mvp-stats">
-                                                                    <div className="mvp-stat">Parate: {giocatore.parate || 0}</div>
-                                                                    <div className="mvp-stat">Partite: {giocatore.partite_portiere || 0}</div>
-                                                                    {giocatore.rigori_parati > 0 && <div className="mvp-stat">Rigori: {giocatore.rigori_parati}</div>}
-                                                                    {giocatore.parate_difficili > 0 && <div className="mvp-stat">Parate difficili: {giocatore.parate_difficili}</div>}
+                                                            {/* STATISTICHE PORTA (se presenti) */}
+                                                            {(giocatore.parate > 0 || giocatore.partite_portiere > 0) && (
+                                                                <div style={{ marginTop: "10px", padding: "10px", background: "rgba(0, 150, 255, 0.1)", borderRadius: "8px" }}>
+                                                                    <h5 style={{ margin: "0 0 8px 0", color: "#0096FF", fontSize: "0.9rem" }}>🧤 Statistiche Portiere</h5>
+                                                                    <div className="mvp-stats">
+                                                                        <div className="mvp-stat">Parate: {giocatore.parate || 0}</div>
+                                                                        <div className="mvp-stat">Partite: {giocatore.partite_portiere || 0}</div>
+                                                                        {giocatore.rigori_parati > 0 && <div className="mvp-stat">Rigori: {giocatore.rigori_parati}</div>}
+                                                                        {giocatore.parate_difficili > 0 && <div className="mvp-stat">Parate difficili: {giocatore.parate_difficili}</div>}
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        )}
+                                                            )}
+                                                        </div>
                                                     </div>
                                                     
                                                     {/* CONTROLLI ADMIN - FABRIZIO STESSI POTERI */}
@@ -2866,6 +3471,16 @@ const getMediaSicura = (giocatore) => {
                                                                 }}
                                                             >
                                                                 +🏆
+                                                            </button>
+
+                                                            {/* 🆕 PULSANTE RIMUOVI MVP */}
+                                                            <button 
+                                                                onClick={() => rimuoviMVP(giocatore.id)}
+                                                                className="btn-rimuovi-mvp"
+                                                                disabled={!giocatore.mvp_count || giocatore.mvp_count === 0}
+                                                                title="Rimuovi MVP"
+                                                            >
+                                                                ➖🏆
                                                             </button>
 
                                                             {/* CONTROLLI STATISTICHE PORTIERE */}
@@ -3052,6 +3667,17 @@ const getMediaSicura = (giocatore) => {
                                 {/* SEZIONE IL MIO SCORE PERSONALE */}
                                 <div className="backup-section">
                                     <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>⭐ Il Mio Score Personale</h3>
+                                    
+                                    {/* FOTO PROFILO PERSONALE GRANDE */}
+                                    <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                                        <FotoProfiloManager 
+                                            giocatore={getCurrentGiocatore()}
+                                            size="large"
+                                            onFotoCambiata={() => window.location.reload()}
+                                        />
+                                        <h3 style={{ marginTop: '10px', color: '#4CAF50' }}>{getCurrentUserName()}</h3>
+                                    </div>
+                                    
                                     <div className="score-stats-grid">
                                         <div className="score-stat-card">
                                             <div className="score-stat-label">📊 Partite Giocate</div>
@@ -3867,19 +4493,28 @@ const getMediaSicura = (giocatore) => {
                                             </div>
                                         ) : (
                                             classificaPresenze.map((giocatore, index) => (
-                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
-                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                        {index + 1}
+                                                <div key={giocatore.id} className={`classifica-item-con-foto ${renderMVPGlow(giocatore, true)}`}>
+                                                    <div className="classifica-foto">
+                                                        <FotoProfiloManager 
+                                                            giocatore={giocatore} 
+                                                            size="small"
+                                                            onFotoCambiata={() => window.location.reload()}
+                                                        />
                                                     </div>
-                                                    <div className="classifica-nome">
-                                                        {giocatore.nome}
-                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="classifica-valore">
-                                                        {giocatore.presenze || 0} partite
+                                                    <div className="classifica-info">
+                                                        <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                            {index + 1}
+                                                        </div>
+                                                        <div className="classifica-nome">
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="classifica-valore">
+                                                            {giocatore.presenze || 0} partite
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
@@ -3895,19 +4530,28 @@ const getMediaSicura = (giocatore) => {
                                             </div>
                                         ) : (
                                             classificaMarcatori.map((giocatore, index) => (
-                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
-                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                        {index + 1}
+                                                <div key={giocatore.id} className={`classifica-item-con-foto ${renderMVPGlow(giocatore, true)}`}>
+                                                    <div className="classifica-foto">
+                                                        <FotoProfiloManager 
+                                                            giocatore={giocatore} 
+                                                            size="small"
+                                                            onFotoCambiata={() => window.location.reload()}
+                                                        />
                                                     </div>
-                                                    <div className="classifica-nome">
-                                                        {giocatore.nome}
-                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="classifica-valore">
-                                                        {giocatore.gol || 0} gol
+                                                    <div className="classifica-info">
+                                                        <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                            {index + 1}
+                                                        </div>
+                                                        <div className="classifica-nome">
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="classifica-valore">
+                                                            {giocatore.gol || 0} gol
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
@@ -3923,19 +4567,28 @@ const getMediaSicura = (giocatore) => {
                                             </div>
                                         ) : (
                                             classificaAssist.map((giocatore, index) => (
-                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
-                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                        {index + 1}
+                                                <div key={giocatore.id} className={`classifica-item-con-foto ${renderMVPGlow(giocatore, true)}`}>
+                                                    <div className="classifica-foto">
+                                                        <FotoProfiloManager 
+                                                            giocatore={giocatore} 
+                                                            size="small"
+                                                            onFotoCambiata={() => window.location.reload()}
+                                                        />
                                                     </div>
-                                                    <div className="classifica-nome">
-                                                        {giocatore.nome}
-                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="classifica-valore">
-                                                        {giocatore.assist || 0} assist
+                                                    <div className="classifica-info">
+                                                        <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                            {index + 1}
+                                                        </div>
+                                                        <div className="classifica-nome">
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="classifica-valore">
+                                                            {giocatore.assist || 0} assist
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
@@ -3951,19 +4604,28 @@ const getMediaSicura = (giocatore) => {
                                             </div>
                                         ) : (
                                             classificaMediaVoto.map((giocatore, index) => (
-                                                <div key={giocatore.id} className={`classifica-item ${renderMVPGlow(giocatore, true)}`}>
-                                                    <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
-                                                        {index + 1}
+                                                <div key={giocatore.id} className={`classifica-item-con-foto ${renderMVPGlow(giocatore, true)}`}>
+                                                    <div className="classifica-foto">
+                                                        <FotoProfiloManager 
+                                                            giocatore={giocatore} 
+                                                            size="small"
+                                                            onFotoCambiata={() => window.location.reload()}
+                                                        />
                                                     </div>
-                                                    <div className="classifica-nome">
-                                                        {giocatore.nome}
-                                                        {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                        {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                                                            <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="classifica-valore">
-                                                        {giocatore.mediaReale.toFixed(2)}
+                                                    <div className="classifica-info">
+                                                        <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                            {index + 1}
+                                                        </div>
+                                                        <div className="classifica-nome">
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="classifica-valore">
+                                                            {giocatore.mediaReale.toFixed(2)}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
@@ -3978,26 +4640,33 @@ const getMediaSicura = (giocatore) => {
                                         {giocatori.map(giocatore => (
                                             <div key={giocatore.id} className={`player-card ${renderMVPGlow(giocatore)}`}>
                                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
-                                                    <div style={{ flex: 1 }}>
-                                                        <h4 style={{ margin: "0 0 10px 0" }}>
-                                                            {giocatore.nome}
-                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                                                                <span style={{ 
-                                                                    background: '#FFD700', 
-                                                                    color: 'black', 
-                                                                    padding: '2px 8px', 
-                                                                    borderRadius: '4px', 
-                                                                    fontSize: '0.7rem', 
-                                                                    marginLeft: '8px', 
-                                                                    fontWeight: 'bold'
-                                                                }}>
-                                                                    👑 MVP ATTUALE
-                                                                </span>
-                                                            )}
-                                                        </h4>
-                                                        <div style={{ display: "flex", gap: "15px", fontSize: "0.9rem", color: "#ccc" }}>
-                                                            <span>📊 Partite: {giocatore.presenze || 0}</span>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                        <FotoProfiloManager 
+                                                            giocatore={giocatore}
+                                                            size="small"
+                                                            onFotoCambiata={() => window.location.reload()}
+                                                        />
+                                                        <div>
+                                                            <h4 style={{ margin: "0 0 10px 0" }}>
+                                                                {giocatore.nome}
+                                                                {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                                {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                    <span style={{ 
+                                                                        background: '#FFD700', 
+                                                                        color: 'black', 
+                                                                        padding: '2px 8px', 
+                                                                        borderRadius: '4px', 
+                                                                        fontSize: '0.7rem', 
+                                                                        marginLeft: '8px', 
+                                                                        fontWeight: 'bold'
+                                                                    }}>
+                                                                        👑 MVP ATTUALE
+                                                                    </span>
+                                                                )}
+                                                            </h4>
+                                                            <div style={{ display: "flex", gap: "15px", fontSize: "0.9rem", color: "#ccc" }}>
+                                                                <span>📊 Partite: {giocatore.presenze || 0}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     
@@ -4036,9 +4705,12 @@ const getMediaSicura = (giocatore) => {
                                 <h2>⭐ Il Mio Score Personale</h2>
                                 
                                 <div className="score-header">
-                                    <div className="score-avatar">
-                                        {getCurrentUserName().charAt(0).toUpperCase()}
-                                    </div>
+                                    {/* FOTO PROFILO PERSONALE GRANDE */}
+                                    <FotoProfiloManager 
+                                        giocatore={getCurrentGiocatore()}
+                                        size="large"
+                                        onFotoCambiata={() => window.location.reload()}
+                                    />
                                     <h3 style={{ color: "#4CAF50", marginBottom: "5px" }}>{getCurrentUserName()}</h3>
                                     <p style={{ color: "#ccc" }}>Il tuo profilo personale nella Arena Cup</p>
                                 </div>
