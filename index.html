@@ -1892,14 +1892,6 @@ const handleLogin = (e) => {
                 return null;
             };
 
-            // 🔧 FUNZIONE LOGIN MIGLIORATA
-            const handleLogin = (e) => {
-                if (e) e.preventDefault();
-                
-                if (!loginForm.username.trim()) {
-                    alert("Inserisci un nome!");
-                    return;
-                }
                 
                 // Controllo password per admin e Fabrizio
                 if (loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") {
