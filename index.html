@@ -1653,15 +1653,39 @@
             const chatContainerRef = useRef(null);
             const fileInputRef = useRef(null);
 
-            // 🔐 PASSWORD ADMIN CORRETTE (NON VISIBILI)
-            const ADMIN_PASSWORD = "giulia85";
-            const FABRIZIO_PASSWORD = "manetta2025";
-
-            // 🎯 FUNZIONI PERMESSI CORRETTE - FABRIZIO STESSI POTERI DI ADMIN
-            const isAdminUser = () => {
-                return loginForm.username === "admin" || loginForm.username === "vitantonio" || loginForm.username === "fabrizio";
-            };
-
+           // 🔧 FUNZIONE LOGIN CORRETTA - VERSIONE FUNZIONANTE
+const handleLogin = (e) => {
+    if (e) e.preventDefault();
+    
+    if (!loginForm.username.trim()) {
+        alert("Inserisci un nome!");
+        return;
+    }
+    
+    // 🔐 CONTROLLO PASSWORD PER ADMIN E FABRIZIO - VERSIONE CORRETTA
+    if (loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") {
+        if (loginForm.password !== ADMIN_PASSWORD) {
+            alert("❌ Password admin errata!");
+            return;
+        }
+    }
+    
+    if (loginForm.username.toLowerCase() === "fabrizio") {
+        if (loginForm.password !== FABRIZIO_PASSWORD) {
+            alert("❌ Password Fabrizio errata!");
+            return;
+        }
+    }
+    
+    localStorage.setItem("username", loginForm.username);
+    setIsLogged(true);
+    
+    setTimeout(() => {
+        if ("Notification" in window && Notification.permission === "default") {
+            requestNotificationPermission();
+        }
+    }, 500);
+};
             // 🎯 FUNZIONE SICURA PER OTTENERE LA MEDIA - VERSIONE CORRETTA
             const getMediaSicura = (giocatore) => {
                 if (!giocatore) return "0.00";
