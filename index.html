@@ -4723,18 +4723,156 @@ const handleLogin = (e) => {
                                 )}
                             </div>
                         )}
+{activeTab === "mioscore" && (
+    <div>
+        <h2>⭐ Il Mio Score Personale</h2>
+        
+        <div className="score-header">
+            {/* FOTO PROFILO PERSONALE GRANDE - VERSIONE SICURA */}
+            {getCurrentGiocatore() && getCurrentGiocatore().id ? (
+                <FotoProfiloManager 
+                    giocatore={getCurrentGiocatore()}
+                    size="large"
+                    onFotoCambiata={() => window.location.reload()}
+                />
+            ) : (
+                <div className="foto-profilo-large foto-profilo-placeholder">
+                    {getCurrentUserName().charAt(0).toUpperCase()}
+                </div>
+            )}
+            <h3 style={{ color: "#4CAF50", marginBottom: "5px" }}>{getCurrentUserName()}</h3>
+            <p style={{ color: "#ccc" }}>Il tuo profilo personale nella Arena Cup</p>
+        </div>
 
-                        {activeTab === "mioscore" && (
+        <div className="score-stats-grid">
+            <div className="score-stat-card">
+                <div className="score-stat-label">📊 Partite Giocate</div>
+                <div className="score-stat-value">{getCurrentGiocatore().presenze || 0}</div>
+            </div>
+            
+            <div className="score-stat-card">
+                <div className="score-stat-label">⚽ Gol Segnati</div>
+                <div className="score-stat-value" style={{ color: "#FFD700" }}>
+                    {getCurrentGiocatore().gol || 0}
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                    Media: {getCurrentGiocatore().presenze ? ((getCurrentGiocatore().gol || 0) / getCurrentGiocatore().presenze).toFixed(2) : "0.00"} a partita
+                </div>
+            </div>
+            
+            <div className="score-stat-card">
+                <div className="score-stat-label">🎯 Assist</div>
+                <div className="score-stat-value" style={{ color: "#4CAF50" }}>
+                    {getCurrentGiocatore().assist || 0}
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                    Media: {getCurrentGiocatore().presenze ? ((getCurrentGiocatore().assist || 0) / getCurrentGiocatore().presenze).toFixed(2) : "0.00"} a partita
+                </div>
+            </div>
+            
+            <div className="score-stat-card">
+                <div className="score-stat-label">⭐ Media Voto</div>
+                <div className="score-stat-value" style={{ color: "#2196F3" }}>
+                    {getMediaSicura(getCurrentGiocatore())}
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                    {pagelle.filter(p => p.giocatore === loginForm.username).length} valutazioni
+                </div>
+            </div>
+        </div>
+
+        <div className="score-stats-grid">
+            <div className="score-stat-card">
+                <div className="score-stat-label">🏆 MVP</div>
+                <div className="score-stat-value" style={{ color: "#FFC107" }}>
+                    {getCurrentGiocatore().mvp_count || 0}
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                    {getCurrentGiocatore().presenze ? `1 ogni ${Math.ceil((getCurrentGiocatore().presenze || 1) / (getCurrentGiocatore().mvp_count || 1))} partite` : "Nessuna partita"}
+                </div>
+            </div>
+            
+            <div className="score-stat-card">
+                <div className="score-stat-label">🧤 Punti Portiere</div>
+                <div className="score-stat-value" style={{ color: "#0096FF" }}>
+                    {calcolaPunteggioBenjiPrice(getCurrentGiocatore())}
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "#ccc", marginTop: "5px" }}>
+                    {getCurrentGiocatore().partite_portiere || 0} partite in porta
+                </div>
+            </div>
+        </div>
+
+        {/* LE MIE ULTIME PAGELLE */}
+        <div style={{ marginTop: "40px" }}>
+            <h3 style={{ marginBottom: "20px", color: "#FFC107" }}>📝 Le Mie Ultime Pagelle</h3>
+            {getMiePagelle().length === 0 ? (
+                <div className="empty-state">
+                    <div className="icon">📝</div>
+                    <p>Nessuna pagella ancora.</p>
+                    <p style={{ fontSize: "0.9rem", marginTop: "10px" }}>Le tue valutazioni appariranno qui!</p>
+                </div>
+            ) : (
+                getMiePagelle().slice(0, 5).map(pagella => (
+                    <div key={pagella.id} className={`pagella-card ${getClasseFazione(pagella.fazione)}`}>
+                        <div className="pagella-header">
                             <div>
-                                <h2>⭐ Il Mio Score Personale</h2>
-                                
-                                <div className="score-header">
-                                    {/* FOTO PROFILO PERSONALE GRANDE */}
-                                    <FotoProfiloManager 
-                                        giocatore={getCurrentGiocatore()}
-                                        size="large"
-                                        onFotoCambiata={() => window.location.reload()}
-                                    />
+                                <div className="pagella-giocatore">
+                                    {pagella.giocatore}
+                                    {getBadgeFazione(pagella.fazione)}
+                                    {getBadgeCoppa(pagella)}
+                                </div>
+                                <div className="pagella-data">
+                                    Valutato da {pagella.autore || "Vitantonio"} il {pagella.data}
+                                </div>
+                            </div>
+                            <div className="pagella-voto">
+                                {pagella.voto}/10
+                            </div>
+                        </div>
+                        
+                        {pagella.commento && (
+                            <div className="pagella-commento">
+                                "{pagella.commento}"
+                            </div>
+                        )}
+                    </div>
+                ))
+            )}
+        </div>
+
+        {/* STATISTICHE DETTAGLIATE */}
+        <div style={{ marginTop: "40px" }}>
+            <h3 style={{ marginBottom: "20px", color: "#2196F3" }}>📈 Statistiche Dettagliate</h3>
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <h4 style={{ color: "#FFD700", margin: "0 0 10px 0", fontSize: "0.9rem" }}>⚽ Gol/Partita</h4>
+                    <p style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold" }}>
+                        {getCurrentGiocatore().presenze ? ((getCurrentGiocatore().gol || 0) / getCurrentGiocatore().presenze).toFixed(2) : "0.00"}
+                    </p>
+                </div>
+                <div className="stat-card">
+                    <h4 style={{ color: "#4CAF50", margin: "0 0 10px 0", fontSize: "0.9rem" }}>🎯 Assist/Partita</h4>
+                    <p style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold" }}>
+                        {getCurrentGiocatore().presenze ? ((getCurrentGiocatore().assist || 0) / getCurrentGiocatore().presenze).toFixed(2) : "0.00"}
+                    </p>
+                </div>
+                <div className="stat-card">
+                    <h4 style={{ color: "#FFC107", margin: "0 0 10px 0", fontSize: "0.9rem" }}>🏆 MVP/Partita</h4>
+                    <p style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold" }}>
+                        {getCurrentGiocatore().presenze ? ((getCurrentGiocatore().mvp_count || 0) / getCurrentGiocatore().presenze).toFixed(2) : "0.00"}
+                    </p>
+                </div>
+                <div className="stat-card">
+                    <h4 style={{ color: "#0096FF", margin: "0 0 10px 0", fontSize: "0.9rem" }}>🧤 Punti/Partita</h4>
+                    <p style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold" }}>
+                        {getCurrentGiocatore().partite_portiere ? (calcolaPunteggioBenjiPrice(getCurrentGiocatore()) / getCurrentGiocatore().partite_portiere).toFixed(1) : "0.0"}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+)}
                                     <h3 style={{ color: "#4CAF50", marginBottom: "5px" }}>{getCurrentUserName()}</h3>
                                     <p style={{ color: "#ccc" }}>Il tuo profilo personale nella Arena Cup</p>
                                 </div>
