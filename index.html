@@ -1653,14 +1653,6 @@
             const chatContainerRef = useRef(null);
             const fileInputRef = useRef(null);
 
-           // 🔧 FUNZIONE LOGIN CORRETTA - VERSIONE FUNZIONANTE
-const handleLogin = (e) => {
-    if (e) e.preventDefault();
-    
-    if (!loginForm.username.trim()) {
-        alert("Inserisci un nome!");
-        return;
-    }
     
     // 🔐 CONTROLLO PASSWORD PER ADMIN E FABRIZIO - VERSIONE CORRETTA
     if (loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") {
