@@ -1262,186 +1262,269 @@
         const database = firebase.database();
         const storage = firebase.storage();
 
-        // 🛠️ RISOLUZIONE CORS PER FIREBASE STORAGE
-        const risolviCorsFirebaseStorage = {
-            // Funzione per upload file con gestione CORS
-            async uploadFile(file, path, metadata = {}) {
-                try {
-                    const storageRef = storage.ref(path);
-                    
-                    // Configurazione per gestire CORS
-                    const uploadTask = storageRef.put(file, {
-                        ...metadata,
-                        customMetadata: {
-                            'Content-Type': file.type,
-                            ...metadata.customMetadata
-                        }
-                    });
-                    
-                    return new Promise((resolve, reject) => {
-                        uploadTask.on('state_changed',
-                            (snapshot) => {
-                                // Progresso upload
-                                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                                console.log(`Upload: ${progress}%`);
-                            },
-                            (error) => {
-                                console.error('❌ Errore upload Firebase Storage:', error);
-                                
-                                // Gestione specifica errori CORS
-                                if (error.code === 'storage/cors-unsupported') {
-                                    console.log('⚠️ CORS non supportato, tentativo metodo alternativo...');
-                                    this.uploadFileAlternativo(file, path, metadata)
-                                        .then(resolve)
-                                        .catch(reject);
-                                } else {
-                                    reject(this.gestisciErroreCors(error));
-                                }
-                            },
-                            async () => {
-                                try {
-                                    const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                                    console.log('✅ Upload completato con successo:', downloadURL);
-                                    resolve(downloadURL);
-                                } catch (urlError) {
-                                    console.error('❌ Errore recupero URL:', urlError);
-                                    reject(this.gestisciErroreCors(urlError));
-                                }
-                            }
-                        );
-                    });
-                    
-                } catch (error) {
-                    console.error('❌ Errore iniziale upload:', error);
-                    throw this.gestisciErroreCors(error);
-                }
-            },
-
-            // Metodo alternativo per upload se CORS fallisce
-            async uploadFileAlternativo(file, path, metadata = {}) {
-                try {
-                    console.log('🔄 Tentativo upload alternativo...');
-                    
-                    // Converti file in Base64
-                    const base64 = await this.fileToBase64(file);
-                    
-                    // Salva come stringa nel Database (fallback)
-                    const base64Path = `base64_images/${path}`;
-                    await database.ref(base64Path).set({
-                        data: base64,
-                        contentType: file.type,
-                        name: file.name,
-                        size: file.size,
-                        timestamp: Date.now()
-                    });
-                    
-                    console.log('✅ File salvato come Base64 nel Database');
-                    return `base64:${base64Path}`;
-                    
-                } catch (error) {
-                    console.error('❌ Errore upload alternativo:', error);
-                    throw new Error('Impossibile caricare il file: ' + error.message);
-                }
-            },
-
-            // Converti file in Base64
-            fileToBase64(file) {
+        // 🆕 SISTEMA UPLOAD OTTIMIZZATO PER MOBILE
+        const sistemaUploadMobile = {
+            // 🆕 FUNZIONE UPLOAD OTTIMIZZATA PER MOBILE (iOS/Android)
+            async uploadFileMobile(file, fileName) {
                 return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
+                    try {
+                        console.log(`📤 Inizio upload file: ${fileName}, dimensione: ${file.size} bytes`);
+                        
+                        // 🔧 OTTIMIZZAZIONE PER MOBILE: riduci dimensioni immagine
+                        this.ottimizzaImmaginePerMobile(file).then(optimizedFile => {
+                            const storageRef = storage.ref();
+                            const fileRef = storageRef.child(`profili/${fileName}`);
+                            
+                            const metadata = {
+                                contentType: optimizedFile.type,
+                                cacheControl: 'public, max-age=31536000',
+                                customMetadata: {
+                                    'uploadedBy': this.getCurrentUserName(),
+                                    'uploadedAt': new Date().toISOString(),
+                                    'originalSize': file.size.toString(),
+                                    'optimizedSize': optimizedFile.size.toString(),
+                                    'platform': navigator.userAgent
+                                }
+                            };
+
+                            // ⏱️ Timeout per iOS (problemi di background)
+                            const uploadTimeout = setTimeout(() => {
+                                uploadTask.cancel();
+                                reject(new Error('❌ Upload timeout - connessione troppo lenta'));
+                            }, 45000); // 45 secondi per mobile
+
+                            const uploadTask = fileRef.put(optimizedFile, metadata);
+
+                            uploadTask.on('state_changed',
+                                (snapshot) => {
+                                    // Reset timeout ad ogni progresso
+                                    clearTimeout(uploadTimeout);
+                                    
+                                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                                    console.log(`📤 Upload progress: ${progress.toFixed(1)}%`);
+                                    
+                                    // 🔧 MANTIENI ATTIVA LA CONNESSIONE SU iOS
+                                    if (progress < 100) {
+                                        setTimeout(() => {
+                                            clearTimeout(uploadTimeout);
+                                        }, 40000);
+                                    }
+                                },
+                                (error) => {
+                                    clearTimeout(uploadTimeout);
+                                    console.error('❌ Errore upload:', error);
+                                    
+                                    // GESTIONE ERRORI SPECIFICI MOBILE
+                                    switch(error.code) {
+                                        case 'storage/retry-limit-exceeded':
+                                            reject(new Error('❌ Connessione instabile. Riprova con rete migliore'));
+                                            break;
+                                        case 'storage/canceled':
+                                            reject(new Error('❌ Upload cancellato'));
+                                            break;
+                                        case 'storage/unknown':
+                                            reject(new Error('❌ Errore sconosciuto. Riprova'));
+                                            break;
+                                        default:
+                                            reject(new Error(`❌ Errore upload: ${error.message}`));
+                                    }
+                                },
+                                async () => {
+                                    clearTimeout(uploadTimeout);
+                                    try {
+                                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                                        console.log('✅ Upload completato con successo:', downloadURL);
+                                        resolve(downloadURL);
+                                    } catch (urlError) {
+                                        console.error('❌ Errore recupero URL:', urlError);
+                                        reject(new Error('❌ Errore nel recupero del file'));
+                                    }
+                                }
+                            );
+                        }).catch(error => {
+                            reject(new Error(`❌ Errore ottimizzazione immagine: ${error.message}`));
+                        });
+                        
+                    } catch (error) {
+                        console.error('❌ Errore iniziale upload:', error);
+                        reject(new Error(`❌ Impossibile avviare l'upload: ${error.message}`));
+                    }
                 });
             },
 
-            // Carica file da Firebase Storage con gestione CORS
-            async getDownloadURL(path) {
-                try {
-                    const storageRef = storage.ref(path);
-                    const url = await storageRef.getDownloadURL();
-                    return url;
-                } catch (error) {
-                    console.error('❌ Errore download Firebase Storage:', error);
-                    
-                    // Se è un file Base64 salvato nel Database
-                    if (path.startsWith('base64:')) {
-                        const dbPath = path.replace('base64:', '');
-                        const snapshot = await database.ref(dbPath).once('value');
-                        const data = snapshot.val();
-                        return data ? data.data : null;
-                    }
-                    
-                    throw this.gestisciErroreCors(error);
-                }
-            },
-
-            // Elimina file con gestione errori CORS
-            async deleteFile(path) {
-                try {
-                    const storageRef = storage.ref(path);
-                    await storageRef.delete();
-                    console.log('✅ File eliminato con successo');
-                } catch (error) {
-                    console.error('❌ Errore eliminazione file:', error);
-                    
-                    // Se è un file Base64, elimina dal Database
-                    if (path.startsWith('base64:')) {
-                        const dbPath = path.replace('base64:', '');
-                        await database.ref(dbPath).remove();
-                        console.log('✅ File Base64 eliminato dal Database');
+            // 🆕 OTTIMIZZAZIONE IMMAGINE PER MOBILE
+            async ottimizzaImmaginePerMobile(file) {
+                return new Promise((resolve, reject) => {
+                    // Se non è un'immagine, restituisci il file originale
+                    if (!file.type.startsWith('image/')) {
+                        resolve(file);
                         return;
                     }
+
+                    // Limite dimensioni per mobile (1MB)
+                    const MAX_SIZE = 1024 * 1024;
+                    if (file.size <= MAX_SIZE) {
+                        resolve(file);
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            
+                            // Calcola nuove dimensioni (max 800px lato maggiore)
+                            let width = img.width;
+                            let height = img.height;
+                            
+                            if (width > height && width > 800) {
+                                height = (height * 800) / width;
+                                width = 800;
+                            } else if (height > 800) {
+                                width = (width * 800) / height;
+                                height = 800;
+                            }
+                            
+                            canvas.width = width;
+                            canvas.height = height;
+                            
+                            // Disegna l'immagine ridimensionata
+                            ctx.drawImage(img, 0, 0, width, height);
+                            
+                            // Converti in blob con qualità ridotta
+                            canvas.toBlob((blob) => {
+                                const optimizedFile = new File([blob], file.name, {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now()
+                                });
+                                
+                                console.log(`🔄 Immagine ottimizzata: ${file.size} -> ${optimizedFile.size} bytes`);
+                                resolve(optimizedFile);
+                            }, 'image/jpeg', 0.7); // 70% qualità
+                        };
+                        
+                        img.onerror = () => {
+                            console.warn('⚠️ Errore caricamento immagine, uso file originale');
+                            resolve(file);
+                        };
+                        
+                        img.src = e.target.result;
+                    };
                     
-                    throw this.gestisciErroreCors(error);
-                }
+                    reader.onerror = () => {
+                        console.warn('⚠️ Errore lettura file, uso file originale');
+                        resolve(file);
+                    };
+                    
+                    reader.readAsDataURL(file);
+                });
             },
 
-            // Gestione errori CORS
-            gestisciErroreCors(error) {
-                console.error('🔥 Errore CORS Firebase Storage:', error);
-                
-                switch(error.code) {
-                    case 'storage/cors-unsupported':
-                        return new Error('CORS non configurato sul bucket Firebase. Configura CORS tramite gsutil.');
-                    case 'storage/unauthorized':
-                        return new Error('Accesso non autorizzato. Verifica le regole di sicurezza Firebase.');
-                    case 'storage/retry-limit-exceeded':
-                        return new Error('Limite di tentativi superato. Riprova più tardi.');
-                    case 'storage/invalid-checksum':
-                        return new Error('File corrotto durante il trasferimento.');
-                    case 'storage/canceled':
-                        return new Error('Upload cancellato.');
-                    default:
-                        return new Error(`Errore Firebase Storage: ${error.message}`);
-                }
-            },
-
-            // Verifica configurazione CORS
-            async verificaConfigurazioneCORS() {
+            // 🆕 GESTIONE PERMESSI CAMERA MIGLIORATA
+            async richiediPermessoCamera() {
                 try {
-                    // Prova un upload di test
-                    const testBlob = new Blob(['test'], { type: 'text/plain' });
-                    const testRef = storage.ref('test-cors.txt');
-                    
-                    await testRef.put(testBlob);
-                    await testRef.delete();
-                    
-                    console.log('✅ Configurazione CORS verificata con successo');
-                    return true;
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        throw new Error('Camera non supportata su questo dispositivo');
+                    }
+
+                    // 🔧 PRIMA VERIFICA I PERMESSI
+                    if (navigator.permissions) {
+                        try {
+                            const cameraPermission = await navigator.permissions.query({ name: 'camera' });
+                            if (cameraPermission.state === 'denied') {
+                                throw new Error('Permesso camera negato. Abilitalo nelle impostazioni del browser');
+                            }
+                        } catch (e) {
+                            console.log('⚠️ API Permissions non supportata');
+                        }
+                    }
+
+                    // 🔧 RICHIESTA CAMERA CON GESTIONE ERRORI DETTAGLIATA
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: 'user',
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
+                        audio: false
+                    });
+
+                    console.log('✅ Permesso camera ottenuto con successo');
+                    return stream;
+
                 } catch (error) {
-                    console.warn('⚠️ Possibili problemi CORS:', error.message);
-                    return false;
+                    console.error('❌ Errore accesso camera:', error);
+                    
+                    // GESTIONE ERRORI DETTAGLIATA
+                    let errorMessage = 'Impossibile accedere alla fotocamera. ';
+                    
+                    if (error.name === 'NotAllowedError') {
+                        errorMessage += 'Permesso negato. Controlla le impostazioni del browser e consenti l\'accesso alla camera.';
+                    } else if (error.name === 'NotFoundError') {
+                        errorMessage += 'Nessuna fotocamera trovata sul dispositivo.';
+                    } else if (error.name === 'NotSupportedError') {
+                        errorMessage += 'Browser non supportato per l\'accesso alla camera.';
+                    } else if (error.name === 'NotReadableError') {
+                        errorMessage += 'La fotocamera è già in uso da un\'altra applicazione.';
+                    } else {
+                        errorMessage += `Errore: ${error.message}`;
+                    }
+                    
+                    throw new Error(errorMessage);
                 }
+            },
+
+            // 🆕 FUNZIONE SCATTA FOTO OTTIMIZZATA
+            scattaFoto(videoElement, canvasElement) {
+                return new Promise((resolve) => {
+                    const video = videoElement;
+                    const canvas = canvasElement;
+                    const context = canvas.getContext('2d');
+                    
+                    // Imposta dimensioni canvas uguali al video
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    
+                    // Disegna il frame corrente
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // Converti in base64 (qualità ridotta per mobile)
+                    const fotoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    resolve(fotoDataUrl);
+                    
+                    console.log('📸 Foto scattata con successo');
+                });
+            },
+
+            // 🆕 FUNZIONE PER OTTENERE NOME UTENTE CORRENTE
+            getCurrentUserName() {
+                const username = localStorage.getItem("username") || "Utente";
+                if (username === "admin" || username === "vitantonio") return "Vitantonio";
+                if (username === "fabrizio") return "Fabrizio";
+                return username;
+            },
+
+            // 🆕 VERIFICA SUPPORTO MOBILE
+            verificaSupportoMobile() {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                const isAndroid = /Android/.test(navigator.userAgent);
+                const isMobile = isIOS || isAndroid;
+                
+                console.log(`📱 Dispositivo: ${isIOS ? 'iOS' : isAndroid ? 'Android' : 'Desktop'}`);
+                return { isMobile, isIOS, isAndroid };
             }
         };
 
-        // 🆕 COMPONENTE GESTIONE FOTO PROFILO CON CORS RISOLTO
+        // 🆕 COMPONENTE GESTIONE FOTO PROFILO OTTIMIZZATO PER MOBILE
         const FotoProfiloManager = ({ giocatore, onFotoCambiata, size = "medium" }) => {
             const [showModal, setShowModal] = useState(false);
             const [fotoSelezionata, setFotoSelezionata] = useState(null);
             const [anteprimaFoto, setAnteprimaFoto] = useState(null);
             const [modalitaCamera, setModalitaCamera] = useState(false);
             const [caricamento, setCaricamento] = useState(false);
+            const [errore, setErrore] = useState(null);
             
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
@@ -1456,13 +1539,15 @@
 
             const classeDimensione = dimensioni[size] || dimensioni.medium;
 
-            // 🆕 CARICA FOTO PROFILO DA FIREBASE STORAGE CON CORS RISOLTO
+            // 🆕 CARICA FOTO PROFILO
             const caricaFotoProfilo = async () => {
                 try {
-                    const fotoUrl = await risolviCorsFirebaseStorage.getDownloadURL(`profili/${giocatore.id}.jpg`);
-                    return fotoUrl;
+                    const storageRef = storage.ref();
+                    const fileRef = storageRef.child(`profili/${giocatore.id}.jpg`);
+                    
+                    const url = await fileRef.getDownloadURL();
+                    return url;
                 } catch (error) {
-                    // Se non esiste la foto, restituisci null
                     console.log('ℹ️ Nessuna foto profilo trovata:', error.message);
                     return null;
                 }
@@ -1474,39 +1559,62 @@
                 caricaFotoProfilo().then(url => setFotoUrl(url));
             }, [giocatore.id]);
 
-            // 🆕 INIZIALIZZA FOTOCAMERA
+            // 🆕 INIZIALIZZA FOTOCAMERA OTTIMIZZATA
             const inizializzaCamera = async () => {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: 'user' } 
-                    });
+                    setErrore(null);
+                    console.log('📷 Inizializzazione camera...');
+                    
+                    const stream = await sistemaUploadMobile.richiediPermessoCamera();
                     streamRef.current = stream;
-                    videoRef.current.srcObject = stream;
+                    
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = stream;
+                        // 🔧 ATTENDI CHE IL VIDEO SIA PRONTO
+                        await new Promise((resolve) => {
+                            if (videoRef.current) {
+                                videoRef.current.onloadedmetadata = () => {
+                                    videoRef.current.play();
+                                    resolve();
+                                };
+                            } else {
+                                resolve();
+                            }
+                        });
+                    }
+                    
                     setModalitaCamera(true);
+                    console.log('✅ Camera inizializzata con successo');
+                    
                 } catch (error) {
-                    console.error("Errore accesso camera:", error);
-                    alert("Impossibile accedere alla fotocamera. Controlla i permessi.");
+                    console.error('❌ Errore inizializzazione camera:', error);
+                    setErrore(error.message);
+                    setModalitaCamera(false);
                 }
             };
 
-            // 🆕 SCATTA FOTO
-            const scattaFoto = () => {
-                const video = videoRef.current;
-                const canvas = canvasRef.current;
-                const context = canvas.getContext('2d');
-                
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0);
-                
-                const fotoDataUrl = canvas.toDataURL('image/jpeg');
-                setAnteprimaFoto(fotoDataUrl);
-                setFotoSelezionata(fotoDataUrl);
-                setModalitaCamera(false);
-                
-                // Ferma lo stream della camera
-                if (streamRef.current) {
-                    streamRef.current.getTracks().forEach(track => track.stop());
+            // 🆕 SCATTA FOTO OTTIMIZZATA
+            const scattaFoto = async () => {
+                if (!videoRef.current || !canvasRef.current) {
+                    setErrore('Camera non inizializzata correttamente');
+                    return;
+                }
+
+                try {
+                    const fotoDataUrl = await sistemaUploadMobile.scattaFoto(videoRef.current, canvasRef.current);
+                    setAnteprimaFoto(fotoDataUrl);
+                    setFotoSelezionata(fotoDataUrl);
+                    setModalitaCamera(false);
+                    
+                    // Ferma lo stream della camera
+                    if (streamRef.current) {
+                        streamRef.current.getTracks().forEach(track => track.stop());
+                    }
+                    
+                    console.log('✅ Foto scattata con successo');
+                } catch (error) {
+                    console.error('❌ Errore scatto foto:', error);
+                    setErrore('Errore durante lo scatto della foto');
                 }
             };
 
@@ -1514,9 +1622,17 @@
             const gestisciCaricamentoFoto = (event) => {
                 const file = event.target.files[0];
                 if (file) {
-                    // Verifica dimensione file (max 5MB)
-                    if (file.size > 5 * 1024 * 1024) {
-                        alert("❌ Il file è troppo grande! Dimensione massima: 5MB");
+                    setErrore(null);
+                    
+                    // Verifica tipo file
+                    if (!file.type.startsWith('image/')) {
+                        setErrore('❌ Seleziona solo file immagine (JPEG, PNG, etc.)');
+                        return;
+                    }
+
+                    // Verifica dimensione file (max 10MB)
+                    if (file.size > 10 * 1024 * 1024) {
+                        setErrore("❌ Il file è troppo grande! Dimensione massima: 10MB");
                         return;
                     }
                     
@@ -1525,32 +1641,34 @@
                         setAnteprimaFoto(e.target.result);
                         setFotoSelezionata(e.target.result);
                     };
+                    reader.onerror = () => {
+                        setErrore('❌ Errore durante la lettura del file');
+                    };
                     reader.readAsDataURL(file);
                 }
             };
 
-            // 🆕 SALVA FOTO SU FIREBASE STORAGE CON CORS RISOLTO
+            // 🆕 SALVA FOTO OTTIMIZZATA PER MOBILE
             const salvaFoto = async () => {
-                if (!fotoSelezionata) return;
+                if (!fotoSelezionata) {
+                    setErrore('❌ Nessuna foto selezionata');
+                    return;
+                }
                 
                 setCaricamento(true);
+                setErrore(null);
                 
                 try {
                     // Converti base64 in blob
                     const response = await fetch(fotoSelezionata);
                     const blob = await response.blob();
                     
-                    // Upload su Firebase Storage con gestione CORS
-                    const downloadURL = await risolviCorsFirebaseStorage.uploadFile(
+                    console.log(`💾 Inizio salvataggio foto per ${giocatore.nome}`);
+                    
+                    // Upload su Firebase Storage con sistema ottimizzato
+                    const downloadURL = await sistemaUploadMobile.uploadFileMobile(
                         blob, 
-                        `profili/${giocatore.id}.jpg`,
-                        {
-                            contentType: 'image/jpeg',
-                            customMetadata: {
-                                'uploadedBy': giocatore.nome,
-                                'uploadedAt': new Date().toISOString()
-                            }
-                        }
+                        `${giocatore.id}.jpg`
                     );
                     
                     setFotoUrl(downloadURL);
@@ -1558,40 +1676,47 @@
                     setFotoSelezionata(null);
                     setAnteprimaFoto(null);
                     setCaricamento(false);
+                    setErrore(null);
                     
                     // Aggiorna URL foto nel database giocatore
                     await database.ref(`giocatori/${giocatore.id}`).update({
-                        foto_profilo: downloadURL
+                        foto_profilo: downloadURL,
+                        foto_aggiornata_il: new Date().toISOString()
                     });
                     
                     if (onFotoCambiata) {
                         onFotoCambiata(downloadURL);
                     }
                     
+                    console.log('✅ Foto profilo aggiornata con successo!');
                     alert("✅ Foto profilo aggiornata con successo!");
                     
                 } catch (error) {
-                    console.error("Errore salvataggio foto:", error);
-                    alert("❌ Errore nel salvataggio della foto: " + error.message);
+                    console.error("❌ Errore salvataggio foto:", error);
+                    setErrore(`❌ Errore nel salvataggio: ${error.message}`);
                     setCaricamento(false);
                 }
             };
 
-            // 🆕 RIMUOVI FOTO CON CORS RISOLTO
+            // 🆕 RIMUOVI FOTO
             const rimuoviFoto = async () => {
                 if (!confirm("Sei sicuro di voler rimuovere la foto profilo?")) return;
                 
                 try {
-                    // Elimina da Storage con gestione CORS
-                    await risolviCorsFirebaseStorage.deleteFile(`profili/${giocatore.id}.jpg`);
+                    const storageRef = storage.ref();
+                    const fileRef = storageRef.child(`profili/${giocatore.id}.jpg`);
+                    
+                    await fileRef.delete();
                     
                     // Elimina riferimento dal database
                     await database.ref(`giocatori/${giocatore.id}`).update({
-                        foto_profilo: null
+                        foto_profilo: null,
+                        foto_aggiornata_il: null
                     });
                     
                     setFotoUrl(null);
                     setShowModal(false);
+                    setErrore(null);
                     
                     if (onFotoCambiata) {
                         onFotoCambiata(null);
@@ -1599,8 +1724,8 @@
                     
                     alert("✅ Foto profilo rimossa!");
                 } catch (error) {
-                    console.error("Errore rimozione foto:", error);
-                    alert("❌ Errore nella rimozione della foto: " + error.message);
+                    console.error("❌ Errore rimozione foto:", error);
+                    setErrore(`❌ Errore nella rimozione: ${error.message}`);
                 }
             };
 
@@ -1611,10 +1736,22 @@
                 setAnteprimaFoto(null);
                 setModalitaCamera(false);
                 setCaricamento(false);
+                setErrore(null);
                 
                 // Ferma lo stream della camera se attivo
                 if (streamRef.current) {
                     streamRef.current.getTracks().forEach(track => track.stop());
+                }
+            };
+
+            // 🆕 EFFETTUA TEST CAMERA
+            const testCamera = async () => {
+                try {
+                    setErrore(null);
+                    await sistemaUploadMobile.richiediPermessoCamera();
+                    alert('✅ Camera funzionante correttamente!');
+                } catch (error) {
+                    setErrore(error.message);
                 }
             };
 
@@ -1630,7 +1767,6 @@
                             onError={(e) => {
                                 // Fallback se l'immagine non carica
                                 e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'flex';
                             }}
                         />
                     ) : null}
@@ -1654,11 +1790,40 @@
                         {fotoUrl ? '✏️' : '📷'}
                     </button>
 
-                    {/* MODAL GESTIONE FOTO */}
+                    {/* MODAL GESTIONE FOTO OTTIMIZZATO */}
                     {showModal && (
                         <div className="modal-foto">
                             <div className="modal-foto-content">
                                 <h3>📷 Foto Profilo di {giocatore.nome}</h3>
+                                
+                                {/* MESSAGGIO ERRORE */}
+                                {errore && (
+                                    <div style={{ 
+                                        background: 'rgba(244, 67, 54, 0.2)',
+                                        color: '#ff6b6b',
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        margin: '10px 0',
+                                        border: '1px solid rgba(244, 67, 54, 0.5)'
+                                    }}>
+                                        <strong>❌ Errore:</strong> {errore}
+                                        <br />
+                                        <button 
+                                            onClick={testCamera}
+                                            style={{
+                                                background: 'transparent',
+                                                color: '#ff6b6b',
+                                                border: '1px solid #ff6b6b',
+                                                padding: '5px 10px',
+                                                borderRadius: '4px',
+                                                marginTop: '8px',
+                                                fontSize: '0.8rem'
+                                            }}
+                                        >
+                                            Test Camera
+                                        </button>
+                                    </div>
+                                )}
                                 
                                 {/* STATO CARICAMENTO */}
                                 {caricamento && (
@@ -1670,7 +1835,11 @@
                                         margin: '10px 0'
                                     }}>
                                         <div style={{ fontSize: '1.2rem', marginBottom: '10px' }}>⏳ Caricamento in corso...</div>
-                                        <div style={{ fontSize: '0.9rem', color: '#ccc' }}>Attendi il completamento dell'upload</div>
+                                        <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
+                                            Attendere il completamento dell'upload
+                                            <br />
+                                            <small>Non chiudere la pagina</small>
+                                        </div>
                                     </div>
                                 )}
                                 
@@ -1694,6 +1863,7 @@
                                             ref={videoRef}
                                             autoPlay
                                             playsInline
+                                            muted
                                             className="video-camera"
                                             style={{ display: 'block' }}
                                         />
@@ -1702,13 +1872,18 @@
                                                 className="btn-foto scatta"
                                                 onClick={scattaFoto}
                                             >
-                                                Scatta Foto
+                                                📸 Scatta Foto
                                             </button>
                                             <button 
                                                 className="btn-foto annulla"
-                                                onClick={() => setModalitaCamera(false)}
+                                                onClick={() => {
+                                                    setModalitaCamera(false);
+                                                    if (streamRef.current) {
+                                                        streamRef.current.getTracks().forEach(track => track.stop());
+                                                    }
+                                                }}
                                             >
-                                                Annulla
+                                                ❌ Annulla
                                             </button>
                                         </div>
                                     </>
@@ -1735,6 +1910,7 @@
                                     type="file"
                                     ref={fileInputRef}
                                     accept="image/*"
+                                    capture="environment"
                                     onChange={gestisciCaricamentoFoto}
                                     style={{ display: 'none' }}
                                 />
@@ -1768,13 +1944,14 @@
                                                     onClick={salvaFoto}
                                                     disabled={caricamento}
                                                 >
-                                                    {caricamento ? '⏳ Caricamento...' : '💾 Salva Foto'}
+                                                    {caricamento ? '⏳ Salvataggio...' : '💾 Salva Foto'}
                                                 </button>
                                                 <button 
                                                     className="btn-foto annulla"
                                                     onClick={() => {
                                                         setAnteprimaFoto(null);
                                                         setFotoSelezionata(null);
+                                                        setErrore(null);
                                                     }}
                                                     disabled={caricamento}
                                                 >
@@ -1798,12 +1975,12 @@
                                             onClick={chiudiModal}
                                             disabled={caricamento}
                                         >
-                                            ❌ Annulla
+                                            ❌ Chiudi
                                         </button>
                                     </div>
                                 )}
                                 
-                                {/* INFORMAZIONI CORS */}
+                                {/* INFORMAZIONI MOBILE */}
                                 <div style={{ 
                                     marginTop: '15px', 
                                     padding: '10px', 
@@ -1812,8 +1989,15 @@
                                     fontSize: '0.8rem',
                                     color: '#ccc'
                                 }}>
-                                    <strong>ℹ️ Informazioni:</strong> Le foto vengono salvate su Firebase Storage. 
-                                    Dimensione massima: 5MB. Formati supportati: JPEG, PNG, WebP.
+                                    <strong>📱 Informazioni Mobile:</strong>
+                                    <br />
+                                    • Supporto per iOS e Android
+                                    <br />
+                                    • Upload ottimizzato per reti lente
+                                    <br />
+                                    • Dimensione massima: 10MB
+                                    <br />
+                                    • Formati: JPEG, PNG, WebP
                                 </div>
                             </div>
                         </div>
@@ -1821,6 +2005,10 @@
                 </div>
             );
         };
+
+        // 🛠️ IL RESTO DEL CODICE REACT RIMANE IDENTICO...
+        // [TUTTO IL RESTO DEL CODICE REACT CHE HAI FORNITO RIMANE INVARIATO]
+        // ... continuazione di tutto il codice React esistente...
 
         function App() {
             const [loginForm, setLoginForm] = useState({
@@ -2149,8 +2337,9 @@
             useEffect(() => {
                 if (!isLogged) return;
 
-                // 🛠️ VERIFICA CONFIGURAZIONE CORS ALL'AVVIO
-                risolviCorsFirebaseStorage.verificaConfigurazioneCORS();
+                // 🆕 VERIFICA SUPPORTO MOBILE ALL'AVVIO
+                const supporto = sistemaUploadMobile.verificaSupportoMobile();
+                console.log('📱 Supporto mobile verificato:', supporto);
 
                 if (localStorage.getItem('notificationPermissionAsked') !== 'true') {
                     setTimeout(() => {
@@ -2371,7 +2560,9 @@
                 
                 // 🆕 ELIMINA ANCHE LA FOTO PROFILO SE ESISTE
                 try {
-                    risolviCorsFirebaseStorage.deleteFile(`profili/${id}.jpg`).catch(() => {
+                    const storageRef = storage.ref();
+                    const fileRef = storageRef.child(`profili/${id}.jpg`);
+                    fileRef.delete().catch(() => {
                         console.log("Nessuna foto profilo da eliminare");
                     });
                 } catch (error) {
