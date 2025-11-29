@@ -670,7 +670,6 @@
             text-align: left;
         }
 
-        /* NUOVO STILE PER TEXTAREA PIÙ GRANDE */
         .pagella-textarea {
             width: 100%;
             padding: 12px;
@@ -684,7 +683,6 @@
             font-family: inherit;
         }
 
-        /* 🏆 NUOVI STILI PER MVP ILLUMINATO */
         .mvp-glow {
             position: relative;
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 193, 7, 0.25) 100%) !important;
@@ -745,7 +743,6 @@
             100% { transform: rotate(0deg) scale(1); }
         }
 
-        /* 🏆 STILI PER VINCITE NEL CALENDARIO */
         .risultato-partita {
             margin: 10px 0;
             padding: 12px;
@@ -816,7 +813,6 @@
         .badge-sconfitta { background: #F44336; color: white; }
         .badge-pareggio { background: #FFC107; color: black; }
 
-        /* 🏆 BADGE COPPA PER GIOCATORI VINCENTI */
         .badge-coppa {
             background: linear-gradient(135deg, #FFD700 0%, #FFC107 100%);
             color: black;
@@ -829,7 +825,7 @@
             box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
         }
 
-        /* 🆕 STILI PER FOTO PROFILO */
+        /* 🆕 SISTEMA FOTO COMPLETAMENTE RISCRITTO */
         .foto-profilo-container {
             position: relative;
             display: inline-block;
@@ -895,7 +891,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.95);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -905,46 +901,55 @@
 
         .modal-foto-content {
             background: #1a1a2e;
-            padding: 30px;
+            padding: 25px;
             border-radius: 15px;
-            max-width: 500px;
-            width: 100%;
+            max-width: 90%;
+            width: 400px;
             text-align: center;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .modal-foto-actions {
             display: flex;
-            gap: 15px;
-            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
             margin-top: 20px;
-            flex-wrap: wrap;
         }
 
         .btn-foto {
-            padding: 12px 20px;
+            padding: 15px 20px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
             color: white;
-            flex: 1;
-            min-width: 120px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-foto:active {
+            transform: scale(0.98);
         }
 
         .btn-foto.scatta {
-            background: #2196F3;
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
         }
 
         .btn-foto.carica {
-            background: #4CAF50;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
         }
 
         .btn-foto.annulla {
-            background: #F44336;
+            background: linear-gradient(135deg, #F44336 0%, #d32f2f 100%);
         }
 
         .btn-foto.rimuovi {
-            background: #FF9800;
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
         }
 
         .anteprima-foto {
@@ -965,6 +970,7 @@
             border-radius: 10px;
             margin: 15px auto;
             display: none;
+            transform: scaleX(-1);
         }
 
         .controlli-camera {
@@ -972,6 +978,54 @@
             gap: 10px;
             justify-content: center;
             margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-camera {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-camera.scatta {
+            background: #4CAF50;
+        }
+
+        .btn-camera.annulla {
+            background: #F44336;
+        }
+
+        .input-file-hidden {
+            display: none;
+        }
+
+        .foto-istruzioni {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin: 10px 0;
+            line-height: 1.4;
+        }
+
+        .foto-loading {
+            display: none;
+            text-align: center;
+            color: #4CAF50;
+            margin: 10px 0;
+        }
+
+        .foto-error {
+            display: none;
+            text-align: center;
+            color: #F44336;
+            margin: 10px 0;
+            background: rgba(244, 67, 54, 0.1);
+            padding: 10px;
+            border-radius: 8px;
         }
 
         .btn-rimuovi-mvp {
@@ -1077,17 +1131,14 @@
                 min-width: 150px;
             }
 
-            /* TEXTAREA PIÙ GRANDE SU DESKTOP */
             .pagella-textarea {
                 min-height: 120px;
             }
 
-            /* MVP GLOW DESKTOP */
             .mvp-glow {
                 animation: mvpPulse 2s ease-in-out infinite alternate;
             }
 
-            /* FOTO PROFILO DESKTOP */
             .foto-profilo {
                 width: 60px;
                 height: 60px;
@@ -1105,6 +1156,16 @@
                 height: 100px;
                 font-size: 2.5rem;
             }
+
+            .modal-foto-actions {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .btn-foto {
+                flex: 1;
+                min-width: 140px;
+            }
         }
     </style>
 </head>
@@ -1112,7 +1173,6 @@
     <div id="root"></div>
     
     <script>
-        // SERVICE WORKER MIGLIORATO per notifiche push
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(registration => {
@@ -1122,7 +1182,6 @@
                 .catch(error => console.log('SW registration failed'));
         }
         
-        // Richiedi permesso notifiche MIGLIORATO
         function requestNotificationPermission() {
             if ("Notification" in window) {
                 Notification.requestPermission().then(permission => {
@@ -1143,7 +1202,6 @@
             }
         }
         
-        // Mostra notifica push MIGLIORATO - SEMPRE VISIBILE
         function showPushNotification(title, message, tag = 'arena-cup') {
             console.log(`🔔 Tentativo notifica: ${title} - ${message}`);
             
@@ -1179,7 +1237,6 @@
                 console.log("❌ Permesso notifiche non garantito");
             }
             
-            // FALLBACK CON PUSH.JS
             if (typeof Push !== 'undefined') {
                 try {
                     Push.create(title, {
@@ -1200,14 +1257,12 @@
             playNotificationSound();
         }
         
-        // Vibrazione (solo mobile)
         function vibrate() {
             if (navigator.vibrate) {
                 navigator.vibrate([100, 50, 100]);
             }
         }
         
-        // 🎵 NOTIFICA SONORA MIGLIORATA
         function playNotificationSound() {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1231,7 +1286,6 @@
             }
         }
         
-        // 🔔 FORZA RICHIESTA PERMESSI NOTIFICHE AL CARICAMENTO
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 if ("Notification" in window && Notification.permission === "default") {
@@ -1244,7 +1298,6 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // 🛠️ AGGIUNTA: DEFINIZIONE DELLE COSTANTI MANCANTI
         const ADMIN_PASSWORD = "giulia85";
         const FABRIZIO_PASSWORD = "manetta2025";
 
@@ -1262,275 +1315,21 @@
         const database = firebase.database();
         const storage = firebase.storage();
 
-        // 🆕 SISTEMA UPLOAD OTTIMIZZATO PER MOBILE
-        const sistemaUploadMobile = {
-            // 🆕 FUNZIONE UPLOAD OTTIMIZZATA PER MOBILE (iOS/Android)
-            async uploadFileMobile(file, fileName) {
-                return new Promise((resolve, reject) => {
-                    try {
-                        console.log(`📤 Inizio upload file: ${fileName}, dimensione: ${file.size} bytes`);
-                        
-                        // 🔧 OTTIMIZZAZIONE PER MOBILE: riduci dimensioni immagine
-                        this.ottimizzaImmaginePerMobile(file).then(optimizedFile => {
-                            const storageRef = storage.ref();
-                            const fileRef = storageRef.child(`profili/${fileName}`);
-                            
-                            const metadata = {
-                                contentType: optimizedFile.type,
-                                cacheControl: 'public, max-age=31536000',
-                                customMetadata: {
-                                    'uploadedBy': this.getCurrentUserName(),
-                                    'uploadedAt': new Date().toISOString(),
-                                    'originalSize': file.size.toString(),
-                                    'optimizedSize': optimizedFile.size.toString(),
-                                    'platform': navigator.userAgent
-                                }
-                            };
-
-                            // ⏱️ Timeout per iOS (problemi di background)
-                            const uploadTimeout = setTimeout(() => {
-                                uploadTask.cancel();
-                                reject(new Error('❌ Upload timeout - connessione troppo lenta'));
-                            }, 45000); // 45 secondi per mobile
-
-                            const uploadTask = fileRef.put(optimizedFile, metadata);
-
-                            uploadTask.on('state_changed',
-                                (snapshot) => {
-                                    // Reset timeout ad ogni progresso
-                                    clearTimeout(uploadTimeout);
-                                    
-                                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                                    console.log(`📤 Upload progress: ${progress.toFixed(1)}%`);
-                                    
-                                    // 🔧 MANTIENI ATTIVA LA CONNESSIONE SU iOS
-                                    if (progress < 100) {
-                                        setTimeout(() => {
-                                            clearTimeout(uploadTimeout);
-                                        }, 40000);
-                                    }
-                                },
-                                (error) => {
-                                    clearTimeout(uploadTimeout);
-                                    console.error('❌ Errore upload:', error);
-                                    
-                                    // GESTIONE ERRORI SPECIFICI MOBILE
-                                    switch(error.code) {
-                                        case 'storage/retry-limit-exceeded':
-                                            reject(new Error('❌ Connessione instabile. Riprova con rete migliore'));
-                                            break;
-                                        case 'storage/canceled':
-                                            reject(new Error('❌ Upload cancellato'));
-                                            break;
-                                        case 'storage/unknown':
-                                            reject(new Error('❌ Errore sconosciuto. Riprova'));
-                                            break;
-                                        default:
-                                            reject(new Error(`❌ Errore upload: ${error.message}`));
-                                    }
-                                },
-                                async () => {
-                                    clearTimeout(uploadTimeout);
-                                    try {
-                                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                                        console.log('✅ Upload completato con successo:', downloadURL);
-                                        resolve(downloadURL);
-                                    } catch (urlError) {
-                                        console.error('❌ Errore recupero URL:', urlError);
-                                        reject(new Error('❌ Errore nel recupero del file'));
-                                    }
-                                }
-                            );
-                        }).catch(error => {
-                            reject(new Error(`❌ Errore ottimizzazione immagine: ${error.message}`));
-                        });
-                        
-                    } catch (error) {
-                        console.error('❌ Errore iniziale upload:', error);
-                        reject(new Error(`❌ Impossibile avviare l'upload: ${error.message}`));
-                    }
-                });
-            },
-
-            // 🆕 OTTIMIZZAZIONE IMMAGINE PER MOBILE
-            async ottimizzaImmaginePerMobile(file) {
-                return new Promise((resolve, reject) => {
-                    // Se non è un'immagine, restituisci il file originale
-                    if (!file.type.startsWith('image/')) {
-                        resolve(file);
-                        return;
-                    }
-
-                    // Limite dimensioni per mobile (1MB)
-                    const MAX_SIZE = 1024 * 1024;
-                    if (file.size <= MAX_SIZE) {
-                        resolve(file);
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const img = new Image();
-                        img.onload = function() {
-                            const canvas = document.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
-                            
-                            // Calcola nuove dimensioni (max 800px lato maggiore)
-                            let width = img.width;
-                            let height = img.height;
-                            
-                            if (width > height && width > 800) {
-                                height = (height * 800) / width;
-                                width = 800;
-                            } else if (height > 800) {
-                                width = (width * 800) / height;
-                                height = 800;
-                            }
-                            
-                            canvas.width = width;
-                            canvas.height = height;
-                            
-                            // Disegna l'immagine ridimensionata
-                            ctx.drawImage(img, 0, 0, width, height);
-                            
-                            // Converti in blob con qualità ridotta
-                            canvas.toBlob((blob) => {
-                                const optimizedFile = new File([blob], file.name, {
-                                    type: 'image/jpeg',
-                                    lastModified: Date.now()
-                                });
-                                
-                                console.log(`🔄 Immagine ottimizzata: ${file.size} -> ${optimizedFile.size} bytes`);
-                                resolve(optimizedFile);
-                            }, 'image/jpeg', 0.7); // 70% qualità
-                        };
-                        
-                        img.onerror = () => {
-                            console.warn('⚠️ Errore caricamento immagine, uso file originale');
-                            resolve(file);
-                        };
-                        
-                        img.src = e.target.result;
-                    };
-                    
-                    reader.onerror = () => {
-                        console.warn('⚠️ Errore lettura file, uso file originale');
-                        resolve(file);
-                    };
-                    
-                    reader.readAsDataURL(file);
-                });
-            },
-
-            // 🆕 GESTIONE PERMESSI CAMERA MIGLIORATA
-            async richiediPermessoCamera() {
-                try {
-                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                        throw new Error('Camera non supportata su questo dispositivo');
-                    }
-
-                    // 🔧 PRIMA VERIFICA I PERMESSI
-                    if (navigator.permissions) {
-                        try {
-                            const cameraPermission = await navigator.permissions.query({ name: 'camera' });
-                            if (cameraPermission.state === 'denied') {
-                                throw new Error('Permesso camera negato. Abilitalo nelle impostazioni del browser');
-                            }
-                        } catch (e) {
-                            console.log('⚠️ API Permissions non supportata');
-                        }
-                    }
-
-                    // 🔧 RICHIESTA CAMERA CON GESTIONE ERRORI DETTAGLIATA
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { 
-                            facingMode: 'user',
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 }
-                        },
-                        audio: false
-                    });
-
-                    console.log('✅ Permesso camera ottenuto con successo');
-                    return stream;
-
-                } catch (error) {
-                    console.error('❌ Errore accesso camera:', error);
-                    
-                    // GESTIONE ERRORI DETTAGLIATA
-                    let errorMessage = 'Impossibile accedere alla fotocamera. ';
-                    
-                    if (error.name === 'NotAllowedError') {
-                        errorMessage += 'Permesso negato. Controlla le impostazioni del browser e consenti l\'accesso alla camera.';
-                    } else if (error.name === 'NotFoundError') {
-                        errorMessage += 'Nessuna fotocamera trovata sul dispositivo.';
-                    } else if (error.name === 'NotSupportedError') {
-                        errorMessage += 'Browser non supportato per l\'accesso alla camera.';
-                    } else if (error.name === 'NotReadableError') {
-                        errorMessage += 'La fotocamera è già in uso da un\'altra applicazione.';
-                    } else {
-                        errorMessage += `Errore: ${error.message}`;
-                    }
-                    
-                    throw new Error(errorMessage);
-                }
-            },
-
-            // 🆕 FUNZIONE SCATTA FOTO OTTIMIZZATA
-            scattaFoto(videoElement, canvasElement) {
-                return new Promise((resolve) => {
-                    const video = videoElement;
-                    const canvas = canvasElement;
-                    const context = canvas.getContext('2d');
-                    
-                    // Imposta dimensioni canvas uguali al video
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    
-                    // Disegna il frame corrente
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                    // Converti in base64 (qualità ridotta per mobile)
-                    const fotoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                    resolve(fotoDataUrl);
-                    
-                    console.log('📸 Foto scattata con successo');
-                });
-            },
-
-            // 🆕 FUNZIONE PER OTTENERE NOME UTENTE CORRENTE
-            getCurrentUserName() {
-                const username = localStorage.getItem("username") || "Utente";
-                if (username === "admin" || username === "vitantonio") return "Vitantonio";
-                if (username === "fabrizio") return "Fabrizio";
-                return username;
-            },
-
-            // 🆕 VERIFICA SUPPORTO MOBILE
-            verificaSupportoMobile() {
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                const isAndroid = /Android/.test(navigator.userAgent);
-                const isMobile = isIOS || isAndroid;
-                
-                console.log(`📱 Dispositivo: ${isIOS ? 'iOS' : isAndroid ? 'Android' : 'Desktop'}`);
-                return { isMobile, isIOS, isAndroid };
-            }
-        };
-
-        // 🆕 COMPONENTE GESTIONE FOTO PROFILO OTTIMIZZATO PER MOBILE - VERSIONE CORRETTA
+        // 🆕 COMPONENTE FOTO PROFILO COMPLETAMENTE RISCRITTO
         const FotoProfiloManager = ({ giocatore, onFotoCambiata, size = "medium" }) => {
             const [showModal, setShowModal] = useState(false);
             const [fotoSelezionata, setFotoSelezionata] = useState(null);
             const [anteprimaFoto, setAnteprimaFoto] = useState(null);
             const [modalitaCamera, setModalitaCamera] = useState(false);
-            const [caricamento, setCaricamento] = useState(false);
-            const [errore, setErrore] = useState(null);
+            const [isLoading, setIsLoading] = useState(false);
+            const [error, setError] = useState(null);
             const [fotoUrl, setFotoUrl] = useState(null);
             
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
             const streamRef = useRef(null);
             const fileInputRef = useRef(null);
+            const cameraFileInputRef = useRef(null);
 
             const dimensioni = {
                 small: "foto-profilo-small",
@@ -1540,16 +1339,11 @@
 
             const classeDimensione = dimensioni[size] || dimensioni.medium;
 
-            // 🆕 CARICA FOTO PROFILO
             const caricaFotoProfilo = async () => {
                 try {
-                    const storageRef = storage.ref();
-                    const fileRef = storageRef.child(`profili/${giocatore.id}.jpg`);
-                    
-                    const url = await fileRef.getDownloadURL();
-                    return url;
+                    const fotoUrl = await storage.ref(`profili/${giocatore.id}.jpg`).getDownloadURL();
+                    return fotoUrl;
                 } catch (error) {
-                    console.log('ℹ️ Nessuna foto profilo trovata:', error.message);
                     return null;
                 }
             };
@@ -1558,212 +1352,245 @@
                 caricaFotoProfilo().then(url => setFotoUrl(url));
             }, [giocatore.id]);
 
-            // 🆕 INIZIALIZZA FOTOCAMERA OTTIMIZZATA
             const inizializzaCamera = async () => {
                 try {
-                    setErrore(null);
-                    console.log('📷 Inizializzazione camera...');
+                    setError(null);
                     
-                    const stream = await sistemaUploadMobile.richiediPermessoCamera();
+                    if (streamRef.current) {
+                        streamRef.current.getTracks().forEach(track => track.stop());
+                    }
+
+                    const constraints = {
+                        video: {
+                            facingMode: 'user',
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
+                        audio: false
+                    };
+
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
                     streamRef.current = stream;
                     
                     if (videoRef.current) {
                         videoRef.current.srcObject = stream;
-                        // 🔧 ATTENDI CHE IL VIDEO SIA PRONTO
-                        await new Promise((resolve) => {
-                            if (videoRef.current) {
-                                videoRef.current.onloadedmetadata = () => {
-                                    videoRef.current.play().then(() => {
-                                        console.log('✅ Video camera avviato');
-                                        resolve();
-                                    }).catch(e => {
-                                        console.warn('⚠️ Errore play video:', e);
-                                        resolve(); // Continua comunque
-                                    });
-                                };
-                                
-                                // Timeout di sicurezza
-                                setTimeout(resolve, 3000);
-                            } else {
-                                resolve();
-                            }
-                        });
+                        videoRef.current.onloadedmetadata = () => {
+                            videoRef.current.play();
+                        };
                     }
                     
                     setModalitaCamera(true);
-                    console.log('✅ Camera inizializzata con successo');
-                    
                 } catch (error) {
-                    console.error('❌ Errore inizializzazione camera:', error);
-                    setErrore(error.message);
-                    setModalitaCamera(false);
+                    console.error("Errore accesso camera:", error);
+                    setError("Impossibile accedere alla fotocamera. Controlla i permessi del browser.");
+                    if (cameraFileInputRef.current) {
+                        cameraFileInputRef.current.click();
+                    }
                 }
             };
 
-            // 🆕 SCATTA FOTO OTTIMIZZATA
-            const scattaFoto = async () => {
-                if (!videoRef.current || !canvasRef.current) {
-                    setErrore('Camera non inizializzata correttamente');
-                    return;
-                }
-
+            const scattaFoto = () => {
                 try {
-                    const fotoDataUrl = await sistemaUploadMobile.scattaFoto(videoRef.current, canvasRef.current);
+                    const video = videoRef.current;
+                    const canvas = canvasRef.current;
+                    
+                    if (!video || !canvas) {
+                        throw new Error("Elementi camera non disponibili");
+                    }
+
+                    const context = canvas.getContext('2d');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const fotoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
                     setAnteprimaFoto(fotoDataUrl);
                     setFotoSelezionata(fotoDataUrl);
                     setModalitaCamera(false);
                     
-                    // Ferma lo stream della camera
                     if (streamRef.current) {
                         streamRef.current.getTracks().forEach(track => track.stop());
                         streamRef.current = null;
                     }
-                    
-                    console.log('✅ Foto scattata con successo');
                 } catch (error) {
-                    console.error('❌ Errore scatto foto:', error);
-                    setErrore('Errore durante lo scatto della foto');
+                    console.error("Errore scatto foto:", error);
+                    setError("Errore durante lo scatto della foto");
                 }
             };
 
-            // 🆕 CARICA FOTO DA DISPOSITIVO
             const gestisciCaricamentoFoto = (event) => {
                 const file = event.target.files[0];
-                if (file) {
-                    setErrore(null);
-                    
-                    // Verifica tipo file
-                    if (!file.type.startsWith('image/')) {
-                        setErrore('❌ Seleziona solo file immagine (JPEG, PNG, etc.)');
-                        return;
-                    }
+                if (!file) return;
 
-                    // Verifica dimensione file (max 10MB)
-                    if (file.size > 10 * 1024 * 1024) {
-                        setErrore("❌ Il file è troppo grande! Dimensione massima: 10MB");
-                        return;
-                    }
-                    
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        setAnteprimaFoto(e.target.result);
-                        setFotoSelezionata(e.target.result);
-                        setModalitaCamera(false);
-                    };
-                    reader.onerror = () => {
-                        setErrore('❌ Errore durante la lettura del file');
-                    };
-                    reader.readAsDataURL(file);
+                if (!file.type.startsWith('image/')) {
+                    setError("Seleziona un file immagine valido");
+                    return;
                 }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    setError("L'immagine è troppo grande (max 5MB)");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setAnteprimaFoto(e.target.result);
+                    setFotoSelezionata(e.target.result);
+                    setError(null);
+                };
+                reader.onerror = () => {
+                    setError("Errore nella lettura del file");
+                };
+                reader.readAsDataURL(file);
+                
+                event.target.value = '';
             };
 
-            // 🆕 SALVA FOTO OTTIMIZZATA PER MOBILE
             const salvaFoto = async () => {
                 if (!fotoSelezionata) {
-                    setErrore('❌ Nessuna foto selezionata');
+                    setError("Nessuna foto selezionata");
                     return;
                 }
                 
-                setCaricamento(true);
-                setErrore(null);
-                
+                setIsLoading(true);
+                setError(null);
+
                 try {
-                    // Converti base64 in blob
                     const response = await fetch(fotoSelezionata);
                     const blob = await response.blob();
                     
-                    console.log(`💾 Inizio salvataggio foto per ${giocatore.nome}`);
-                    
-                    // Upload su Firebase Storage con sistema ottimizzato
-                    const downloadURL = await sistemaUploadMobile.uploadFileMobile(
-                        blob, 
-                        `${giocatore.id}.jpg`
-                    );
-                    
-                    setFotoUrl(downloadURL);
-                    setShowModal(false);
-                    setFotoSelezionata(null);
-                    setAnteprimaFoto(null);
-                    setCaricamento(false);
-                    setErrore(null);
-                    
-                    // Aggiorna URL foto nel database giocatore
-                    await database.ref(`giocatori/${giocatore.id}`).update({
-                        foto_profilo: downloadURL,
-                        foto_aggiornata_il: new Date().toISOString()
+                    const fileRef = storage.ref(`profili/${giocatore.id}.jpg`);
+                    const uploadTask = fileRef.put(blob, {
+                        customMetadata: {
+                            'uploadedBy': giocatore.nome,
+                            'uploadedAt': new Date().toISOString()
+                        }
                     });
                     
-                    if (onFotoCambiata) {
-                        onFotoCambiata(downloadURL);
-                    }
-                    
-                    console.log('✅ Foto profilo aggiornata con successo!');
-                    alert("✅ Foto profilo aggiornata con successo!");
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            console.log(`Upload: ${progress}%`);
+                        },
+                        (error) => {
+                            console.error("Errore upload:", error);
+                            setError("Errore nel salvataggio della foto");
+                            setIsLoading(false);
+                        },
+                        async () => {
+                            try {
+                                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                                setFotoUrl(downloadURL);
+                                
+                                await database.ref(`giocatori/${giocatore.id}`).update({
+                                    foto_profilo: downloadURL,
+                                    foto_aggiornata_il: new Date().toLocaleString('it-IT')
+                                });
+                                
+                                chiudiModal();
+                                
+                                if (onFotoCambiata) {
+                                    onFotoCambiata(downloadURL);
+                                }
+                                
+                                alert("✅ Foto profilo aggiornata con successo!");
+                                
+                            } catch (error) {
+                                console.error("Errore aggiornamento database:", error);
+                                setError("Errore nell'aggiornamento del profilo");
+                            } finally {
+                                setIsLoading(false);
+                            }
+                        }
+                    );
                     
                 } catch (error) {
-                    console.error("❌ Errore salvataggio foto:", error);
-                    setErrore(`❌ Errore nel salvataggio: ${error.message}`);
-                    setCaricamento(false);
+                    console.error("Errore salvataggio foto:", error);
+                    setError("Errore nel salvataggio della foto");
+                    setIsLoading(false);
                 }
             };
 
-            // 🆕 RIMUOVI FOTO
             const rimuoviFoto = async () => {
-                if (!confirm("Sei sicuro di voler rimuovere la foto profilo?")) return;
-                
+                if (!confirm("Sei sicuro di voler rimuovere la foto profilo?")) {
+                    return;
+                }
+
+                setIsLoading(true);
+                setError(null);
+
                 try {
-                    const storageRef = storage.ref();
-                    const fileRef = storageRef.child(`profili/${giocatore.id}.jpg`);
+                    await storage.ref(`profili/${giocatore.id}.jpg`).delete();
                     
-                    await fileRef.delete();
-                    
-                    // Elimina riferimento dal database
                     await database.ref(`giocatori/${giocatore.id}`).update({
                         foto_profilo: null,
                         foto_aggiornata_il: null
                     });
                     
                     setFotoUrl(null);
-                    setShowModal(false);
-                    setErrore(null);
+                    chiudiModal();
                     
                     if (onFotoCambiata) {
                         onFotoCambiata(null);
                     }
                     
                     alert("✅ Foto profilo rimossa!");
+                    
                 } catch (error) {
-                    console.error("❌ Errore rimozione foto:", error);
-                    setErrore(`❌ Errore nella rimozione: ${error.message}`);
+                    console.error("Errore rimozione foto:", error);
+                    if (error.code === 'storage/object-not-found') {
+                        await database.ref(`giocatori/${giocatore.id}`).update({
+                            foto_profilo: null,
+                            foto_aggiornata_il: null
+                        });
+                        setFotoUrl(null);
+                        chiudiModal();
+                        alert("✅ Foto profilo rimossa!");
+                    } else {
+                        setError("Errore nella rimozione della foto");
+                    }
+                } finally {
+                    setIsLoading(false);
                 }
             };
 
-            // 🆕 CHIUDI MODAL E PULISCI
             const chiudiModal = () => {
-                setShowModal(false);
-                setFotoSelezionata(null);
-                setAnteprimaFoto(null);
-                setModalitaCamera(false);
-                setCaricamento(false);
-                setErrore(null);
-                
-                // Ferma lo stream della camera se attivo
                 if (streamRef.current) {
                     streamRef.current.getTracks().forEach(track => track.stop());
                     streamRef.current = null;
                 }
+                
+                setShowModal(false);
+                setModalitaCamera(false);
+                setFotoSelezionata(null);
+                setAnteprimaFoto(null);
+                setError(null);
+                setIsLoading(false);
             };
 
-            // 🆕 EFFETTUA TEST CAMERA
-            const testCamera = async () => {
-                try {
-                    setErrore(null);
-                    await sistemaUploadMobile.richiediPermessoCamera();
-                    alert('✅ Camera funzionante correttamente!');
-                } catch (error) {
-                    setErrore(error.message);
+            const apriCameraFallback = () => {
+                if (cameraFileInputRef.current) {
+                    cameraFileInputRef.current.accept = 'image/*';
+                    cameraFileInputRef.current.capture = 'camera';
+                    cameraFileInputRef.current.click();
                 }
             };
+
+            const apriGalleria = () => {
+                if (fileInputRef.current) {
+                    fileInputRef.current.accept = 'image/*';
+                    fileInputRef.current.removeAttribute('capture');
+                    fileInputRef.current.click();
+                }
+            };
+
+            useEffect(() => {
+                return () => {
+                    if (streamRef.current) {
+                        streamRef.current.getTracks().forEach(track => track.stop());
+                    }
+                };
+            }, []);
 
             return (
                 <div className="foto-profilo-container">
@@ -1774,89 +1601,48 @@
                             className={`${classeDimensione} foto-profilo`}
                             onClick={() => setShowModal(true)}
                             style={{ cursor: 'pointer' }}
-                            onError={(e) => {
-                                // Fallback se l'immagine non carica
-                                e.target.style.display = 'none';
-                            }}
+                            onError={() => setFotoUrl(null)}
                         />
-                    ) : null}
-                    
-                    <div 
-                        className={`${classeDimensione} foto-profilo foto-profilo-placeholder`}
-                        onClick={() => setShowModal(true)}
-                        style={{ 
-                            cursor: 'pointer',
-                            display: fotoUrl ? 'none' : 'flex'
-                        }}
-                    >
-                        {giocatore.nome.charAt(0).toUpperCase()}
-                    </div>
+                    ) : (
+                        <div 
+                            className={`${classeDimensione} foto-profilo foto-profilo-placeholder`}
+                            onClick={() => setShowModal(true)}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {giocatore.nome.charAt(0).toUpperCase()}
+                        </div>
+                    )}
                     
                     <button 
                         className="aggiungi-foto-btn"
                         onClick={() => setShowModal(true)}
                         title="Cambia foto profilo"
                     >
-                        {fotoUrl ? '✏️' : '📷'}
+                        📷
                     </button>
 
-                    {/* MODAL GESTIONE FOTO OTTIMIZZATO */}
                     {showModal && (
                         <div className="modal-foto">
                             <div className="modal-foto-content">
-                                <h3>📷 Foto Profilo di {giocatore.nome}</h3>
+                                <h3 style={{ marginBottom: '15px', color: '#4CAF50' }}>
+                                    📷 Foto Profilo di {giocatore.nome}
+                                </h3>
                                 
-                                {/* MESSAGGIO ERRORE */}
-                                {errore && (
-                                    <div style={{ 
-                                        background: 'rgba(244, 67, 54, 0.2)',
-                                        color: '#ff6b6b',
-                                        padding: '12px',
-                                        borderRadius: '8px',
-                                        margin: '10px 0',
-                                        border: '1px solid rgba(244, 67, 54, 0.5)'
-                                    }}>
-                                        <strong>❌ Errore:</strong> {errore}
-                                        <br />
-                                        <button 
-                                            onClick={testCamera}
-                                            style={{
-                                                background: 'transparent',
-                                                color: '#ff6b6b',
-                                                border: '1px solid #ff6b6b',
-                                                padding: '5px 10px',
-                                                borderRadius: '4px',
-                                                marginTop: '8px',
-                                                fontSize: '0.8rem'
-                                            }}
-                                        >
-                                            Test Camera
-                                        </button>
+                                {error && (
+                                    <div className="foto-error" style={{ display: 'block' }}>
+                                        ❌ {error}
                                     </div>
                                 )}
                                 
-                                {/* STATO CARICAMENTO */}
-                                {caricamento && (
-                                    <div style={{ 
-                                        textAlign: 'center', 
-                                        padding: '20px',
-                                        background: 'rgba(255,255,255,0.1)',
-                                        borderRadius: '10px',
-                                        margin: '10px 0'
-                                    }}>
-                                        <div style={{ fontSize: '1.2rem', marginBottom: '10px' }}>⏳ Caricamento in corso...</div>
-                                        <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                                            Attendere il completamento dell'upload
-                                            <br />
-                                            <small>Non chiudere la pagina</small>
-                                        </div>
+                                {isLoading && (
+                                    <div className="foto-loading" style={{ display: 'block' }}>
+                                        ⏳ Salvataggio in corso...
                                     </div>
                                 )}
-                                
-                                {/* ANTEPRIMA FOTO ESISTENTE */}
-                                {fotoUrl && !anteprimaFoto && !caricamento && (
+
+                                {fotoUrl && !anteprimaFoto && !modalitaCamera && (
                                     <div style={{ textAlign: 'center', margin: '15px 0' }}>
-                                        <p>Foto attuale:</p>
+                                        <p style={{ marginBottom: '10px', color: '#ccc' }}>Foto attuale:</p>
                                         <img 
                                             src={fotoUrl} 
                                             alt="Foto attuale"
@@ -1866,7 +1652,6 @@
                                     </div>
                                 )}
                                 
-                                {/* VIDEO CAMERA */}
                                 {modalitaCamera && (
                                     <>
                                         <video 
@@ -1879,20 +1664,14 @@
                                         />
                                         <div className="controlli-camera">
                                             <button 
-                                                className="btn-foto scatta"
+                                                className="btn-camera scatta"
                                                 onClick={scattaFoto}
                                             >
                                                 📸 Scatta Foto
                                             </button>
                                             <button 
-                                                className="btn-foto annulla"
-                                                onClick={() => {
-                                                    setModalitaCamera(false);
-                                                    if (streamRef.current) {
-                                                        streamRef.current.getTracks().forEach(track => track.stop());
-                                                        streamRef.current = null;
-                                                    }
-                                                }}
+                                                className="btn-camera annulla"
+                                                onClick={() => setModalitaCamera(false)}
                                             >
                                                 ❌ Annulla
                                             </button>
@@ -1900,115 +1679,124 @@
                                     </>
                                 )}
                                 
-                                {/* ANTEPRIMA NUOVA FOTO */}
-                                {anteprimaFoto && !caricamento && (
-                                    <div style={{ textAlign: 'center' }}>
-                                        <p>Anteprima nuova foto:</p>
+                                {anteprimaFoto && (
+                                    <>
+                                        <p style={{ color: '#4CAF50', marginBottom: '10px' }}>Anteprima nuova foto:</p>
                                         <img 
                                             src={anteprimaFoto} 
                                             alt="Anteprima nuova foto"
                                             className="anteprima-foto"
                                             style={{ display: 'block' }}
                                         />
-                                    </div>
+                                    </>
                                 )}
                                 
-                                {/* CANVAS NASCOSTO PER SCATTARE FOTO */}
                                 <canvas ref={canvasRef} style={{ display: 'none' }} />
                                 
-                                {/* INPUT FILE NASCOSTO */}
                                 <input 
                                     type="file"
                                     ref={fileInputRef}
                                     accept="image/*"
                                     onChange={gestisciCaricamentoFoto}
-                                    style={{ display: 'none' }}
+                                    className="input-file-hidden"
                                 />
                                 
-                                {/* AZIONI */}
-                                {!caricamento && (
-                                    <div className="modal-foto-actions">
-                                        {!modalitaCamera && !anteprimaFoto && (
-                                            <>
-                                                <button 
-                                                    className="btn-foto scatta"
-                                                    onClick={inizializzaCamera}
-                                                    disabled={caricamento}
-                                                >
-                                                    📸 Scatta Foto
-                                                </button>
-                                                <button 
-                                                    className="btn-foto carica"
-                                                    onClick={() => fileInputRef.current?.click()}
-                                                    disabled={caricamento}
-                                                >
-                                                    📁 Carica da Device
-                                                </button>
-                                            </>
-                                        )}
-                                        
-                                        {anteprimaFoto && (
-                                            <>
-                                                <button 
-                                                    className="btn-foto carica"
-                                                    onClick={salvaFoto}
-                                                    disabled={caricamento}
-                                                >
-                                                    {caricamento ? '⏳ Salvataggio...' : '💾 Salva Foto'}
-                                                </button>
-                                                <button 
-                                                    className="btn-foto annulla"
-                                                    onClick={() => {
-                                                        setAnteprimaFoto(null);
-                                                        setFotoSelezionata(null);
-                                                        setErrore(null);
-                                                    }}
-                                                    disabled={caricamento}
-                                                >
-                                                    🔄 Riprova
-                                                </button>
-                                            </>
-                                        )}
-                                        
-                                        {fotoUrl && (
-                                            <button 
-                                                className="btn-foto rimuovi"
-                                                onClick={rimuoviFoto}
-                                                disabled={caricamento}
-                                            >
-                                                🗑️ Rimuovi Foto
-                                            </button>
-                                        )}
-                                        
-                                        <button 
-                                            className="btn-foto annulla"
-                                            onClick={chiudiModal}
-                                            disabled={caricamento}
-                                        >
-                                            ❌ Chiudi
-                                        </button>
+                                <input 
+                                    type="file"
+                                    ref={cameraFileInputRef}
+                                    accept="image/*"
+                                    capture="camera"
+                                    onChange={gestisciCaricamentoFoto}
+                                    className="input-file-hidden"
+                                />
+                                
+                                {!modalitaCamera && !anteprimaFoto && (
+                                    <div className="foto-istruzioni">
+                                        Scegli come aggiungere o modificare la tua foto profilo
                                     </div>
                                 )}
                                 
-                                {/* INFORMAZIONI MOBILE */}
-                                <div style={{ 
-                                    marginTop: '15px', 
-                                    padding: '10px', 
-                                    background: 'rgba(255,255,255,0.05)', 
-                                    borderRadius: '8px',
-                                    fontSize: '0.8rem',
-                                    color: '#ccc'
-                                }}>
-                                    <strong>📱 Informazioni Mobile:</strong>
-                                    <br />
-                                    • Supporto per iOS e Android
-                                    <br />
-                                    • Upload ottimizzato per reti lente
-                                    <br />
-                                    • Dimensione massima: 10MB
-                                    <br />
-                                    • Formati: JPEG, PNG, WebP
+                                <div className="modal-foto-actions">
+                                    {!modalitaCamera && !anteprimaFoto && (
+                                        <>
+                                            <button 
+                                                className="btn-foto scatta"
+                                                onClick={inizializzaCamera}
+                                            >
+                                                📸 Scatta Foto
+                                            </button>
+                                            <button 
+                                                className="btn-foto carica"
+                                                onClick={apriGalleria}
+                                            >
+                                                📁 Scegli dalla Galleria
+                                            </button>
+                                        </>
+                                    )}
+                                    
+                                    {anteprimaFoto && (
+                                        <>
+                                            <button 
+                                                className="btn-foto carica"
+                                                onClick={salvaFoto}
+                                                disabled={isLoading}
+                                            >
+                                                {isLoading ? '⏳ Salvataggio...' : '💾 Salva Foto'}
+                                            </button>
+                                            <button 
+                                                className="btn-foto annulla"
+                                                onClick={() => {
+                                                    setAnteprimaFoto(null);
+                                                    setFotoSelezionata(null);
+                                                    setError(null);
+                                                }}
+                                                disabled={isLoading}
+                                            >
+                                                🔄 Scatta di nuovo
+                                            </button>
+                                        </>
+                                    )}
+                                    
+                                    {fotoUrl && (
+                                        <button 
+                                            className="btn-foto rimuovi"
+                                            onClick={rimuoviFoto}
+                                            disabled={isLoading}
+                                        >
+                                            🗑️ Rimuovi Foto
+                                        </button>
+                                    )}
+                                    
+                                    <button 
+                                        className="btn-foto annulla"
+                                        onClick={chiudiModal}
+                                        disabled={isLoading}
+                                    >
+                                        ❌ Chiudi
+                                    </button>
                                 </div>
+
+                                {!modalitaCamera && !anteprimaFoto && (
+                                    <div style={{ marginTop: '15px', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                                        <p style={{ fontSize: '0.8rem', color: '#ccc', marginBottom: '5px' }}>
+                                            Problemi con la fotocamera?
+                                        </p>
+                                        <button 
+                                            onClick={apriCameraFallback}
+                                            style={{
+                                                background: 'transparent',
+                                                color: '#2196F3',
+                                                border: '1px solid #2196F3',
+                                                padding: '8px 12px',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                fontSize: '0.8rem'
+                                            }}
+                                        >
+                                            📱 Usa Fotocamera Sistema
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -2016,7 +1804,7 @@
             );
         };
 
-        // 🛠️ IL RESTO DEL CODICE REACT RIMANE IDENTICO...
+        // RESTANTE CODICE REACT COMPLETO E INTATTO
         function App() {
             const [loginForm, setLoginForm] = useState({
                 username: localStorage.getItem("username") || "",
@@ -2035,7 +1823,6 @@
             const [haNuoviMessaggi, setHaNuoviMessaggi] = useState(false);
             const [statistiche, setStatistiche] = useState({ download: 0, utentiUnici: 0 });
             
-            // 🔔 STATI NOTIFICHE MIGLIORATI
             const [notificheChat, setNotificheChat] = useState(0);
             const [notificheCalendario, setNotificheCalendario] = useState(0);
             const [notificationsEnabled, setNotificationsEnabled] = useState(
@@ -2048,7 +1835,6 @@
                 localStorage.getItem('calendarNotificationsEnabled') !== 'false'
             );
 
-            // 📝 STATI PAGELLE MIGLIORATI
             const [nuovaPagella, setNuovaPagella] = useState({
                 giocatore: "",
                 voto: "",
@@ -2057,7 +1843,6 @@
                 fazione: "nessuna"
             });
 
-            // 🎯 STATO PER MODIFICA PAGELLA
             const [pagellaInModifica, setPagellaInModifica] = useState(null);
             const [modificaPagella, setModificaPagella] = useState({
                 voto: "",
@@ -2065,10 +1850,7 @@
                 fazione: "nessuna"
             });
 
-            // 🆕 STATO PER GESTIONE GIOCATORI
             const [nuovoGiocatore, setNuovoGiocatore] = useState("");
-
-            // 🆕 STATI PER BACKUP
             const [backupData, setBackupData] = useState(null);
             const [backupStats, setBackupStats] = useState({
                 giocatori: 0,
@@ -2081,7 +1863,6 @@
             const chatContainerRef = useRef(null);
             const fileInputRef = useRef(null);
 
-            // 🛠️ AGGIUNTA: FUNZIONE handleLogin COMPLETA E CORRETTA
             const handleLogin = (e) => {
                 e.preventDefault();
                 if (!loginForm.username.trim()) {
@@ -2089,7 +1870,6 @@
                     return;
                 }
 
-                // 🔐 CONTROLLO PASSWORD PER ADMIN E FABRIZIO - VERSIONE CORRETTA
                 if (loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") {
                     if (loginForm.password !== ADMIN_PASSWORD) {
                         alert("❌ Password admin errata!");
@@ -2114,31 +1894,23 @@
                 }, 500);
             };
 
-            // 🛠️ AGGIUNTA: FUNZIONE isAdminUser MANCANTE
             const isAdminUser = () => {
                 const username = loginForm.username.toLowerCase();
                 return username === "admin" || username === "vitantonio" || username === "fabrizio";
             };
 
-            // 🎯 FUNZIONE SICURA PER OTTENERE LA MEDIA - VERSIONE CORRETTA
             const getMediaSicura = (giocatore) => {
                 if (!giocatore) return "0.00";
-                
                 const media = parseFloat(giocatore.media_calcolata);
-                
-                // Controlla se è un numero valido e non NaN
                 if (isNaN(media) || !isFinite(media)) {
                     return "0.00";
                 }
-                
                 return media.toFixed(2);
             };
 
-            // 📊 AGGIORNA MEDIA GIOCATORE - VERSIONE CORRETTA E COMPLETA
             const aggiornaMediaGiocatore = (nomeGiocatore) => {
                 const pagelleGiocatore = pagelle.filter(p => p.giocatore === nomeGiocatore);
                 if (pagelleGiocatore.length === 0) {
-                    // Se non ci sono pagelle, imposta media a 0
                     const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
                     if (giocatore) {
                         database.ref(`giocatori/${giocatore.id}`).update({
@@ -2149,27 +1921,21 @@
                     return;
                 }
                 
-                // Calcola la media CORRETTA
                 const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
                     const voto = parseFloat(pagella.voto);
                     return sum + (isNaN(voto) ? 0 : voto);
                 }, 0);
                 
                 const media = sommaVoti / pagelleGiocatore.length;
-                
-                // Trova il giocatore e aggiorna la media
                 const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
                 if (giocatore) {
                     database.ref(`giocatori/${giocatore.id}`).update({
                         media_calcolata: media.toFixed(2),
                         voti: pagelleGiocatore.map(p => parseFloat(p.voto))
-                    }).then(() => {
-                        console.log(`✅ Media aggiornata per ${nomeGiocatore}: ${media.toFixed(2)}`);
                     });
                 }
             };
 
-            // 🧤 FUNZIONI PER STATISTICHE PORTIERE (SOLO ADMIN E FABRIZIO)
             const aggiungiStatPortiere = (id, tipo, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le statistiche portiere!");
                 
@@ -2185,36 +1951,11 @@
                     [tipo]: nuovoValore
                 }).then(() => {
                     const azione = quantita >= 0 ? "aggiunte" : "rimosse";
-                    const emoji = 
-                        tipo === 'parate' ? '🧤' :
-                        tipo === 'gol_subiti' ? '🥅' :
-                        tipo === 'rigori_parati' ? '🎯' :
-                        tipo === 'uscite_vinte' ? '🚀' :
-                        tipo === 'assist_portiere' ? '🎯' :
-                        tipo === 'parate_difficili' ? '🌟' :
-                        tipo === 'rinvii_buoni' ? '⚽' :
-                        tipo === 'errori' ? '❌' :
-                        tipo === 'interventi_decisivi' ? '🛡️' :
-                        tipo === 'partite_portiere' ? '📊' : '📈';
-                    
-                    const nomeStat = 
-                        tipo === 'parate' ? 'parate' :
-                        tipo === 'gol_subiti' ? 'gol subiti' :
-                        tipo === 'rigori_parati' ? 'rigori parati' :
-                        tipo === 'uscite_vinte' ? 'uscite vinte' :
-                        tipo === 'assist_portiere' ? 'assist da portiere' :
-                        tipo === 'parate_difficili' ? 'parate difficili' :
-                        tipo === 'rinvii_buoni' ? 'rinvii buoni' :
-                        tipo === 'errori' ? 'errori' :
-                        tipo === 'interventi_decisivi' ? 'interventi decisivi' :
-                        tipo === 'partite_portiere' ? 'partite da portiere' : 'statistiche';
-                    
-                    alert(`${emoji} ${Math.abs(quantita)} ${nomeStat} ${azione}!`);
+                    alert(`🧤 ${Math.abs(quantita)} ${tipo} ${azione}!`);
                     document.getElementById(`${tipo}-${id}`).value = "";
                 });
             };
 
-            // 🏆 FUNZIONE PER TROVARE IL MVP ATTUALE - VERSIONE CORRETTA
             const getCurrentMVP = () => {
                 if (giocatori.length === 0) return null;
                 
@@ -2224,7 +1965,6 @@
                     return currentMVPCount > prevMVPCount ? current : prev;
                 });
                 
-                // CONVERTI media_calcolata IN NUMERO per sicurezza
                 if (mvp && mvp.mvp_count > 0) {
                     return {
                         ...mvp,
@@ -2235,18 +1975,15 @@
                 return null;
             };
 
-            // 🏆 FUNZIONE PER RENDERIZZARE IL MVP CON EFFETTI SPECIALI
             const renderMVPGlow = (giocatore, isListItem = false) => {
                 const currentMVP = getCurrentMVP();
                 const isMVP = currentMVP && currentMVP.id === giocatore.id;
-                
                 if (isMVP) {
                     return isListItem ? 'mvp-glow-item' : 'mvp-glow';
                 }
                 return '';
             };
 
-            // 🆕 FUNZIONE RIMUOVI MVP (SOLO ADMIN)
             const rimuoviMVP = (id) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono rimuovere MVP!");
                 
@@ -2264,25 +2001,16 @@
                     mvp_count: nuovoCount
                 }).then(() => {
                     alert("➖🏆 MVP rimosso correttamente!");
-                    
-                    showPushNotification(
-                        "➖🏆 MVP Rimosso",
-                        `Un MVP è stato rimosso da ${giocatore.nome}`,
-                        'mvp'
-                    );
+                    showPushNotification("➖🏆 MVP Rimosso", `Un MVP è stato rimosso da ${giocatore.nome}`, 'mvp');
                 }).catch(error => {
                     console.error("Errore rimozione MVP:", error);
                     alert("❌ Errore nella rimozione dell'MVP");
                 });
             };
 
-            // 🎯 CLASSIFICA MEDIA VOTO - ESCLUDE CHI NON HA MAI GIOCATO
             const classificaMediaVoto = React.useMemo(() => {
-                console.log("📊 Ricalcolo media voto...", pagelle.length);
-                
                 return giocatori
                     .map(giocatore => {
-                        // Escludi giocatori che non hanno mai giocato (presenze = 0)
                         if ((giocatore.presenze || 0) === 0) {
                             return { ...giocatore, mediaReale: 0, escluso: true };
                         }
@@ -2294,13 +2022,10 @@
                         
                         const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
                             const voto = parseFloat(pagella.voto);
-                            console.log(`📝 ${giocatore.nome}: voto ${voto} da ${pagella.autore}`);
                             return sum + (isNaN(voto) ? 0 : voto);
                         }, 0);
                         
                         const mediaReale = sommaVoti / pagelleGiocatore.length;
-                        console.log(`🎯 ${giocatore.nome}: ${pagelleGiocatore.length} pagelle, media ${mediaReale.toFixed(2)}`);
-                        
                         return { ...giocatore, mediaReale };
                     })
                     .filter(g => g.mediaReale > 0 && !g.escluso)
@@ -2308,25 +2033,19 @@
                     .slice(0, 10);
             }, [giocatori, pagelle]);
 
-            // 🏆 FUNZIONE PER OTTENERE BADGE COPPA PER GIOCATORI VINCENTI
             const getBadgeCoppa = (pagella) => {
                 if (!pagella.fazione || !pagella.data) return null;
-                
-                // Trova la partita corrispondente alla data della pagella
                 const partitaCorrispondente = partite.find(p => 
                     p.data === pagella.data && 
                     p.risultato === 'Vittoria' && 
                     p.fazione_vincente === pagella.fazione
                 );
-                
                 if (partitaCorrispondente) {
                     return <span className="badge-coppa">🏆 VINCITORE</span>;
                 }
-                
                 return null;
             };
 
-            // 🔧 GESTIONE INPUT MIGLIORATA
             const handleInputChange = (field, value) => {
                 setLoginForm(prev => ({
                     ...prev,
@@ -2334,7 +2053,6 @@
                 }));
             };
 
-            // 🔧 GESTIONE ENTER KEY
             const handleKeyPress = (e) => {
                 if (e.key === 'Enter') {
                     handleLogin(e);
@@ -2344,10 +2062,6 @@
             useEffect(() => {
                 if (!isLogged) return;
 
-                // 🆕 VERIFICA SUPPORTO MOBILE ALL'AVVIO
-                const supporto = sistemaUploadMobile.verificaSupportoMobile();
-                console.log('📱 Supporto mobile verificato:', supporto);
-
                 if (localStorage.getItem('notificationPermissionAsked') !== 'true') {
                     setTimeout(() => {
                         if ("Notification" in window && Notification.permission === "default") {
@@ -2355,12 +2069,7 @@
                                 if (permission === "granted") {
                                     setNotificationsEnabled(true);
                                     localStorage.setItem('notificationsEnabled', 'true');
-                                    console.log("✅ Notifiche abilitate!");
-                                    
-                                    showPushNotification(
-                                        "Arena Cup - Notifiche Attive", 
-                                        "Ora riceverai notifiche per nuovi messaggi e partite!"
-                                    );
+                                    showPushNotification("Arena Cup - Notifiche Attive", "Ora riceverai notifiche per nuovi messaggi e partite!");
                                 }
                                 localStorage.setItem('notificationPermissionAsked', 'true');
                             });
@@ -2421,16 +2130,10 @@
                             setHaNuoviMessaggi(true);
                             
                             if (!primoCaricamento && countNuovi > 0) {
-                                console.log(`💬 ${countNuovi} nuovi messaggi`);
-                                
                                 nuoviMessaggi.forEach(msg => {
                                     const mittente = msg.mittente === "admin" ? "Vitantonio" : msg.mittente;
                                     if (mittente !== loginForm.username) {
-                                        showPushNotification(
-                                            `💬 Nuovo messaggio da ${mittente}`,
-                                            msg.messaggio.length > 50 ? msg.messaggio.substring(0, 50) + '...' : msg.messaggio,
-                                            'chat'
-                                        );
+                                        showPushNotification(`💬 Nuovo messaggio da ${mittente}`, msg.messaggio.length > 50 ? msg.messaggio.substring(0, 50) + '...' : msg.messaggio, 'chat');
                                     }
                                 });
                             }
@@ -2458,22 +2161,14 @@
                             const vecchiaPartita = partitePrecedenti.find(p => p.id === nuovaPartita.id);
                             
                             if (!vecchiaPartita) {
-                                showPushNotification(
-                                    "🗓️ Nuova Partita Programmata!",
-                                    `${formattaData(nuovaPartita.data)} - ${nuovaPartita.ora}`,
-                                    'calendar'
-                                );
+                                showPushNotification("🗓️ Nuova Partita Programmata!", `${formattaData(nuovaPartita.data)} - ${nuovaPartita.ora}`, 'calendar');
                             } else if (JSON.stringify(vecchiaPartita.confermati) !== JSON.stringify(nuovaPartita.confermati)) {
                                 const nomeVisualizzato = getCurrentUserName();
                                 const eraConfermato = vecchiaPartita.confermati?.includes(nomeVisualizzato);
                                 const oraConfermato = nuovaPartita.confermati?.includes(nomeVisualizzato);
                                 
                                 if (!eraConfermato && oraConfermato) {
-                                    showPushNotification(
-                                        "✅ Prenotazione Confermada",
-                                        `Sei confermato per il ${formattaData(nuovaPartita.data)}`,
-                                        'calendar'
-                                    );
+                                    showPushNotification("✅ Prenotazione Confermada", `Sei confermato per il ${formattaData(nuovaPartita.data)}`, 'calendar');
                                 }
                             }
                         });
@@ -2496,26 +2191,22 @@
                     pagelleArray.sort((a, b) => new Date(b.data) - new Date(a.data));
                     setPagelle(pagelleArray);
                     
-                    // 🔄 AGGIORNA AUTOMATICAMENTE LE MEDIE DEI GIOCATORI
                     giocatori.forEach(giocatore => {
                         aggiornaMediaGiocatore(giocatore.nome);
                     });
                 });
             }, [isLogged, activeTab, ultimoMessaggioVisto, loginForm.username]);
 
-            // SCROLL AUTOMATICO CHAT
             useEffect(() => {
                 if (activeTab === "chat" && chatContainerRef.current) {
                     chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
                 }
             }, [messaggi, activeTab]);
 
-            // 🆕 FUNZIONE PER AGGIUNGERE GIOCATORE
             const aggiungiGiocatore = () => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiungere giocatori!");
                 if (!nuovoGiocatore.trim()) return alert("Inserisci un nome per il giocatore!");
                 
-                // Controlla se il giocatore esiste già
                 const esisteGià = giocatori.some(g => 
                     g.nome.toLowerCase() === nuovoGiocatore.toLowerCase()
                 );
@@ -2548,28 +2239,19 @@
                 }).then(() => {
                     setNuovoGiocatore("");
                     alert("✅ Giocatore aggiunto con successo!");
-                    
-                    showPushNotification(
-                        "👥 Nuovo Giocatore",
-                        `${nuovoGiocatore} è stato aggiunto alla Arena Cup!`,
-                        'chat'
-                    );
+                    showPushNotification("👥 Nuovo Giocatore", `${nuovoGiocatore} è stato aggiunto alla Arena Cup!`, 'chat');
                 }).catch(error => {
                     console.error("Errore aggiunta giocatore:", error);
                     alert("❌ Errore durante l'aggiunta del giocatore");
                 });
             };
 
-            // 🆕 FUNZIONE PER ELIMINARE GIOCATORE
             const eliminaGiocatore = (id, nome) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono eliminare giocatori!");
                 if (!confirm(`Sei sicuro di voler eliminare ${nome}? Questa azione è irreversibile!`)) return;
                 
-                // 🆕 ELIMINA ANCHE LA FOTO PROFILO SE ESISTE
                 try {
-                    const storageRef = storage.ref();
-                    const fileRef = storageRef.child(`profili/${id}.jpg`);
-                    fileRef.delete().catch(() => {
+                    storage.ref(`profili/${id}.jpg`).delete().catch(() => {
                         console.log("Nessuna foto profilo da eliminare");
                     });
                 } catch (error) {
@@ -2579,12 +2261,7 @@
                 database.ref(`giocatori/${id}`).remove()
                     .then(() => {
                         alert(`✅ Giocatore ${nome} eliminato con successo!`);
-                        
-                        showPushNotification(
-                            "👥 Giocatore Eliminato",
-                            `${nome} è stato rimosso dalla Arena Cup`,
-                            'chat'
-                        );
+                        showPushNotification("👥 Giocatore Eliminato", `${nome} è stato rimosso dalla Arena Cup`, 'chat');
                     })
                     .catch(error => {
                         console.error("Errore eliminazione giocatore:", error);
@@ -2592,13 +2269,9 @@
                     });
             };
 
-            // 🆕 FUNZIONI BACKUP COMPLETE
-
-            // 📥 ESPORTA BACKUP - VERSIONE CORRETTA
             const esportaBackup = () => {
                 if (!isAdminUser()) return alert("Solo gli admin possono esportare backup!");
                 
-                // Recupera tutti i dati dal database
                 Promise.all([
                     database.ref('giocatori').once('value'),
                     database.ref('messaggi').once('value'),
@@ -2607,13 +2280,11 @@
                     database.ref('statistiche').once('value')
                 ]).then(([giocatoriSnap, messaggiSnap, partiteSnap, pagelleSnap, statisticheSnap]) => {
                     
-                    // 🛠️ CORREZIONE: Conta gli elementi in modo corretto
                     const giocatoriData = giocatoriSnap.val() || {};
                     const messaggiData = messaggiSnap.val() || {};
                     const partiteData = partiteSnap.val() || {};
                     const pagelleData = pagelleSnap.val() || {};
                     
-                    // Conta gli elementi REALI
                     const countGiocatori = Object.keys(giocatoriData).length;
                     const countMessaggi = Object.keys(messaggiData).length;
                     const countPartite = Object.keys(partiteData).length;
@@ -2640,7 +2311,6 @@
                         }
                     };
 
-                    // Aggiorna statistiche backup CORRETTE
                     setBackupStats({
                         giocatori: countGiocatori,
                         messaggi: countMessaggi,
@@ -2649,10 +2319,8 @@
                         statistiche: statisticheSnap.val() ? 1 : 0
                     });
 
-                    // Salva in stato per preview
                     setBackupData(backup);
 
-                    // Crea e scarica file
                     const dataStr = JSON.stringify(backup, null, 2);
                     const dataBlob = new Blob([dataStr], { type: 'application/json' });
                     const url = URL.createObjectURL(dataBlob);
@@ -2666,11 +2334,7 @@
 
                     alert(`✅ Backup esportato con successo!\n\nStatistiche:\n👥 ${countGiocatori} giocatori\n💬 ${countMessaggi} messaggi\n🗓️ ${countPartite} partite\n📝 ${countPagelle} pagelle`);
 
-                    showPushNotification(
-                        "💾 Backup Esportato",
-                        `Backup creato con ${countGiocatori} giocatori, ${countMessaggi} messaggi, ${countPartite} partite`,
-                        'backup'
-                    );
+                    showPushNotification("💾 Backup Esportato", `Backup creato con ${countGiocatori} giocatori, ${countMessaggi} messaggi, ${countPartite} partite`, 'backup');
 
                 }).catch(error => {
                     console.error("Errore esportazione backup:", error);
@@ -2678,7 +2342,6 @@
                 });
             };
 
-            // 📤 IMPORT BACKUP
             const importaBackup = (event) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono importare backup!");
                 
@@ -2690,7 +2353,6 @@
                     try {
                         const backup = JSON.parse(e.target.result);
                         
-                        // Validazione backup
                         if (!backup.metadata || !backup.dati) {
                             alert("❌ File di backup non valido!");
                             return;
@@ -2700,7 +2362,6 @@
                             return;
                         }
 
-                        // Importa i dati nel database
                         Promise.all([
                             database.ref('giocatori').set(backup.dati.giocatori),
                             database.ref('messaggi').set(backup.dati.messaggi),
@@ -2710,13 +2371,8 @@
                         ]).then(() => {
                             alert(`✅ Backup importato con successo!\n\nDati importati:\n👥 ${backup.metadata.totale_dati.giocatori} giocatori\n💬 ${backup.metadata.totale_dati.messaggi} messaggi\n🗓️ ${backup.metadata.totale_dati.partite} partite\n📝 ${backup.metadata.totale_dati.pagelle} pagelle`);
 
-                            showPushNotification(
-                                "💾 Backup Importato",
-                                `Backup ripristinato con ${backup.metadata.totale_dati.giocatori} giocatori, ${backup.metadata.totale_dati.messaggi} messaggi`,
-                                'backup'
-                            );
+                            showPushNotification("💾 Backup Importato", `Backup ripristinato con ${backup.metadata.totale_dati.giocatori} giocatori, ${backup.metadata.totale_dati.messaggi} messaggi`, 'backup');
 
-                            // Reset file input
                             event.target.value = '';
 
                         }).catch(error => {
@@ -2732,7 +2388,6 @@
                 reader.readAsText(file);
             };
 
-            // 🔄 RIPRISTINA DATI
             const ripristinaDati = () => {
                 if (!isAdminUser()) return alert("Solo gli admin possono ripristinare i dati!");
                 if (!backupData) return alert("Nessun backup caricato!");
@@ -2749,20 +2404,13 @@
                     database.ref('statistiche').set(backupData.dati.statistiche)
                 ]).then(() => {
                     alert(`✅ Dati ripristinati con successo dal backup!`);
-
-                    showPushNotification(
-                        "🔄 Dati Ripristinati",
-                        `Sistema ripristinato dal backup del ${backupData.metadata.data_creazione.split('T')[0]}`,
-                        'backup'
-                    );
-
+                    showPushNotification("🔄 Dati Ripristinati", `Sistema ripristinato dal backup del ${backupData.metadata.data_creazione.split('T')[0]}`, 'backup');
                 }).catch(error => {
                     console.error("Errore ripristino dati:", error);
                     alert("❌ Errore durante il ripristino dei dati");
                 });
             };
 
-            // 🗑️ PULIZIA DATI
             const puliziaDati = () => {
                 if (!isAdminUser()) return alert("Solo gli admin possono pulire i dati!");
                 
@@ -2782,20 +2430,13 @@
                     database.ref('statistiche').set({ download: 0, utentiUnici: 0 })
                 ]).then(() => {
                     alert("✅ Tutti i dati sono stati cancellati!");
-                    
-                    showPushNotification(
-                        "🗑️ Dati Cancellati",
-                        "Tutti i dati dell'Arena Cup sono stati cancellati",
-                        'backup'
-                    );
-
+                    showPushNotification("🗑️ Dati Cancellati", "Tutti i dati dell'Arena Cup sono stati cancellati", 'backup');
                 }).catch(error => {
                     console.error("Errore pulizia dati:", error);
                     alert("❌ Errore durante la pulizia dei dati");
                 });
             };
 
-            // 🧤 CALCOLO PUNTEGGIO BENJI PRICE
             const calcolaPunteggioBenjiPrice = (portiere) => {
                 let punteggio = 0;
                 punteggio += (portiere.parate || 0) * 3;
@@ -2810,7 +2451,6 @@
                 return Math.max(0, punteggio);
             };
 
-            // 🏆 CALCOLA CLASSIFICHE
             const classificaMarcatori = [...giocatori]
                 .filter(g => (g.gol || 0) > 0)
                 .sort((a, b) => (b.gol || 0) - (a.gol || 0))
@@ -2826,7 +2466,6 @@
                 .sort((a, b) => (b.mvp_count || 0) - (a.mvp_count || 0))
                 .slice(0, 10);
 
-            // 🧤 CLASSIFICA BENJI PRICE
             const classificaBenjiPrice = [...giocatori]
                 .filter(g => calcolaPunteggioBenjiPrice(g) > 0)
                 .map(g => ({
@@ -2836,7 +2475,6 @@
                 .sort((a, b) => b.punteggio_benji - a.punteggio_benji)
                 .slice(0, 10);
 
-            // 🎯 CLASSIFICA PRESENZE/PARTITE GIOCATE - ESCLUDE CHI NON HA MAI GIOCATO
             const classificaPresenze = [...giocatori]
                 .filter(g => (g.presenze || 0) > 0)
                 .sort((a, b) => (b.presenze || 0) - (a.presenze || 0))
@@ -2848,7 +2486,6 @@
                 setLoginForm({ username: "", password: "" });
             };
 
-            // 🔔 GESTIONE IMPOSTAZIONI NOTIFICHE
             const toggleNotifications = () => {
                 const newState = !notificationsEnabled;
                 setNotificationsEnabled(newState);
@@ -2871,7 +2508,6 @@
                 localStorage.setItem('calendarNotificationsEnabled', newState.toString());
             };
 
-            // 📝 FUNZIONI PAGELLE MIGLIORATE (SOLO ADMIN E FABRIZIO)
             const aggiungiPagella = () => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiungere pagelle!");
                 if (!nuovaPagella.giocatore.trim()) return alert("Seleziona un giocatore!");
@@ -2901,20 +2537,14 @@
                     });
                     alert("📝 Pagella aggiunta!");
                     
-                    // 🔥 AGGIORNA MEDIA GIOCATORE - FORZATO
                     setTimeout(() => {
                         aggiornaMediaGiocatore(nuovaPagella.giocatore);
                     }, 1000);
                     
-                    showPushNotification(
-                        "📝 Nuova Pagella Aggiunta",
-                        `${getCurrentUserName()} ha valutato ${nuovaPagella.giocatore} con ${nuovaPagella.voto}/10`,
-                        'chat'
-                    );
+                    showPushNotification("📝 Nuova Pagella Aggiunta", `${getCurrentUserName()} ha valutato ${nuovaPagella.giocatore} con ${nuovaPagella.voto}/10`, 'chat');
                 });
             };
 
-            // 🎯 MODIFICA PAGELLA - FUNZIONANTE (SOLO ADMIN E FABRIZIO)
             const avviaModificaPagella = (pagella) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono modificare pagelle!");
                 setPagellaInModifica(pagella.id);
@@ -2943,7 +2573,6 @@
                     setModificaPagella({ voto: "", commento: "", fazione: "nessuna" });
                     alert("✅ Pagella modificata!");
                     
-                    // 🔥 AGGIORNA MEDIA GIOCATORE
                     const pagellaModificata = pagelle.find(p => p.id === pagellaInModifica);
                     if (pagellaModificata) {
                         aggiornaMediaGiocatore(pagellaModificata.giocatore);
@@ -2963,12 +2592,10 @@
                 if (!isAdminUser()) return alert("Solo gli admin possono eliminare pagelle!");
                 if (!confirm(`Eliminare la pagella di ${giocatore}?`)) return;
                 database.ref(`pagelle/${id}`).remove().then(() => {
-                    // 🔥 AGGIORNA MEDIA GIOCATORE
                     aggiornaMediaGiocatore(giocatore);
                 });
             };
 
-            // 🎯 FUNZIONE PER OTTENERE CLASSE FAZIONE
             const getClasseFazione = (fazione) => {
                 switch(fazione) {
                     case 'bianca': return 'fazione-bianca';
@@ -2978,7 +2605,6 @@
                 }
             };
 
-            // 🎯 FUNZIONE PER OTTENERE BADGE FAZIONE
             const getBadgeFazione = (fazione) => {
                 switch(fazione) {
                     case 'bianca': return <span className="badge-fazione badge-bianca">ARMATA BIANCA</span>;
@@ -2988,7 +2614,6 @@
                 }
             };
 
-            // 🏆 FUNZIONE PER RENDERIZZARE IL RISULTATO DELLA PARTITA
             const renderRisultatoPartita = (partita) => {
                 if (!partita.risultato) return null;
 
@@ -3053,7 +2678,6 @@
                 );
             };
 
-            // ⚽ AGGIUNGI/RIMUOVI PRESENZA (SOLO ADMIN E FABRIZIO)
             const aggiungiPresenza = (id, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le presenze!");
                 
@@ -3074,7 +2698,6 @@
                 });
             };
 
-            // 🗓️ TOGGLE PRENOTAZIONE - SISTEMA CORRETTO E SIMPLIFICATO
             const togglePrenotazionePartita = (partitaId) => {
                 const partita = partite.find(p => p.id === partitaId);
                 if (!partita) return;
@@ -3092,31 +2715,17 @@
 
                 let nuoviConfermati;
                 if (giaConfermato) {
-                    // Rimuovi dalla lista
                     nuoviConfermati = confermati.filter(name => name !== nomeVisualizzato);
                 } else {
-                    // Aggiungi alla lista
                     nuoviConfermati = [...confermati, nomeVisualizzato];
                 }
-
-                console.log("🔧 Aggiornamento partita:", {
-                    partitaId,
-                    nomeVisualizzato,
-                    giaConfermato,
-                    confermatiPrecedenti: confermati,
-                    nuoviConfermati
-                });
 
                 database.ref(`partite/${partitaId}`).update({
                     confermati: nuoviConfermati
                 }).then(() => {
                     if (!giaConfermato) {
                         alert("✅ Prenotazione confermata!");
-                        showPushNotification(
-                            "✅ Prenotazione Confermata",
-                            `Sei confermato per il ${formattaData(partita.data)}`,
-                            'calendar'
-                        );
+                        showPushNotification("✅ Prenotazione Confermata", `Sei confermato per il ${formattaData(partita.data)}`, 'calendar');
                     } else {
                         alert("❌ Prenotazione annullata!");
                     }
@@ -3126,19 +2735,16 @@
                 });
             };
 
-            // 🎯 IMPOSTA VINCITORE/PERDENTE PARTITA CON FAZIONI (SOLO ADMIN E FABRIZIO)
             const impostaRisultatoPartita = (partitaId, risultato) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono impostare i risultati!");
                 
                 if (risultato === "Vittoria" || risultato === "Sconfitta") {
-                    // Chiedi quale armata ha vinto
                     const fazioneVincente = prompt("Quale armata ha vinto? (bianca/nera/rossa)");
                     if (!fazioneVincente || !['bianca', 'nera', 'rossa'].includes(fazioneVincente.toLowerCase())) {
                         alert("Devi inserire un'armata valida: bianca, nera o rossa");
                         return;
                     }
                     
-                    // Determina la fazione perdente in base al risultato
                     let fazionePerdente;
                     if (risultato === "Vittoria") {
                         fazionePerdente = prompt("Quale armata ha perso? (bianca/nera/rossa)");
@@ -3156,7 +2762,6 @@
                         alert(`✅ Risultato impostato: ${risultato}\nArmata vincente: ${fazioneVincente}${fazionePerdente ? `\nArmata perdente: ${fazionePerdente}` : ''}`);
                     });
                 } else {
-                    // Pareggio - nessuna fazione vincente/perdente
                     database.ref(`partite/${partitaId}`).update({
                         risultato: risultato,
                         fazione_vincente: null,
@@ -3167,7 +2772,6 @@
                 }
             };
 
-            // 🎯 IMPOSTA PARTITA TRIANGOLARE (SOLO ADMIN E FABRIZIO)
             const impostaTriangolare = (partitaId, triangolare) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono modificare il formato partita!");
                 
@@ -3178,7 +2782,6 @@
                 });
             };
 
-            // ALTRE FUNZIONI ESISTENTI...
             const addGolAssist = (id, tipo, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare Gol/Assist!");
                 
@@ -3221,7 +2824,6 @@
                 });
             };
 
-            // 🏆 FUNZIONE MVP (SOLO ADMIN E FABRIZIO)
             const addMVP = (id) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono assegnare MVP!");
                 
@@ -3234,12 +2836,7 @@
                     mvp_count: nuovoCount
                 }).then(() => {
                     alert("🏆 MVP assegnato!");
-                    
-                    showPushNotification(
-                        "🏆 Nuovo MVP!",
-                        `${giocatore.nome} è stato nominato MVP!`,
-                        'chat'
-                    );
+                    showPushNotification("🏆 Nuovo MVP!", `${giocatore.nome} è stato nominato MVP!`, 'chat');
                 });
             };
 
@@ -3256,7 +2853,6 @@
                     created_at: new Date().toLocaleString('it-IT')
                 }).then(() => {
                     setNuovoMessaggio("");
-                    console.log("💬 Messaggio inviato");
                 });
             };
 
@@ -3275,7 +2871,6 @@
                 media_calcolata: calcolaMedia(g.voti)
             }));
 
-            // 🎯 MEDIA GENERALE - SOLO CHI HA VOTI E HA GIOCATO ALMENO UNA PARTITA
             const giocatoriConVoti = giocatori.filter(g => 
                 g.voti && g.voti.length > 0 && (g.presenze || 0) > 0
             );
@@ -3326,17 +2921,14 @@
                 return loginForm.username;
             };
 
-            // 🆕 TROVA GIOCATORE CORRENTE - CORRETTO
             const getCurrentGiocatore = () => {
                 return giocatori.find(g => g.nome === loginForm.username) || {};
             };
 
-            // 🆕 PAGINE PERSONALI DEL GIOCATORE
             const getMiePagelle = () => {
                 return pagelle.filter(p => p.giocatore === loginForm.username);
             };
 
-            // 🔧 SEZIONE LOGIN CORRETTA
             if (!isLogged) {
                 return (
                     <div className="app-container">
@@ -3390,7 +2982,6 @@
                 );
             }
 
-            // 🛠️ AGGIUNTA: RENDER PRINCIPALE COMPLETO
             return (
                 <div className="app-container">
                     <div className="app-header">
@@ -3427,7 +3018,6 @@
                             </div>
                         </div>
 
-                        {/* DESKTOP NAVIGATION MIGLIORATA */}
                         <div className="desktop-nav">
                             <button
                                 className={`desktop-nav-button ${activeTab === "classifica" ? "active" : ""}`}
@@ -3479,7 +3069,6 @@
                             >
                                 📝 Pagelle
                             </button>
-                            {/* BACKUP VISIBILE SOLO PER ADMIN E FABRIZIO */}
                             {isAdminUser() && (
                                 <button
                                     className={`desktop-nav-button ${activeTab === "backup" ? "active" : ""}`}
@@ -3496,7 +3085,6 @@
                             <div>
                                 <h2>🏆 Classifiche</h2>
                                 
-                                {/* 🏆 MVP ATTUALE CON EFFETTO SPECIALE */}
                                 {getCurrentMVP() && (
                                     <div className={`player-card mvp-glow`} style={{ position: 'relative' }}>
                                         <div className="mvp-crown">👑</div>
@@ -3541,7 +3129,6 @@
                                     </div>
                                 </div>
 
-                                {/* 🆕 SEZIONE GESTIONE GIOCATORI (SOLO ADMIN) */}
                                 {isAdminUser() && (
                                     <div className="gestione-giocatori">
                                         <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>👥 Gestione Giocatori</h3>
@@ -3739,7 +3326,6 @@
                                     </div>
                                 </div>
 
-                                {/* LISTA COMPLETA GIOCATORI CON TUTTE LE STATISTICHE E FOTO PROFILO */}
                                 <div style={{ marginTop: "40px" }}>
                                     <h3>👥 Lista Completa Giocatori</h3>
                                     {giocatori.length === 0 ? (
@@ -3751,7 +3337,6 @@
                                             <div key={giocatore.id} className={`player-card ${isCurrentUser(giocatore.nome) ? 'current-user' : ''} ${renderMVPGlow(giocatore)}`}>
                                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
                                                     <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', gap: '15px' }}>
-                                                        {/* FOTO PROFILO */}
                                                         <FotoProfiloManager 
                                                             giocatore={giocatore}
                                                             size="medium"
@@ -3805,7 +3390,6 @@
                                                                 </div>
                                                             </div>
 
-                                                            {/* STATISTICHE PORTA (se presenti) */}
                                                             {(giocatore.parate > 0 || giocatore.partite_portiere > 0) && (
                                                                 <div style={{ marginTop: "10px", padding: "10px", background: "rgba(0, 150, 255, 0.1)", borderRadius: "8px" }}>
                                                                     <h5 style={{ margin: "0 0 8px 0", color: "#0096FF", fontSize: "0.9rem" }}>🧤 Statistiche Portiere</h5>
@@ -3820,7 +3404,6 @@
                                                         </div>
                                                     </div>
                                                     
-                                                    {/* CONTROLLI ADMIN - FABRIZIO STESSI POTERI */}
                                                     {isAdminUser() && (
                                                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
                                                             <input 
@@ -3904,7 +3487,6 @@
                                                                 +🏆
                                                             </button>
 
-                                                            {/* 🆕 PULSANTE RIMUOVI MVP */}
                                                             <button 
                                                                 onClick={() => rimuoviMVP(giocatore.id)}
                                                                 className="btn-rimuovi-mvp"
@@ -3914,7 +3496,6 @@
                                                                 ➖🏆
                                                             </button>
 
-                                                            {/* CONTROLLI STATISTICHE PORTIERE */}
                                                             <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "5px" }}>
                                                                 <input 
                                                                     id={`parate-${giocatore.id}`}
@@ -3948,12 +3529,10 @@
                             </div>
                         )}
 
-                        {/* 🆕 TAB BACKUP - SISTEMA COMPLETO DI BACKUP - SOLO PER ADMIN */}
                         {activeTab === "backup" && isAdminUser() && (
                             <div>
                                 <h2>💾 Sistema di Backup</h2>
                                 
-                                {/* INFORMAZIONI BACKUP */}
                                 <div className="backup-info">
                                     <h3 style={{ color: "#FFC107", marginBottom: "10px" }}>ℹ️ Informazioni Backup</h3>
                                     <p>Il sistema di backup ti permette di:</p>
@@ -3968,7 +3547,6 @@
                                     </p>
                                 </div>
 
-                                {/* STATISTICHE DATI CORRENTI */}
                                 <div className="backup-section">
                                     <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>📊 Dati Correnti</h3>
                                     <div className="backup-stats">
@@ -3999,7 +3577,6 @@
                                     </div>
                                 </div>
 
-                                {/* AZIONI BACKUP */}
                                 <div className="backup-section">
                                     <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>🛠️ Azioni Backup</h3>
                                     
@@ -4040,7 +3617,6 @@
                                         </button>
                                     </div>
 
-                                    {/* PREVIEW BACKUP CARICATO */}
                                     {backupData && (
                                         <div className="backup-info" style={{ background: "rgba(76, 175, 80, 0.1)", borderLeftColor: "#4CAF50" }}>
                                             <h4 style={{ color: "#4CAF50", marginBottom: "10px" }}>✅ Backup Caricato</h4>
@@ -4077,7 +3653,6 @@
                                     )}
                                 </div>
 
-                                {/* ISTRUZIONI */}
                                 <div className="backup-section">
                                     <h3 style={{ marginBottom: "15px", color: "#FF9800" }}>📋 Istruzioni</h3>
                                     <div style={{ lineHeight: "1.6" }}>
@@ -4090,16 +3665,13 @@
                             </div>
                         )}
 
-                        {/* TAB IMPOSTAZIONI - ORA CON BACKUP E IL MIO SCORE INTEGRATI */}
                         {activeTab === "impostazioni" && (
                             <div>
                                 <h2>⚙️ Impostazioni</h2>
                                 
-                                {/* SEZIONE IL MIO SCORE PERSONALE */}
                                 <div className="backup-section">
                                     <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>⭐ Il Mio Score Personale</h3>
                                     
-                                    {/* FOTO PROFILO PERSONALE GRANDE */}
                                     <div style={{ textAlign: 'center', marginBottom: '20px' }}>
                                         <FotoProfiloManager 
                                             giocatore={getCurrentGiocatore()}
@@ -4153,7 +3725,6 @@
                                         </div>
                                     </div>
 
-                                    {/* LE MIE ULTIME PAGELLE */}
                                     <div style={{ marginTop: "30px" }}>
                                         <h4>📝 Le Mie Ultime Pagelle</h4>
                                         {getMiePagelle().length === 0 ? (
@@ -4191,7 +3762,6 @@
                                     </div>
                                 </div>
 
-                                {/* SEZIONE BACKUP (SOLO ADMIN) */}
                                 {isAdminUser() && (
                                     <div className="backup-section">
                                         <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>💾 Sistema di Backup</h3>
@@ -4200,7 +3770,6 @@
                                             <p><strong>⚠️ Solo gli admin possono utilizzare queste funzionalità</strong></p>
                                         </div>
 
-                                        {/* STATISTICHE DATI CORRENTI */}
                                         <div style={{ margin: "20px 0" }}>
                                             <h4 style={{ marginBottom: "15px", color: "#4CAF50" }}>📊 Dati CorrentI</h4>
                                             <div className="backup-stats">
@@ -4231,7 +3800,6 @@
                                             </div>
                                         </div>
 
-                                        {/* AZIONI BACKUP */}
                                         <div style={{ margin: "20px 0" }}>
                                             <h4 style={{ marginBottom: "15px", color: "#2196F3" }}>🛠️ Azioni Backup</h4>
                                             
@@ -4272,7 +3840,6 @@
                                                 </button>
                                             </div>
 
-                                            {/* PREVIEW BACKUP CARICATO */}
                                             {backupData && (
                                                 <div className="backup-info" style={{ background: "rgba(76, 175, 80, 0.1)", borderLeftColor: "#4CAF50" }}>
                                                     <h4 style={{ color: "#4CAF50", marginBottom: "10px" }}>✅ Backup Caricato</h4>
@@ -4311,7 +3878,6 @@
                                     </div>
                                 )}
 
-                                {/* NOTIFICHE E IMPOSTAZIONI APP */}
                                 <div className="notification-settings">
                                     <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>🔔 Notifiche</h3>
                                     
@@ -4416,7 +3982,6 @@
                             </div>
                         )}
 
-                        {/* ALTRE TAB ESISTENTI... */}
                         {activeTab === "calendario" && (
                             <div>
                                 <h2>🗓️ Calendario Partite</h2>
@@ -4435,7 +4000,6 @@
                                         
                                         return (
                                             <div key={partita.id} className="match-card" style={{ position: 'relative' }}>
-                                                {/* BADGE RISULTATO */}
                                                 {partita.risultato && (
                                                     <div className={`badge-risultato ${
                                                         partita.risultato === 'Vittoria' ? 'badge-vittoria' :
@@ -4519,10 +4083,8 @@
                                                     </div>
                                                 </div>
                                                 
-                                                {/* 🏆 VISUALIZZAZIONE RISULTATO PARTITA */}
                                                 {renderRisultatoPartita(partita)}
                                                 
-                                                {/* LISTA CONFERMATI */}
                                                 <div className="confermato-list">
                                                     <h4 style={{ margin: "15px 0 10px 0", color: "#FFC107" }}>Giocatori Confermati:</h4>
                                                     {confermati.length === 0 ? (
@@ -4539,7 +4101,6 @@
                                                     )}
                                                 </div>
                                                 
-                                                {/* CONTROLLI ADMIN PER RISULTATO CON FAZIONI */}
                                                 {isAdminUser() && (
                                                     <div style={{ marginTop: "15px", paddingTop: "15px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
                                                         <h4 style={{ marginBottom: "10px", color: "#FFC107" }}>Controlli Admin:</h4>
@@ -4699,7 +4260,6 @@
                             <div>
                                 <h2>📝 Sistema Pagelle</h2>
                                 
-                                {/* FORM AGGIUNTA PAGELLA (SOLO ADMIN) */}
                                 {isAdminUser() && (
                                     <div className="pagella-form">
                                         <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>Aggiungi Nuova Pagella</h3>
@@ -4739,7 +4299,6 @@
                                             </select>
                                         </div>
                                         
-                                        {/* TEXTAREA PIÙ GRANDE PER COMMENTI */}
                                         <textarea 
                                             placeholder="Commento (opzionale)"
                                             value={nuovaPagella.commento}
@@ -4767,7 +4326,6 @@
                                     </div>
                                 )}
 
-                                {/* LISTA PAGELLE */}
                                 <h3 style={{ marginTop: "30px", marginBottom: "15px" }}>Ultime Pagelle</h3>
                                 {pagelle.length === 0 ? (
                                     <div className="empty-state">
@@ -4801,7 +4359,6 @@
                                                 </div>
                                             )}
                                             
-                                            {/* MODIFICA PAGELLA (SOLO ADMIN) */}
                                             {pagellaInModifica === pagella.id ? (
                                                 <div className="modifica-pagella-form">
                                                     <h4 style={{ marginBottom: "10px", color: "#FFC107" }}>Modifica Pagella</h4>
@@ -4829,7 +4386,6 @@
                                                         </select>
                                                     </div>
                                                     
-                                                    {/* TEXTAREA PIÙ GRANDE PER MODIFICA */}
                                                     <textarea 
                                                         placeholder="Commento"
                                                         value={modificaPagella.commento}
@@ -4913,7 +4469,6 @@
                             <div>
                                 <h2>📊 Partite Giocate</h2>
                                 
-                                {/* TOP CLASSIFICHE PRESENZE, GOL E MEDIA */}
                                 <div className="classifica-grid">
                                     <div className="classifica-card">
                                         <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>📊 Top Presenze</h3>
@@ -5064,7 +4619,6 @@
                                     </div>
                                 </div>
 
-                                {/* CONTROLLI ADMIN PER PRESENZE */}
                                 {isAdminUser() && (
                                     <div style={{ marginTop: "40px" }}>
                                         <h3 style={{ marginBottom: "20px", color: "#FFC107" }}>👑 Controlli Admin - Gestione Partite</h3>
@@ -5136,7 +4690,6 @@
                                 <h2>⭐ Il Mio Score Personale</h2>
                                 
                                 <div className="score-header">
-                                    {/* FOTO PROFILO PERSONALE GRANDE - VERSIONE SICURA */}
                                     {getCurrentGiocatore() && getCurrentGiocatore().id ? (
                                         <FotoProfiloManager 
                                             giocatore={getCurrentGiocatore()}
@@ -5211,7 +4764,6 @@
                                     </div>
                                 </div>
 
-                                {/* LE MIE ULTIME PAGELLE */}
                                 <div style={{ marginTop: "40px" }}>
                                     <h3 style={{ marginBottom: "20px", color: "#FFC107" }}>📝 Le Mie Ultime Pagelle</h3>
                                     {getMiePagelle().length === 0 ? (
@@ -5249,7 +4801,6 @@
                                     )}
                                 </div>
 
-                                {/* STATISTICHE DETTAGLIATE */}
                                 <div style={{ marginTop: "40px" }}>
                                     <h3 style={{ marginBottom: "20px", color: "#2196F3" }}>📈 Statistiche Dettagliate</h3>
                                     <div className="stats-grid">
@@ -5338,7 +4889,6 @@
                             <span className="icon">📝</span>
                             <span>Pagelle</span>
                         </button>
-                        {/* BACKUP VISIBILE SOLO PER ADMIN E FABRIZIO */}
                         {isAdminUser() && (
                             <button 
                                 className={`nav-button ${activeTab === "backup" ? "active" : ""}`}
