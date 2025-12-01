@@ -1273,443 +1273,466 @@
         const storage = firebase.storage();
 
         // 📸 COMPONENTE GESTIONE FOTO PROFILO - VERSIONE CORRETTA E COMPLETA
-        const FotoProfiloManager = ({ giocatore, onFotoCambiata, size = "medium" }) => {
-            const [showModal, setShowModal] = useState(false);
-            const [fotoSelezionata, setFotoSelezionata] = useState(null);
-            const [anteprimaFoto, setAnteprimaFoto] = useState(null);
-            const [modalitaCamera, setModalitaCamera] = useState(false);
-            const [fotoUrl, setFotoUrl] = useState(null);
-            const [isLoading, setIsLoading] = useState(false);
-            
-            const videoRef = useRef(null);
-            const canvasRef = useRef(null);
-            const streamRef = useRef(null);
-            const fileInputRef = useRef(null);
+       // 📸 COMPONENTE FOTO PROFILO - VERSIONE DEFINITIVA E CORRETTA
+const FotoProfiloManager = ({ giocatore, onFotoCambiata, size = "medium" }) => {
+    const [showModal, setShowModal] = useState(false);
+    const [fotoSelezionata, setFotoSelezionata] = useState(null);
+    const [anteprimaFoto, setAnteprimaFoto] = useState(null);
+    const [modalitaCamera, setModalitaCamera] = useState(false);
+    const [fotoUrl, setFotoUrl] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    
+    const videoRef = useRef(null);
+    const canvasRef = useRef(null);
+    const streamRef = useRef(null);
+    const fileInputRef = useRef(null);
 
-            const dimensioni = {
-                small: "foto-profilo-small",
-                medium: "foto-profilo",
-                large: "foto-profilo-large"
+    const dimensioni = {
+        small: "foto-profilo-small",
+        medium: "foto-profilo",
+        large: "foto-profilo-large"
+    };
+
+    const classeDimensione = dimensioni[size] || dimensioni.medium;
+
+    // 📥 CARICA FOTO ESISTENTE
+    useEffect(() => {
+        const caricaFotoProfilo = async () => {
+            try {
+                const fotoUrl = await storage.ref(`profili/${giocatore.id}.jpg`).getDownloadURL();
+                setFotoUrl(fotoUrl);
+            } catch (error) {
+                setFotoUrl(null);
+            }
+        };
+        
+        if (giocatore && giocatore.id) {
+            caricaFotoProfilo();
+        }
+    }, [giocatore.id]);
+
+    // 🎥 INIZIALIZZA FOTOCAMERA - VERSIONE SICURA
+    const inizializzaCamera = async () => {
+        try {
+            // Ferma stream precedente se esiste
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+                streamRef.current = null;
+            }
+
+            // PER ANDROID: usa camera posteriore
+            // PER iOS: usa camera anteriore (più affidabile)
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            
+            const constraints = {
+                video: { 
+                    facingMode: isIOS ? 'user' : 'environment', // iOS: anteriore, Android: posteriore
+                    width: { ideal: 800 },
+                    height: { ideal: 600 }
+                },
+                audio: false
             };
 
-            const classeDimensione = dimensioni[size] || dimensioni.medium;
+            console.log("📱 Dispositivo:", isIOS ? "iOS" : "Android");
+            console.log("🎥 Modalità camera:", constraints.video.facingMode);
 
-            // 📥 CARICA FOTO ESISTENTE
-            useEffect(() => {
-                const caricaFotoProfilo = async () => {
-                    try {
-                        const fotoUrl = await storage.ref(`profili/${giocatore.id}.jpg`).getDownloadURL();
-                        setFotoUrl(fotoUrl);
-                    } catch (error) {
-                        setFotoUrl(null);
-                    }
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            streamRef.current = stream;
+            
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                await videoRef.current.play();
+            }
+            
+            setModalitaCamera(true);
+            setAnteprimaFoto(null);
+        } catch (error) {
+            console.error("❌ Errore accesso camera:", error);
+            
+            // FALLBACK: prova con camera anteriore se posteriore fallisce
+            try {
+                const fallbackConstraints = {
+                    video: { 
+                        facingMode: 'user', // Sempre camera anteriore come fallback
+                        width: { ideal: 800 },
+                        height: { ideal: 600 }
+                    },
+                    audio: false
                 };
                 
-                if (giocatore && giocatore.id) {
-                    caricaFotoProfilo();
-                }
-            }, [giocatore.id]);
-
-            // 🎥 INIZIALIZZA FOTOCAMERA CORRETTAMENTE
-            const inizializzaCamera = async () => {
-                try {
-                    // Ferma stream precedente se esiste
-                    if (streamRef.current) {
-                        streamRef.current.getTracks().forEach(track => track.stop());
-                        streamRef.current = null;
-                    }
-
-                    const constraints = {
-                        video: { 
-                            facingMode: 'user',
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 }
-                        },
-                        audio: false
-                    };
-
-                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    streamRef.current = stream;
-                    
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream;
-                        await videoRef.current.play();
-                    }
-                    
-                    setModalitaCamera(true);
-                    setAnteprimaFoto(null);
-                } catch (error) {
-                    console.error("❌ Errore accesso camera:", error);
-                    alert("Impossibile accedere alla fotocamera. Controlla i permessi.");
-                }
-            };
-
-            // 📸 SCATTA FOTO CORRETTAMENTE
-            const scattaFoto = () => {
-                if (!videoRef.current || !canvasRef.current) return;
-
-                const video = videoRef.current;
-                const canvas = canvasRef.current;
-                
-                // Imposta dimensioni canvas
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                
-                const context = canvas.getContext('2d');
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                // Converti in base64
-                const fotoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                setAnteprimaFoto(fotoDataUrl);
-                setFotoSelezionata(fotoDataUrl);
-                setModalitaCamera(false);
-                
-                // Ferma lo stream
-                if (streamRef.current) {
-                    streamRef.current.getTracks().forEach(track => track.stop());
-                    streamRef.current = null;
-                }
+                const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+                streamRef.current = stream;
                 
                 if (videoRef.current) {
-                    videoRef.current.srcObject = null;
+                    videoRef.current.srcObject = stream;
+                    await videoRef.current.play();
                 }
-            };
+                
+                setModalitaCamera(true);
+                setAnteprimaFoto(null);
+            } catch (fallbackError) {
+                alert("❌ Impossibile accedere alla fotocamera. Controlla i permessi.");
+            }
+        }
+    };
 
-            // 📁 CARICA FOTO DA DISPOSITIVO
-            const gestisciCaricamentoFoto = (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
+    // 📸 SCATTA FOTO
+    const scattaFoto = () => {
+        if (!videoRef.current || !canvasRef.current) return;
 
-                // Controlla se è un'immagine
-                if (!file.type.startsWith('image/')) {
-                    alert("❌ Seleziona un file immagine valido!");
-                    return;
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const fotoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        setAnteprimaFoto(fotoDataUrl);
+        setFotoSelezionata(fotoDataUrl);
+        setModalitaCamera(false);
+        
+        // Ferma lo stream
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+        
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+    };
+
+    // 📁 CARICA FOTO DA DISPOSITIVO - VERSIONE CORRETTA
+    const gestisciCaricamentoFoto = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert("❌ Seleziona un file immagine valido!");
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert("❌ L'immagine è troppo grande (max 5MB)");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setAnteprimaFoto(e.target.result);
+            setFotoSelezionata(e.target.result);
+            setModalitaCamera(false);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // 💾 SALVA FOTO SU FIREBASE
+    const salvaFoto = async () => {
+        if (!fotoSelezionata) {
+            alert("❌ Nessuna foto selezionata!");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const base64Response = await fetch(fotoSelezionata);
+            const blob = await base64Response.blob();
+
+            const nomeFile = `${giocatore.id}.jpg`;
+            const storageRef = storage.ref(`profili/${nomeFile}`);
+            
+            const uploadTask = storageRef.put(blob, {
+                contentType: 'image/jpeg',
+                customMetadata: {
+                    'giocatore': giocatore.nome,
+                    'uploadTime': new Date().toISOString()
                 }
+            });
 
-                // Limita dimensione file (5MB)
-                if (file.size > 5 * 1024 * 1024) {
-                    alert("❌ L'immagine è troppo grande (max 5MB)");
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    setAnteprimaFoto(e.target.result);
-                    setFotoSelezionata(e.target.result);
-                    setModalitaCamera(false);
-                };
-                reader.readAsDataURL(file);
-            };
-
-            // 💾 SALVA FOTO SU FIREBASE
-            const salvaFoto = async () => {
-                if (!fotoSelezionata) {
-                    alert("❌ Nessuna foto selezionata!");
-                    return;
-                }
-
-                setIsLoading(true);
-                try {
-                    // Converti base64 in blob
-                    const base64Response = await fetch(fotoSelezionata);
-                    const blob = await base64Response.blob();
-
-                    // Crea nome file
-                    const nomeFile = `${giocatore.id}.jpg`;
-                    const storageRef = storage.ref(`profili/${nomeFile}`);
-                    
-                    // Upload con metadata
-                    const uploadTask = storageRef.put(blob, {
-                        contentType: 'image/jpeg',
-                        customMetadata: {
-                            'giocatore': giocatore.nome,
-                            'uploadTime': new Date().toISOString()
-                        }
-                    });
-
-                    uploadTask.on('state_changed',
-                        (snapshot) => {
-                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            console.log(`📤 Upload: ${progress.toFixed(1)}%`);
-                        },
-                        (error) => {
-                            console.error("❌ Errore upload:", error);
-                            alert("❌ Errore nel salvataggio della foto");
-                            setIsLoading(false);
-                        },
-                        async () => {
-                            // Upload completato
-                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                            
-                            // Aggiorna stato locale
-                            setFotoUrl(downloadURL);
-                            
-                            // Aggiorna database
-                            await database.ref(`giocatori/${giocatore.id}`).update({
-                                foto_profilo: downloadURL,
-                                foto_aggiornata: new Date().toISOString()
-                            });
-
-                            // Reset
-                            setShowModal(false);
-                            setFotoSelezionata(null);
-                            setAnteprimaFoto(null);
-                            setModalitaCamera(false);
-                            setIsLoading(false);
-                            
-                            // Callback
-                            if (onFotoCambiata) {
-                                onFotoCambiata(downloadURL);
-                            }
-
-                            alert("✅ Foto profilo aggiornata con successo!");
-                        }
-                    );
-
-                } catch (error) {
-                    console.error("❌ Errore salvataggio foto:", error);
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    console.log(`📤 Upload: ${progress.toFixed(1)}%`);
+                },
+                (error) => {
+                    console.error("❌ Errore upload:", error);
                     alert("❌ Errore nel salvataggio della foto");
                     setIsLoading(false);
-                }
-            };
-
-            // 🗑️ RIMUOVI FOTO
-            const rimuoviFoto = async () => {
-                if (!confirm("🗑️ Sei sicuro di voler rimuovere la foto profilo?")) return;
-
-                try {
-                    // Elimina da Storage
-                    await storage.ref(`profili/${giocatore.id}.jpg`).delete();
+                },
+                async () => {
+                    const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
                     
-                    // Elimina riferimento dal database
+                    setFotoUrl(downloadURL);
+                    
                     await database.ref(`giocatori/${giocatore.id}`).update({
-                        foto_profilo: null,
-                        foto_aggiornata: null
+                        foto_profilo: downloadURL,
+                        foto_aggiornata: new Date().toISOString()
                     });
-                    
-                    // Aggiorna stato locale
-                    setFotoUrl(null);
+
                     setShowModal(false);
+                    setFotoSelezionata(null);
+                    setAnteprimaFoto(null);
+                    setModalitaCamera(false);
+                    setIsLoading(false);
                     
-                    // Callback
                     if (onFotoCambiata) {
-                        onFotoCambiata(null);
+                        onFotoCambiata(downloadURL);
                     }
-                    
-                    alert("✅ Foto profilo rimossa!");
-                } catch (error) {
-                    console.error("❌ Errore rimozione foto:", error);
-                    alert("❌ Errore nella rimozione della foto");
+
+                    alert("✅ Foto profilo aggiornata con successo!");
                 }
-            };
+            );
 
-            // ❌ CHIUDI MODAL E PULISCI
-            const chiudiModal = () => {
-                // Ferma stream camera se attivo
-                if (streamRef.current) {
-                    streamRef.current.getTracks().forEach(track => track.stop());
-                    streamRef.current = null;
-                }
-                
-                if (videoRef.current) {
-                    videoRef.current.srcObject = null;
-                }
-                
-                // Reset stato
-                setShowModal(false);
-                setFotoSelezionata(null);
-                setAnteprimaFoto(null);
-                setModalitaCamera(false);
-            };
+        } catch (error) {
+            console.error("❌ Errore salvataggio foto:", error);
+            alert("❌ Errore nel salvataggio della foto");
+            setIsLoading(false);
+        }
+    };
 
-            // 🎬 CLEANUP ALL'UNMOUNT
-            useEffect(() => {
-                return () => {
-                    if (streamRef.current) {
-                        streamRef.current.getTracks().forEach(track => track.stop());
-                    }
-                };
-            }, []);
+    // 🗑️ RIMUOVI FOTO
+    const rimuoviFoto = async () => {
+        if (!confirm("🗑️ Sei sicuro di voler rimuovere la foto profilo?")) return;
 
-            return (
-                <div className="foto-profilo-container">
-                    {/* FOTO PROFILO O PLACEHOLDER */}
-                    {fotoUrl ? (
-                        <img 
-                            src={fotoUrl} 
-                            alt={`Foto di ${giocatore.nome}`}
-                            className={`${classeDimensione} foto-profilo`}
-                            onClick={() => setShowModal(true)}
-                            style={{ cursor: 'pointer' }}
-                            onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextElementSibling.style.display = 'flex';
-                            }}
-                        />
-                    ) : null}
-                    
-                    <div 
-                        className={`${classeDimensione} foto-profilo foto-profilo-placeholder`}
-                        onClick={() => setShowModal(true)}
-                        style={{ 
-                            cursor: 'pointer',
-                            display: fotoUrl ? 'none' : 'flex'
-                        }}
-                    >
-                        {giocatore.nome.charAt(0).toUpperCase()}
-                    </div>
-                    
-                    {/* BOTTONE CAMBIA FOTO */}
-                    <button 
-                        className="aggiungi-foto-btn"
-                        onClick={() => setShowModal(true)}
-                        title="Cambia foto profilo"
-                        type="button"
-                    >
-                        📷
-                    </button>
+        try {
+            await storage.ref(`profili/${giocatore.id}.jpg`).delete();
+            
+            await database.ref(`giocatori/${giocatore.id}`).update({
+                foto_profilo: null,
+                foto_aggiornata: null
+            });
+            
+            setFotoUrl(null);
+            setShowModal(false);
+            
+            if (onFotoCambiata) {
+                onFotoCambiata(null);
+            }
+            
+            alert("✅ Foto profilo rimossa!");
+        } catch (error) {
+            console.error("❌ Errore rimozione foto:", error);
+            alert("❌ Errore nella rimozione della foto");
+        }
+    };
 
-                    {/* MODALE GESTIONE FOTO */}
-                    {showModal && (
-                        <div className="modal-foto-overlay" onClick={(e) => e.target.className === 'modal-foto-overlay' && chiudiModal()}>
-                            <div className="modal-foto-content">
-                                <h3 style={{ marginBottom: '20px', color: '#4CAF50' }}>
-                                    📷 Foto Profilo di {giocatore.nome}
-                                </h3>
-                                
-                                {/* VIDEO CAMERA */}
-                                {modalitaCamera && (
-                                    <>
-                                        <video 
-                                            ref={videoRef}
-                                            autoPlay
-                                            playsInline
-                                            muted
-                                            className="video-camera"
-                                        />
-                                        <div className="controlli-camera">
-                                            <button 
-                                                className="btn-foto scatta"
-                                                onClick={scattaFoto}
-                                                disabled={isLoading}
-                                            >
-                                                {isLoading ? '⏳' : '📸'} Scatta Foto
-                                            </button>
-                                            <button 
-                                                className="btn-foto annulla"
-                                                onClick={chiudiModal}
-                                                disabled={isLoading}
-                                            >
-                                                ❌ Annulla
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                                
-                                {/* ANTEPRIMA FOTO */}
-                                {anteprimaFoto && !modalitaCamera && (
-                                    <>
+    // ❌ CHIUDI MODAL
+    const chiudiModal = () => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+        
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+        
+        setShowModal(false);
+        setFotoSelezionata(null);
+        setAnteprimaFoto(null);
+        setModalitaCamera(false);
+    };
+
+    // 🎬 CLEANUP
+    useEffect(() => {
+        return () => {
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+            }
+        };
+    }, []);
+
+    return (
+        <div className="foto-profilo-container">
+            {/* FOTO PROFILO O PLACEHOLDER */}
+            {fotoUrl ? (
+                <img 
+                    src={fotoUrl} 
+                    alt={`Foto di ${giocatore.nome}`}
+                    className={`${classeDimensione} foto-profilo`}
+                    onClick={() => setShowModal(true)}
+                    style={{ cursor: 'pointer' }}
+                    onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextElementSibling.style.display = 'flex';
+                    }}
+                />
+            ) : null}
+            
+            <div 
+                className={`${classeDimensione} foto-profilo foto-profilo-placeholder`}
+                onClick={() => setShowModal(true)}
+                style={{ 
+                    cursor: 'pointer',
+                    display: fotoUrl ? 'none' : 'flex'
+                }}
+            >
+                {giocatore.nome.charAt(0).toUpperCase()}
+            </div>
+            
+            {/* BOTTONE CAMBIA FOTO */}
+            <button 
+                className="aggiungi-foto-btn"
+                onClick={() => setShowModal(true)}
+                title="Cambia foto profilo"
+                type="button"
+            >
+                📷
+            </button>
+
+            {/* MODALE GESTIONE FOTO - VERSIONE CORRETTA */}
+            {showModal && (
+                <div className="modal-foto-overlay" onClick={(e) => e.target.className === 'modal-foto-overlay' && chiudiModal()}>
+                    <div className="modal-foto-content">
+                        <h3 style={{ marginBottom: '20px', color: '#4CAF50' }}>
+                            📷 Foto Profilo di {giocatore.nome}
+                        </h3>
+                        
+                        {/* MENU PRINCIPALE - SOLO SE NON IN MODALITA' CAMERA O ANTEPRIMA */}
+                        {!modalitaCamera && !anteprimaFoto && (
+                            <>
+                                {fotoUrl && (
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <p>Foto attuale:</p>
                                         <img 
-                                            src={anteprimaFoto} 
-                                            alt="Anteprima nuova foto"
+                                            src={fotoUrl} 
+                                            alt="Foto attuale"
                                             className="anteprima-foto"
+                                            style={{ maxWidth: '150px' }}
                                         />
-                                        <div className="controlli-camera">
-                                            <button 
-                                                className="btn-foto carica"
-                                                onClick={salvaFoto}
-                                                disabled={isLoading}
-                                            >
-                                                {isLoading ? '⏳ Caricamento...' : '💾 Salva Foto'}
-                                            </button>
-                                            <button 
-                                                className="btn-foto annulla"
-                                                onClick={() => {
-                                                    setAnteprimaFoto(null);
-                                                    setFotoSelezionata(null);
-                                                }}
-                                                disabled={isLoading}
-                                            >
-                                                🔄 Riprova
-                                            </button>
-                                        </div>
-                                    </>
+                                    </div>
                                 )}
                                 
-                                {/* MENU PRINCIPALE - SOLO SE NON IN MODALITA' CAMERA O ANTEPRIMA */}
-                                {!modalitaCamera && !anteprimaFoto && (
-                                    <>
-                                        {fotoUrl && (
-                                            <div style={{ marginBottom: '20px' }}>
-                                                <p>Foto attuale:</p>
-                                                <img 
-                                                    src={fotoUrl} 
-                                                    alt="Foto attuale"
-                                                    className="anteprima-foto"
-                                                    style={{ maxWidth: '150px' }}
-                                                />
-                                            </div>
-                                        )}
-                                        
-                                        <div className="modal-foto-actions">
-                                            <button 
-                                                className="btn-foto scatta"
-                                                onClick={inizializzaCamera}
-                                                disabled={isLoading}
-                                            >
-                                                📸 Scatta Foto
-                                            </button>
-                                            <button 
-                                                className="btn-foto carica"
-                                                onClick={() => fileInputRef.current?.click()}
-                                                disabled={isLoading}
-                                            >
-                                                📁 Carica da Galleria
-                                            </button>
-                                        </div>
-                                        
-                                        {fotoUrl && (
-                                            <div className="modal-foto-actions" style={{ marginTop: '10px' }}>
-                                                <button 
-                                                    className="btn-foto rimuovi"
-                                                    onClick={rimuoviFoto}
-                                                    disabled={isLoading}
-                                                >
-                                                    🗑️ Rimuovi Foto
-                                                </button>
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                                
-                                {/* INPUT FILE NASCOSTO */}
-                                <input 
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={gestisciCaricamentoFoto}
-                                    style={{ display: 'none' }}
-                                />
-                                
-                                {/* CANVAS NASCOSTO */}
-                                <canvas ref={canvasRef} style={{ display: 'none' }} />
-                                
-                                {/* BOTTONE CHIUDI */}
-                                <div className="modal-foto-actions" style={{ marginTop: '20px' }}>
+                                <div className="modal-foto-actions">
+                                    {/* PULSANTE 1: SCATTA FOTO - CORRETTO */}
                                     <button 
-                                        className="btn-foto annulla"
-                                        onClick={chiudiModal}
+                                        className="btn-foto scatta"
+                                        onClick={inizializzaCamera}
                                         disabled={isLoading}
                                     >
-                                        ❌ Chiudi
+                                        📸 Scatta Nuova Foto
+                                    </button>
+                                    
+                                    {/* PULSANTE 2: CARICA DA GALLERIA - CORRETTO */}
+                                    <button 
+                                        className="btn-foto carica"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isLoading}
+                                    >
+                                        📁 Scegli dalla Galleria
                                     </button>
                                 </div>
-                            </div>
+                                
+                                {fotoUrl && (
+                                    <div className="modal-foto-actions" style={{ marginTop: '10px' }}>
+                                        <button 
+                                            className="btn-foto rimuovi"
+                                            onClick={rimuoviFoto}
+                                            disabled={isLoading}
+                                        >
+                                            🗑️ Rimuovi Foto Attuale
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                        
+                        {/* VIDEO CAMERA - QUANDO SCATTI FOTO */}
+                        {modalitaCamera && (
+                            <>
+                                <video 
+                                    ref={videoRef}
+                                    autoPlay
+                                    playsInline
+                                    muted
+                                    className="video-camera"
+                                />
+                                <div className="controlli-camera">
+                                    <button 
+                                        className="btn-foto scatta"
+                                        onClick={scattaFoto}
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? '⏳' : '📸'} Scatta Foto
+                                    </button>
+                                    <button 
+                                        className="btn-foto annulla"
+                                        onClick={() => {
+                                            setModalitaCamera(false);
+                                            if (streamRef.current) {
+                                                streamRef.current.getTracks().forEach(track => track.stop());
+                                                streamRef.current = null;
+                                            }
+                                        }}
+                                        disabled={isLoading}
+                                    >
+                                        ❌ Annulla
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                        
+                        {/* ANTEPRIMA FOTO - DOPO AVER SCATTATO O CARICATO */}
+                        {anteprimaFoto && !modalitaCamera && (
+                            <>
+                                <img 
+                                    src={anteprimaFoto} 
+                                    alt="Anteprima nuova foto"
+                                    className="anteprima-foto"
+                                />
+                                <div className="controlli-camera">
+                                    <button 
+                                        className="btn-foto carica"
+                                        onClick={salvaFoto}
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? '⏳ Caricamento...' : '💾 Salva Foto'}
+                                    </button>
+                                    <button 
+                                        className="btn-foto annulla"
+                                        onClick={() => {
+                                            setAnteprimaFoto(null);
+                                            setFotoSelezionata(null);
+                                        }}
+                                        disabled={isLoading}
+                                    >
+                                        🔄 Scegli un'altra
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                        
+                        {/* INPUT FILE NASCOSTO PER GALLERIA */}
+                        <input 
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={gestisciCaricamentoFoto}
+                            style={{ display: 'none' }}
+                        />
+                        
+                        {/* CANVAS NASCOSTO PER SCATTARE FOTO */}
+                        <canvas ref={canvasRef} style={{ display: 'none' }} />
+                        
+                        {/* BOTTONE CHIUDI SEMPRE VISIBILE */}
+                        <div className="modal-foto-actions" style={{ marginTop: '20px' }}>
+                            <button 
+                                className="btn-foto annulla"
+                                onClick={chiudiModal}
+                                disabled={isLoading}
+                            >
+                                ❌ Chiudi
+                            </button>
                         </div>
-                    )}
+                    </div>
                 </div>
-            );
-        };
+            )}
+        </div>
+    );
+};
 
         function App() {
             const [loginForm, setLoginForm] = useState({
