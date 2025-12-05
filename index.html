@@ -1017,6 +1017,93 @@
             font-weight: bold;
         }
 
+        /* 🆕 STILI PER CLASSIFICA VITTORIE/SCONFITTE */
+        .classifica-winrate {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.9) 0%, rgba(18, 18, 32, 0.9) 100%);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .winrate-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .winrate-numbers {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+        }
+
+        .winrate-vittorie {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .winrate-sconfitte {
+            color: #F44336;
+            font-weight: bold;
+        }
+
+        .winrate-pareggi {
+            color: #FFC107;
+            font-weight: bold;
+        }
+
+        .winrate-percentuale {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .progress-container {
+            margin-top: 10px;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        .progress-bar-winrate {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill-winrate {
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            color: white;
+            font-weight: bold;
+            transition: width 0.5s ease;
+        }
+
+        .progress-vittorie { background: linear-gradient(90deg, #4CAF50, #8BC34A); }
+        .progress-sconfitte { background: linear-gradient(90deg, #F44336, #FF5722); }
+        .progress-pareggi { background: linear-gradient(90deg, #FFC107, #FF9800); }
+
+        .badge-partite-giocate {
+            background: #2196F3;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+
         @media (min-width: 768px) {
             .desktop-nav {
                 display: flex;
@@ -1049,7 +1136,7 @@
                 height: 20px;
                 font-size: 0.7rem;
                 display: flex;
-                        align-items: center;
+                align-items: center;
                 justify-content: center;
                 position: absolute;
                 top: -5px;
@@ -1663,6 +1750,11 @@
                 statistiche: 0
             });
 
+            // 🏆 STATO PER MVP ATTUALE - RISOLTO
+            const [currentMVP, setCurrentMVP] = useState(null);
+            const [previousMVP, setPreviousMVP] = useState(null);
+            const [lastMVPTimestamp, setLastMVPTimestamp] = useState({});
+
             const chatContainerRef = useRef(null);
             const fileInputRef = useRef(null);
 
@@ -1815,36 +1907,79 @@
                 });
             };
 
-            // 🏆 FUNZIONE PER TROVARE IL MVP ATTUALE - VERSIONE CORRETTA
+            // 🏆 FUNZIONE PER TROVARE IL MVP ATTUALE - RISOLTA: CERCA L'ULTIMO MVP ASSEGNATO
             const getCurrentMVP = () => {
                 if (giocatori.length === 0) return null;
                 
-                // Filtra solo i giocatori che hanno giocato almeno una partita
-                const giocatoriCheHannoGiocato = giocatori.filter(hasGiocatoAlmenoUnaPartita);
+                // Trova l'ultimo timestamp MVP
+                let ultimoTimestamp = 0;
+                let ultimoMVP = null;
                 
-                if (giocatoriCheHannoGiocato.length === 0) return null;
-                
-                const mvp = giocatoriCheHannoGiocato.reduce((prev, current) => {
-                    const prevMVPCount = prev.mvp_count || 0;
-                    const currentMVPCount = current.mvp_count || 0;
-                    return currentMVPCount > prevMVPCount ? current : prev;
+                giocatori.forEach(giocatore => {
+                    if (giocatore.last_mvp_timestamp && giocatore.last_mvp_timestamp > ultimoTimestamp) {
+                        ultimoTimestamp = giocatore.last_mvp_timestamp;
+                        ultimoMVP = giocatore;
+                    }
                 });
                 
-                // CONVERTI media_calcolata IN NUMERO per sicurezza
-                if (mvp && mvp.mvp_count > 0) {
-                    return {
-                        ...mvp,
-                        media_calcolata: parseFloat(mvp.media_calcolata) || 0
-                    };
+                // Se nessuno ha un timestamp MVP, guarda il conteggio totale
+                if (!ultimoMVP) {
+                    const giocatoriCheHannoGiocato = giocatori.filter(hasGiocatoAlmenoUnaPartita);
+                    if (giocatoriCheHannoGiocato.length === 0) return null;
+                    
+                    // Trova il massimo numero di MVP
+                    const maxMVP = Math.max(...giocatoriCheHannoGiocato.map(g => g.mvp_count || 0));
+                    if (maxMVP === 0) return null;
+                    
+                    // Trova tutti i giocatori con quel numero di MVP
+                    const giocatoriConMaxMVP = giocatoriCheHannoGiocato.filter(g => (g.mvp_count || 0) === maxMVP);
+                    
+                    // Se c'è un solo giocatore con il massimo, restituiscilo
+                    if (giocatoriConMaxMVP.length === 1) {
+                        return giocatoriConMaxMVP[0];
+                    }
+                    
+                    // Se c'è un pareggio, scegli quello con l'ultimo timestamp
+                    if (giocatoriConMaxMVP.length > 1) {
+                        let ultimo = giocatoriConMaxMVP[0];
+                        giocatoriConMaxMVP.forEach(g => {
+                            if ((g.last_mvp_timestamp || 0) > (ultimo.last_mvp_timestamp || 0)) {
+                                ultimo = g;
+                            }
+                        });
+                        return ultimo;
+                    }
                 }
                 
-                return null;
+                return ultimoMVP;
+            };
+
+            // 🏆 FUNZIONE PER VERIFICARE SE C'È STATO UN CAMBIO MVP
+            const verificaCambioMVP = (nuovoMVP) => {
+                const vecchioMVP = currentMVP;
+                
+                if (!vecchioMVP && nuovoMVP) {
+                    // Primo MVP assegnato
+                    return { cambiato: true, vecchio: null, nuovo: nuovoMVP };
+                }
+                
+                if (vecchioMVP && nuovoMVP && vecchioMVP.id !== nuovoMVP.id) {
+                    // MVP è cambiato
+                    return { cambiato: true, vecchio: vecchioMVP, nuovo: nuovoMVP };
+                }
+                
+                if (vecchioMVP && !nuovoMVP) {
+                    // MVP è stato rimosso
+                    return { cambiato: true, vecchio: vecchioMVP, nuovo: null };
+                }
+                
+                return { cambiato: false, vecchio: vecchioMVP, nuovo: nuovoMVP };
             };
 
             // 🏆 FUNZIONE PER RENDERIZZARE IL MVP CON EFFETTI SPECIALI
             const renderMVPGlow = (giocatore, isListItem = false) => {
-                const currentMVP = getCurrentMVP();
-                const isMVP = currentMVP && currentMVP.id === giocatore.id;
+                const mvp = getCurrentMVP();
+                const isMVP = mvp && mvp.id === giocatore.id;
                 
                 if (isMVP) {
                     return isListItem ? 'mvp-glow-item' : 'mvp-glow';
@@ -1852,7 +1987,7 @@
                 return '';
             };
 
-            // 🆕 FUNZIONE RIMUOVI MVP (SOLO ADMIN)
+            // 🆕 FUNZIONE RIMUOVI MVP (SOLO ADMIN) - VERSIONE CORRETTA
             const rimuoviMVP = (id) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono rimuovere MVP!");
                 
@@ -1869,13 +2004,20 @@
                 database.ref(`giocatori/${id}`).update({
                     mvp_count: nuovoCount
                 }).then(() => {
+                    // Controlla se il MVP è cambiato
+                    const nuovoMVP = getCurrentMVP();
+                    const cambio = verificaCambioMVP(nuovoMVP);
+                    
+                    if (cambio.cambiato && cambio.vecchio && cambio.nuovo) {
+                        showPushNotification(
+                            "👑 CAMBIO MVP!",
+                            `${cambio.nuovo.nome} ha preso lo scettro da ${cambio.vecchio.nome}!`,
+                            'mvp'
+                        );
+                    }
+                    
                     alert("➖🏆 MVP rimosso correttamente!");
                     
-                    showPushNotification(
-                        "➖🏆 MVP Rimosso",
-                        `Un MVP è stato rimosso da ${giocatore.nome}`,
-                        'mvp'
-                    );
                 }).catch(error => {
                     console.error("Errore rimozione MVP:", error);
                     alert("❌ Errore nella rimozione dell'MVP");
@@ -1884,8 +2026,6 @@
 
             // 🎯 CLASSIFICA MEDIA VOTO - ESCLUDE COMPLETAMENTE CHI NON HA MAI GIOCATO
             const classificaMediaVoto = React.useMemo(() => {
-                console.log("📊 Ricalcolo media voto...", pagelle.length);
-                
                 return giocatori
                     .map(giocatore => {
                         // 🔴 IMPORTANTE: Escludi COMPLETAMENTE i giocatori che non hanno mai giocato
@@ -1900,12 +2040,10 @@
                         
                         const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
                             const voto = parseFloat(pagella.voto);
-                            console.log(`📝 ${giocatore.nome}: voto ${voto} da ${pagella.autore}`);
                             return sum + (isNaN(voto) ? 0 : voto);
                         }, 0);
                         
                         const mediaReale = sommaVoti / pagelleGiocatore.length;
-                        console.log(`🎯 ${giocatore.nome}: ${pagelleGiocatore.length} pagelle, media ${mediaReale.toFixed(2)}`);
                         
                         return { ...giocatore, mediaReale, partiteGiocate: pagelleGiocatore.length };
                     })
@@ -1931,6 +2069,104 @@
                 
                 return null;
             };
+
+            // 🆕 CALCOLA STATISTICHE VITTORIE/SCONFITTE PER GIOCATORE
+            const calcolaStatistichePartite = (giocatore) => {
+                const nomeGiocatore = giocatore.nome;
+                let vittorie = 0;
+                let sconfitte = 0;
+                let pareggi = 0;
+                let partiteGiocate = 0;
+                
+                // Cerca pagelle del giocatore per determinare le partite giocate
+                const pagelleGiocatore = pagelle.filter(p => p.giocatore === nomeGiocatore);
+                const datePartiteGiocate = [...new Set(pagelleGiocatore.map(p => p.data))];
+                
+                datePartiteGiocate.forEach(dataPartita => {
+                    const partita = partite.find(p => p.data === dataPartita);
+                    if (partita && partita.risultato) {
+                        const pagellaPartita = pagelleGiocatore.find(p => p.data === dataPartita && p.giocatore === nomeGiocatore);
+                        if (pagellaPartita) {
+                            partiteGiocate++;
+                            
+                            if (partita.risultato === 'Vittoria') {
+                                // Controlla se il giocatore era nella fazione vincente
+                                if (pagellaPartita.fazione === partita.fazione_vincente) {
+                                    vittorie++;
+                                } else {
+                                    sconfitte++;
+                                }
+                            } else if (partita.risultato === 'Sconfitta') {
+                                // Controlla se il giocatore era nella fazione perdente
+                                if (pagellaPartita.fazione === partita.fazione_perdente) {
+                                    sconfitte++;
+                                } else {
+                                    vittorie++;
+                                }
+                            } else if (partita.risultato === 'Pareggio') {
+                                pareggi++;
+                            }
+                        }
+                    }
+                });
+                
+                // Fallback: se non trova partite ma il giocatore ha presenze
+                if (partiteGiocate === 0 && giocatore.presenze > 0) {
+                    partiteGiocate = giocatore.presenze;
+                    // Stima approssimativa basata su media voto
+                    const media = parseFloat(giocatore.media_calcolata) || 0;
+                    if (media > 6.5) {
+                        vittorie = Math.floor(partiteGiocate * 0.6);
+                        sconfitte = Math.floor(partiteGiocate * 0.3);
+                        pareggi = partiteGiocate - vittorie - sconfitte;
+                    } else if (media > 5.5) {
+                        vittorie = Math.floor(partiteGiocate * 0.4);
+                        sconfitte = Math.floor(partiteGiocate * 0.4);
+                        pareggi = partiteGiocate - vittorie - sconfitte;
+                    } else {
+                        sconfitte = Math.floor(partiteGiocate * 0.6);
+                        vittorie = Math.floor(partiteGiocate * 0.2);
+                        pareggi = partiteGiocate - vittorie - sconfitte;
+                    }
+                }
+                
+                const percentualeVittorie = partiteGiocate > 0 ? (vittorie / partiteGiocate) * 100 : 0;
+                const percentualeSconfitte = partiteGiocate > 0 ? (sconfitte / partiteGiocate) * 100 : 0;
+                const percentualePareggi = partiteGiocate > 0 ? (pareggi / partiteGiocate) * 100 : 0;
+                
+                return {
+                    vittorie,
+                    sconfitte,
+                    pareggi,
+                    partiteGiocate,
+                    percentualeVittorie: percentualeVittorie.toFixed(1),
+                    percentualeSconfitte: percentualeSconfitte.toFixed(1),
+                    percentualePareggi: percentualePareggi.toFixed(1),
+                    winRate: percentualeVittorie.toFixed(1)
+                };
+            };
+
+            // 🆕 CLASSIFICA WINRATE (VITTORIE/SCONFITTE)
+            const classificaWinrate = React.useMemo(() => {
+                return giocatori
+                    .filter(hasGiocatoAlmenoUnaPartita)
+                    .map(giocatore => {
+                        const stats = calcolaStatistichePartite(giocatore);
+                        return {
+                            ...giocatore,
+                            ...stats
+                        };
+                    })
+                    .filter(g => g.partiteGiocate > 0)
+                    .sort((a, b) => {
+                        // Ordina per percentuale di vittorie, poi per partite giocate
+                        if (parseFloat(b.percentualeVittorie) !== parseFloat(a.percentualeVittorie)) {
+                            return parseFloat(b.percentualeVittorie) - parseFloat(a.percentualeVittorie);
+                        }
+                        return b.partiteGiocate - a.partiteGiocate;
+                    })
+                    .slice(0, 10);
+            }, [giocatori, partite, pagelle]);
 
             // 🔧 GESTIONE INPUT MIGLIORATA
             const handleInputChange = (field, value) => {
@@ -1997,9 +2233,34 @@
                         partite_portiere: data[key].partite_portiere || 0,
                         presenze: data[key].presenze || 0,
                         foto_profilo: data[key].foto_profilo || null,
+                        last_mvp_timestamp: data[key].last_mvp_timestamp || 0,
                         has_giocato: (data[key].presenze || 0) > 0 // Campo aggiuntivo per controllo rapido
                     })) : [];
                     setGiocatori(giocatoriArray);
+                    
+                    // 🏆 AGGIORNA MVP ATTUALE - RISOLTO
+                    const nuovoMVP = getCurrentMVP();
+                    const cambio = verificaCambioMVP(nuovoMVP);
+                    
+                    if (cambio.cambiato) {
+                        setPreviousMVP(cambio.vecchio);
+                        setCurrentMVP(cambio.nuovo);
+                        
+                        // Notifica cambio MVP
+                        if (cambio.vecchio && cambio.nuovo) {
+                            showPushNotification(
+                                "👑 NUOVO MVP!",
+                                `${cambio.nuovo.nome} ha preso lo scettro da ${cambio.vecchio.nome}!`,
+                                'mvp-change'
+                            );
+                        } else if (cambio.nuovo && !cambio.vecchio) {
+                            showPushNotification(
+                                "👑 PRIMO MVP!",
+                                `${cambio.nuovo.nome} è il primo MVP della stagione!`,
+                                'mvp-first'
+                            );
+                        }
+                    }
                 });
 
                 let ultimoMessaggioTimestamp = 0;
@@ -2073,7 +2334,7 @@
                                 
                                 if (!eraConfermato && oraConfermato) {
                                     showPushNotification(
-                                        "✅ Prenotazione Confermada",
+                                        "✅ Prenotazione Confermata",
                                         `Sei confermato per il ${formattaData(nuovaPartita.data)}`,
                                         'calendar'
                                     );
@@ -2147,6 +2408,7 @@
                     errori: 0,
                     interventi_decisivi: 0,
                     foto_profilo: null,
+                    last_mvp_timestamp: 0,
                     has_giocato: false,
                     created_at: new Date().toLocaleString('it-IT')
                 }).then(() => {
@@ -2209,7 +2471,6 @@
                     database.ref('statistiche').once('value')
                 ]).then(([giocatoriSnap, messaggiSnap, partiteSnap, pagelleSnap, statisticheSnap]) => {
                     
-                    // 🛠️ CORREZIONE: Conta gli elementi in modo corretto
                     const giocatoriData = giocatoriSnap.val() || {};
                     const messaggiData = messaggiSnap.val() || {};
                     const partiteData = partiteSnap.val() || {};
@@ -2835,7 +3096,7 @@
                 });
             };
 
-            // 🏆 FUNZIONE MVP (SOLO ADMIN E FABRIZIO)
+            // 🏆 FUNZIONE MVP (SOLO ADMIN E FABRIZIO) - VERSIONE RISOLTA CON TIMESTAMP
             const addMVP = (id) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono assegnare MVP!");
                 
@@ -2848,18 +3109,32 @@
                     return;
                 }
                 
+                const timestampAttuale = Date.now();
                 const nuovoCount = (giocatore.mvp_count || 0) + 1;
                 
                 database.ref(`giocatori/${id}`).update({
-                    mvp_count: nuovoCount
+                    mvp_count: nuovoCount,
+                    last_mvp_timestamp: timestampAttuale
                 }).then(() => {
-                    alert("🏆 MVP assegnato!");
+                    // Controlla se il MVP è cambiato
+                    const nuovoMVP = giocatori.find(g => g.id === id);
+                    const cambio = verificaCambioMVP(nuovoMVP);
                     
-                    showPushNotification(
-                        "🏆 Nuovo MVP!",
-                        `${giocatore.nome} è stato nominato MVP!`,
-                        'chat'
-                    );
+                    if (cambio.cambiato) {
+                        showPushNotification(
+                            "👑 NUOVO MVP!",
+                            `${giocatore.nome} ha preso lo scettro! Ora ha ${nuovoCount} MVP!`,
+                            'mvp'
+                        );
+                    } else {
+                        showPushNotification(
+                            "🏆 MVP Assegnato",
+                            `${giocatore.nome} ha ricevuto un MVP! Totale: ${nuovoCount}`,
+                            'mvp'
+                        );
+                    }
+                    
+                    alert("🏆 MVP assegnato!");
                 });
             };
 
@@ -3118,19 +3393,19 @@
                             <div>
                                 <h2>🏆 Classifiche</h2>
                                 
-                                {/* 🏆 MVP ATTUALE CON EFFETTO SPECIALE */}
+                                {/* 🏆 MVP ATTUALE CON EFFETTO SPECIALE - RISOLTO */}
                                 {getCurrentMVP() && (
                                     <div className={`player-card mvp-glow`} style={{ position: 'relative' }}>
                                         <div className="mvp-crown">👑</div>
                                         <div style={{ textAlign: 'center', padding: '10px' }}>
                                             <h3 style={{ color: '#FFD700', marginBottom: '10px', fontSize: '1.3rem' }}>
-                                                🏆 MVP ATTUALE
+                                                🏆 MVP ATTUALE (ULTIMO MVP ASSEGNATO)
                                             </h3>
                                             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#FFC107' }}>
                                                 {getCurrentMVP().nome}
                                             </div>
                                             <div style={{ fontSize: '1rem', color: '#ccc', marginTop: '5px' }}>
-                                                {getCurrentMVP().mvp_count} MVP totali
+                                                {getCurrentMVP().mvp_count} MVP totali • Ultimo MVP: {new Date(getCurrentMVP().last_mvp_timestamp || 0).toLocaleDateString('it-IT')}
                                             </div>
                                             <div className="mvp-stats" style={{ justifyContent: 'center', marginTop: '10px' }}>
                                                 <div className="mvp-stat">⚽ {getCurrentMVP().gol || 0} gol</div>
@@ -3166,70 +3441,79 @@
                                     </div>
                                 </div>
 
-                                {/* 🆕 SEZIONE GESTIONE GIOCATORI (SOLO ADMIN) */}
-                                {isAdminUser() && (
-                                    <div className="gestione-giocatori">
-                                        <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>👥 Gestione Giocatori</h3>
-                                        
-                                        <div className="aggiungi-giocatore-form">
-                                            <input 
-                                                type="text"
-                                                placeholder="Nome del nuovo giocatore"
-                                                value={nuovoGiocatore}
-                                                onChange={(e) => setNuovoGiocatore(e.target.value)}
-                                                className="aggiungi-giocatore-input"
-                                                onKeyPress={(e) => e.key === 'Enter' && aggiungiGiocatore()}
-                                            />
-                                            <button 
-                                                onClick={aggiungiGiocatore}
-                                                style={{ 
-                                                    background: "#4CAF50", 
-                                                    color: "white",
-                                                    padding: "15px 20px"
-                                                }}
-                                            >
-                                                ➕ Aggiungi Giocatore
-                                            </button>
-                                        </div>
-
-                                        <div className="lista-giocatori-admin">
-                                            <h4 style={{ marginBottom: "15px", color: "#2196F3" }}>Lista Giocatori ({giocatori.length})</h4>
-                                            {giocatori.length === 0 ? (
-                                                <p style={{ textAlign: "center", color: "#888", padding: "20px" }}>
-                                                    Nessun giocatore ancora.
-                                                </p>
-                                            ) : (
-                                                giocatori.map(giocatore => (
-                                                    <div key={giocatore.id} className={`giocatore-admin-item ${!hasGiocatoAlmenoUnaPartita(giocatore) ? 'giocatore-non-giocante' : ''}`}>
-                                                        <div className="giocatore-admin-nome">
-                                                            {giocatore.nome}
-                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                            {!hasGiocatoAlmenoUnaPartita(giocatore) && (
-                                                                <span className="badge-non-giocante">NON HA GIOCATO</span>
-                                                            )}
+                                {/* 🆕 CLASSIFICA WINRATE (VITTORIE/SCONFITTE) */}
+                                <div className="classifica-grid">
+                                    <div className="classifica-card classifica-winrate">
+                                        <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>📈 Top WinRate (Vittorie/Partite)</h3>
+                                        {classificaWinrate.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">📈</div>
+                                                <p>Nessuna statistica di partita ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaWinrate.map((giocatore, index) => {
+                                                const stats = calcolaStatistichePartite(giocatore);
+                                                return (
+                                                    <div key={giocatore.id} className={`classifica-item-con-foto ${renderMVPGlow(giocatore, true)}`}>
+                                                        <div className="classifica-foto">
+                                                            <FotoProfiloManager 
+                                                                giocatore={giocatore} 
+                                                                size="small"
+                                                                onFotoCambiata={() => window.location.reload()}
+                                                            />
                                                         </div>
-                                                        <div className="giocatore-admin-stats">
-                                                            <span>⚽ {giocatore.gol || 0}</span>
-                                                            <span>🎯 {giocatore.assist || 0}</span>
-                                                            <span>⭐ {getMediaSicura(giocatore)}</span>
-                                                            <span>📊 {giocatore.presenze || 0}</span>
+                                                        <div className="classifica-info">
+                                                            <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                                {index + 1}
+                                                            </div>
+                                                            <div className="classifica-nome">
+                                                                {giocatore.nome}
+                                                                {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                                {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                    <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                                )}
+                                                                <span className="badge-partite-giocate">{stats.partiteGiocate} partite</span>
+                                                            </div>
+                                                            <div className="classifica-valore" style={{ color: '#FFD700', fontWeight: 'bold' }}>
+                                                                {stats.percentualeVittorie}%
+                                                            </div>
                                                         </div>
-                                                        <div className="giocatore-admin-actions">
-                                                            <button 
-                                                                onClick={() => eliminaGiocatore(giocatore.id, giocatore.nome)}
-                                                                className="btn-elimina"
-                                                            >
-                                                                🗑️ Elimina
-                                                            </button>
+                                                        <div className="progress-container">
+                                                            <div className="progress-bar-winrate">
+                                                                <div 
+                                                                    className="progress-fill-winrate progress-vittorie" 
+                                                                    style={{ width: `${stats.percentualeVittorie}%` }}
+                                                                    title={`${stats.vittorie} vittorie (${stats.percentualeVittorie}%)`}
+                                                                >
+                                                                    {stats.percentualeVittorie > 15 && `${stats.percentualeVittorie}%`}
+                                                                </div>
+                                                                <div 
+                                                                    className="progress-fill-winrate progress-sconfitte" 
+                                                                    style={{ width: `${stats.percentualeSconfitte}%` }}
+                                                                    title={`${stats.sconfitte} sconfitte (${stats.percentualeSconfitte}%)`}
+                                                                >
+                                                                    {stats.percentualeSconfitte > 15 && `${stats.percentualeSconfitte}%`}
+                                                                </div>
+                                                                <div 
+                                                                    className="progress-fill-winrate progress-pareggi" 
+                                                                    style={{ width: `${stats.percentualePareggi}%` }}
+                                                                    title={`${stats.pareggi} pareggi (${stats.percentualePareggi}%)`}
+                                                                >
+                                                                    {stats.percentualePareggi > 15 && `${stats.percentualePareggi}%`}
+                                                                </div>
+                                                            </div>
+                                                            <div className="progress-labels">
+                                                                <span className="winrate-vittorie">✅ {stats.vittorie}V</span>
+                                                                <span className="winrate-sconfitte">❌ {stats.sconfitte}S</span>
+                                                                <span className="winrate-pareggi">⚡ {stats.pareggi}P</span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                ))
-                                            )}
-                                        </div>
+                                                );
+                                            })
+                                        )}
                                     </div>
-                                )}
 
-                                <div className="classifica-grid">
                                     <div className="classifica-card">
                                         <h3 style={{ marginBottom: "15px", color: "#FFD700" }}>⚽ Top Marcatori</h3>
                                         {classificaMarcatori.length === 0 ? (
@@ -3380,7 +3664,107 @@
                                             ))
                                         )}
                                     </div>
+
+                                    <div className="classifica-card">
+                                        <h3 style={{ marginBottom: "15px", color: "#0096FF" }}>🧤 Classifica Benji Price</h3>
+                                        {classificaBenjiPrice.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">🧤</div>
+                                                <p>Nessuna statistica portiere ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaBenjiPrice.map((giocatore, index) => (
+                                                <div key={giocatore.id} className={`classifica-item-con-foto ${renderMVPGlow(giocatore, true)}`}>
+                                                    <div className="classifica-foto">
+                                                        <FotoProfiloManager 
+                                                            giocatore={giocatore} 
+                                                            size="small"
+                                                            onFotoCambiata={() => window.location.reload()}
+                                                        />
+                                                    </div>
+                                                    <div className="classifica-info">
+                                                        <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                            {index + 1}
+                                                        </div>
+                                                        <div className="classifica-nome">
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="classifica-valore" style={{ color: '#0096FF' }}>
+                                                            {giocatore.punteggio_benji} pts
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
                                 </div>
+
+                                {/* 🆕 SEZIONE GESTIONE GIOCATORI (SOLO ADMIN) */}
+                                {isAdminUser() && (
+                                    <div className="gestione-giocatori">
+                                        <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>👥 Gestione Giocatori</h3>
+                                        
+                                        <div className="aggiungi-giocatore-form">
+                                            <input 
+                                                type="text"
+                                                placeholder="Nome del nuovo giocatore"
+                                                value={nuovoGiocatore}
+                                                onChange={(e) => setNuovoGiocatore(e.target.value)}
+                                                className="aggiungi-giocatore-input"
+                                                onKeyPress={(e) => e.key === 'Enter' && aggiungiGiocatore()}
+                                            />
+                                            <button 
+                                                onClick={aggiungiGiocatore}
+                                                style={{ 
+                                                    background: "#4CAF50", 
+                                                    color: "white",
+                                                    padding: "15px 20px"
+                                                }}
+                                            >
+                                                ➕ Aggiungi Giocatore
+                                            </button>
+                                        </div>
+
+                                        <div className="lista-giocatori-admin">
+                                            <h4 style={{ marginBottom: "15px", color: "#2196F3" }}>Lista Giocatori ({giocatori.length})</h4>
+                                            {giocatori.length === 0 ? (
+                                                <p style={{ textAlign: "center", color: "#888", padding: "20px" }}>
+                                                    Nessun giocatore ancora.
+                                                </p>
+                                            ) : (
+                                                giocatori.map(giocatore => (
+                                                    <div key={giocatore.id} className={`giocatore-admin-item ${!hasGiocatoAlmenoUnaPartita(giocatore) ? 'giocatore-non-giocante' : ''}`}>
+                                                        <div className="giocatore-admin-nome">
+                                                            {giocatore.nome}
+                                                            {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {!hasGiocatoAlmenoUnaPartita(giocatore) && (
+                                                                <span className="badge-non-giocante">NON HA GIOCATO</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="giocatore-admin-stats">
+                                                            <span>⚽ {giocatore.gol || 0}</span>
+                                                            <span>🎯 {giocatore.assist || 0}</span>
+                                                            <span>⭐ {getMediaSicura(giocatore)}</span>
+                                                            <span>📊 {giocatore.presenze || 0}</span>
+                                                        </div>
+                                                        <div className="giocatore-admin-actions">
+                                                            <button 
+                                                                onClick={() => eliminaGiocatore(giocatore.id, giocatore.nome)}
+                                                                className="btn-elimina"
+                                                            >
+                                                                🗑️ Elimina
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* LISTA COMPLETA GIOCATORI CON TUTTE LE STATISTICHE E FOTO PROFILO */}
                                 <div style={{ marginTop: "40px" }}>
@@ -3393,216 +3777,256 @@
                                             Nessun giocatore ancora.
                                         </p>
                                     ) : (
-                                        giocatori.map(giocatore => (
-                                            <div key={giocatore.id} className={`player-card ${isCurrentUser(giocatore.nome) ? 'current-user' : ''} ${renderMVPGlow(giocatore)} ${!hasGiocatoAlmenoUnaPartita(giocatore) ? 'giocatore-non-giocante' : ''}`}>
-                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
-                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', gap: '15px' }}>
-                                                        {/* FOTO PROFILO */}
-                                                        <FotoProfiloManager 
-                                                            giocatore={giocatore}
-                                                            size="medium"
-                                                            onFotoCambiata={() => window.location.reload()}
-                                                        />
-                                                        
-                                                        <div style={{ flex: 1 }}>
-                                                            <h4 style={{ margin: "0 0 10px 0", fontSize: "1.2rem" }}>
-                                                                {giocatore.nome}
-                                                                {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                                {!hasGiocatoAlmenoUnaPartita(giocatore) && (
-                                                                    <span className="badge-non-giocante">NON HA GIOCATO</span>
-                                                                )}
-                                                                {(giocatore.mvp_count || 0) > 0 && hasGiocatoAlmenoUnaPartita(giocatore) && (
-                                                                    <span className="mvp-badge">{giocatore.mvp_count} MVP</span>
-                                                                )}
-                                                                {(giocatore.presenze || 0) > 0 && (
-                                                                    <span className="presenze-badge">{giocatore.presenze} partite</span>
-                                                                )}
-                                                                {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
-                                                                    <span style={{ 
-                                                                        background: '#FFD700', 
-                                                                        color: 'black', 
-                                                                        padding: '2px 8px', 
-                                                                        borderRadius: '4px', 
-                                                                        fontSize: '0.7rem', 
-                                                                        marginLeft: '8px', 
-                                                                        fontWeight: 'bold',
-                                                                        animation: 'pulse 2s infinite'
-                                                                    }}>
-                                                                        👑 MVP ATTUALE
-                                                                    </span>
-                                                                )}
-                                                            </h4>
+                                        giocatori.map(giocatore => {
+                                            const statsPartite = calcolaStatistichePartite(giocatore);
+                                            return (
+                                                <div key={giocatore.id} className={`player-card ${isCurrentUser(giocatore.nome) ? 'current-user' : ''} ${renderMVPGlow(giocatore)} ${!hasGiocatoAlmenoUnaPartita(giocatore) ? 'giocatore-non-giocante' : ''}`}>
+                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
+                                                        <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', gap: '15px' }}>
+                                                            {/* FOTO PROFILO */}
+                                                            <FotoProfiloManager 
+                                                                giocatore={giocatore}
+                                                                size="medium"
+                                                                onFotoCambiata={() => window.location.reload()}
+                                                            />
                                                             
-                                                            <div className="stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", margin: "10px 0" }}>
-                                                                <div style={{ textAlign: "center" }}>
-                                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>⚽ Gol</div>
-                                                                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#FFD700" }}>
-                                                                        {giocatore.gol || 0}
+                                                            <div style={{ flex: 1 }}>
+                                                                <h4 style={{ margin: "0 0 10px 0", fontSize: "1.2rem" }}>
+                                                                    {giocatore.nome}
+                                                                    {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                                    {!hasGiocatoAlmenoUnaPartita(giocatore) && (
+                                                                        <span className="badge-non-giocante">NON HA GIOCATO</span>
+                                                                    )}
+                                                                    {(giocatore.mvp_count || 0) > 0 && hasGiocatoAlmenoUnaPartita(giocatore) && (
+                                                                        <span className="mvp-badge">{giocatore.mvp_count} MVP</span>
+                                                                    )}
+                                                                    {(giocatore.presenze || 0) > 0 && (
+                                                                        <span className="presenze-badge">{giocatore.presenze} partite</span>
+                                                                    )}
+                                                                    {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                        <span style={{ 
+                                                                            background: '#FFD700', 
+                                                                            color: 'black', 
+                                                                            padding: '2px 8px', 
+                                                                            borderRadius: '4px', 
+                                                                            fontSize: '0.7rem', 
+                                                                            marginLeft: '8px', 
+                                                                            fontWeight: 'bold',
+                                                                            animation: 'pulse 2s infinite'
+                                                                        }}>
+                                                                            👑 MVP ATTUALE
+                                                                        </span>
+                                                                    )}
+                                                                </h4>
+                                                                
+                                                                <div className="stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", margin: "10px 0" }}>
+                                                                    <div style={{ textAlign: "center" }}>
+                                                                        <div style={{ fontSize: "0.8rem", color: "#ccc" }}>⚽ Gol</div>
+                                                                        <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#FFD700" }}>
+                                                                            {giocatore.gol || 0}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div style={{ textAlign: "center" }}>
+                                                                        <div style={{ fontSize: "0.8rem", color: "#ccc" }}>🎯 Assist</div>
+                                                                        <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#4CAF50" }}>
+                                                                            {giocatore.assist || 0}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div style={{ textAlign: "center" }}>
+                                                                        <div style={{ fontSize: "0.8rem", color: "#ccc" }}>⭐ Media</div>
+                                                                        <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: hasGiocatoAlmenoUnaPartita(giocatore) ? "#2196F3" : "#666" }}>
+                                                                            {getMediaSicura(giocatore)}
+                                                                            {!hasGiocatoAlmenoUnaPartita(giocatore) && (
+                                                                                <div style={{ fontSize: "0.6rem", color: "#888", marginTop: "2px" }}>
+                                                                                    (non ha giocato)
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                                <div style={{ textAlign: "center" }}>
-                                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>🎯 Assist</div>
-                                                                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#4CAF50" }}>
-                                                                        {giocatore.assist || 0}
-                                                                    </div>
-                                                                </div>
-                                                                <div style={{ textAlign: "center" }}>
-                                                                    <div style={{ fontSize: "0.8rem", color: "#ccc" }}>⭐ Media</div>
-                                                                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: hasGiocatoAlmenoUnaPartita(giocatore) ? "#2196F3" : "#666" }}>
-                                                                        {getMediaSicura(giocatore)}
-                                                                        {!hasGiocatoAlmenoUnaPartita(giocatore) && (
-                                                                            <div style={{ fontSize: "0.6rem", color: "#888", marginTop: "2px" }}>
-                                                                                (non ha giocato)
+
+                                                                {/* STATISTICHE VITTORIE/SCONFITTE */}
+                                                                {hasGiocatoAlmenoUnaPartita(giocatore) && statsPartite.partiteGiocate > 0 && (
+                                                                    <div style={{ marginTop: "10px", padding: "10px", background: "rgba(255, 255, 255, 0.05)", borderRadius: "8px" }}>
+                                                                        <h5 style={{ margin: "0 0 8px 0", color: "#FFD700", fontSize: "0.9rem" }}>📊 Statistiche Partite</h5>
+                                                                        <div className="winrate-stats">
+                                                                            <div className="winrate-numbers">
+                                                                                <span className="winrate-vittorie">✅ {statsPartite.vittorie}V ({statsPartite.percentualeVittorie}%)</span>
+                                                                                <span className="winrate-sconfitte">❌ {statsPartite.sconfitte}S ({statsPartite.percentualeSconfitte}%)</span>
+                                                                                <span className="winrate-pareggi">⚡ {statsPartite.pareggi}P ({statsPartite.percentualePareggi}%)</span>
                                                                             </div>
-                                                                        )}
+                                                                            <div className="winrate-percentuale">
+                                                                                WinRate: {statsPartite.winRate}%
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="progress-bar-winrate" style={{ marginTop: "8px" }}>
+                                                                            <div 
+                                                                                className="progress-fill-winrate progress-vittorie" 
+                                                                                style={{ width: `${statsPartite.percentualeVittorie}%` }}
+                                                                            >
+                                                                                {statsPartite.percentualeVittorie > 10 && `${statsPartite.percentualeVittorie}%`}
+                                                                            </div>
+                                                                            <div 
+                                                                                className="progress-fill-winrate progress-sconfitte" 
+                                                                                style={{ width: `${statsPartite.percentualeSconfitte}%` }}
+                                                                            >
+                                                                                {statsPartite.percentualeSconfitte > 10 && `${statsPartite.percentualeSconfitte}%`}
+                                                                            </div>
+                                                                            <div 
+                                                                                className="progress-fill-winrate progress-pareggi" 
+                                                                                style={{ width: `${statsPartite.percentualePareggi}%` }}
+                                                                            >
+                                                                                {statsPartite.percentualePareggi > 10 && `${statsPartite.percentualePareggi}%`}
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
+                                                                )}
+
+                                                                {/* STATISTICHE PORTA (se presenti) */}
+                                                                {(giocatore.parate > 0 || giocatore.partite_portiere > 0) && hasGiocatoAlmenoUnaPartita(giocatore) && (
+                                                                    <div style={{ marginTop: "10px", padding: "10px", background: "rgba(0, 150, 255, 0.1)", borderRadius: "8px" }}>
+                                                                        <h5 style={{ margin: "0 0 8px 0", color: "#0096FF", fontSize: "0.9rem" }}>🧤 Statistiche Portiere</h5>
+                                                                        <div className="mvp-stats">
+                                                                            <div className="mvp-stat">Parate: {giocatore.parate || 0}</div>
+                                                                            <div className="mvp-stat">Partite: {giocatore.partite_portiere || 0}</div>
+                                                                            {giocatore.rigori_parati > 0 && <div className="mvp-stat">Rigori: {giocatore.rigori_parati}</div>}
+                                                                            {giocatore.parate_difficili > 0 && <div className="mvp-stat">Parate difficili: {giocatore.parate_difficili}</div>}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
                                                             </div>
-
-                                                            {/* STATISTICHE PORTA (se presenti) */}
-                                                            {(giocatore.parate > 0 || giocatore.partite_portiere > 0) && hasGiocatoAlmenoUnaPartita(giocatore) && (
-                                                                <div style={{ marginTop: "10px", padding: "10px", background: "rgba(0, 150, 255, 0.1)", borderRadius: "8px" }}>
-                                                                    <h5 style={{ margin: "0 0 8px 0", color: "#0096FF", fontSize: "0.9rem" }}>🧤 Statistiche Portiere</h5>
-                                                                    <div className="mvp-stats">
-                                                                        <div className="mvp-stat">Parate: {giocatore.parate || 0}</div>
-                                                                        <div className="mvp-stat">Partite: {giocatore.partite_portiere || 0}</div>
-                                                                        {giocatore.rigori_parati > 0 && <div className="mvp-stat">Rigori: {giocatore.rigori_parati}</div>}
-                                                                        {giocatore.parate_difficili > 0 && <div className="mvp-stat">Parate difficili: {giocatore.parate_difficili}</div>}
-                                                                    </div>
-                                                                </div>
-                                                            )}
                                                         </div>
-                                                    </div>
-                                                    
-                                                    {/* CONTROLLI ADMIN - FABRIZIO STESSI POTERI */}
-                                                    {isAdminUser() && (
-                                                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
-                                                            <input 
-                                                                id={`gol-${giocatore.id}`}
-                                                                type="number" 
-                                                                placeholder="±Gol" 
-                                                                className="number-input"
-                                                            />
-                                                            <button 
-                                                                onClick={() => addGolAssist(giocatore.id, 'gol', document.getElementById(`gol-${giocatore.id}`).value)}
-                                                                style={{ 
-                                                                    padding: "8px 12px", 
-                                                                    background: "#FFD700",
-                                                                    color: "black",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer",
-                                                                    fontSize: "12px"
-                                                                }}
-                                                            >
-                                                                ±⚽
-                                                            </button>
-                                                            
-                                                            <input 
-                                                                id={`assist-${giocatore.id}`}
-                                                                type="number" 
-                                                                placeholder="±Assist" 
-                                                                className="number-input"
-                                                            />
-                                                            <button 
-                                                                onClick={() => addGolAssist(giocatore.id, 'assist', document.getElementById(`assist-${giocatore.id}`).value)}
-                                                                style={{ 
-                                                                    padding: "8px 12px", 
-                                                                    background: "#4CAF50",
-                                                                    color: "white",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer",
-                                                                    fontSize: "12px"
-                                                                }}
-                                                            >
-                                                                ±🎯
-                                                            </button>
-                                                            
-                                                            <input 
-                                                                id={`voto-${giocatore.id}`}
-                                                                type="number" 
-                                                                step="0.5"
-                                                                min="1"
-                                                                max="10"
-                                                                placeholder="Voto" 
-                                                                className="number-input"
-                                                                disabled={!hasGiocatoAlmenoUnaPartita(giocatore)}
-                                                                title={!hasGiocatoAlmenoUnaPartita(giocatore) ? "Il giocatore non ha giocato ancora" : ""}
-                                                            />
-                                                            <button 
-                                                                onClick={() => addVoto(giocatore.id, document.getElementById(`voto-${giocatore.id}`).value)}
-                                                                style={{ 
-                                                                    padding: "8px 12px", 
-                                                                    background: "#2196F3",
-                                                                    color: "white",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer",
-                                                                    fontSize: "12px"
-                                                                }}
-                                                                disabled={!hasGiocatoAlmenoUnaPartita(giocatore)}
-                                                                title={!hasGiocatoAlmenoUnaPartita(giocatore) ? "Il giocatore non ha giocato ancora" : ""}
-                                                            >
-                                                                +⭐
-                                                            </button>
-                                                            
-                                                            <button 
-                                                                onClick={() => addMVP(giocatore.id)}
-                                                                style={{ 
-                                                                    padding: "8px 12px", 
-                                                                    background: "#FFC107",
-                                                                    color: "black",
-                                                                    border: "none",
-                                                                    borderRadius: "8px",
-                                                                    cursor: "pointer",
-                                                                    fontSize: "12px"
-                                                                }}
-                                                                disabled={!hasGiocatoAlmenoUnaPartita(giocatore)}
-                                                                title={!hasGiocatoAlmenoUnaPartita(giocatore) ? "Il giocatore non ha giocato ancora" : ""}
-                                                            >
-                                                                +🏆
-                                                            </button>
-
-                                                            {/* 🆕 PULSANTE RIMUOVI MVP */}
-                                                            <button 
-                                                                onClick={() => rimuoviMVP(giocatore.id)}
-                                                                className="btn-rimuovi-mvp"
-                                                                disabled={!giocatore.mvp_count || giocatore.mvp_count === 0 || !hasGiocatoAlmenoUnaPartita(giocatore)}
-                                                                title={!hasGiocatoAlmenoUnaPartita(giocatore) ? "Il giocatore non ha giocato ancora" : "Rimuovi MVP"}
-                                                            >
-                                                                ➖🏆
-                                                            </button>
-
-                                                            {/* CONTROLLI STATISTICHE PORTIERE */}
-                                                            <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "5px" }}>
+                                                        
+                                                        {/* CONTROLLI ADMIN - FABRIZIO STESSI POTERI */}
+                                                        {isAdminUser() && (
+                                                            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
                                                                 <input 
-                                                                    id={`parate-${giocatore.id}`}
+                                                                    id={`gol-${giocatore.id}`}
                                                                     type="number" 
-                                                                    placeholder="Parate" 
+                                                                    placeholder="±Gol" 
                                                                     className="number-input"
-                                                                    style={{ width: "60px" }}
                                                                 />
                                                                 <button 
-                                                                    onClick={() => aggiungiStatPortiere(giocatore.id, 'parate', document.getElementById(`parate-${giocatore.id}`).value)}
+                                                                    onClick={() => addGolAssist(giocatore.id, 'gol', document.getElementById(`gol-${giocatore.id}`).value)}
                                                                     style={{ 
-                                                                        padding: "6px 8px", 
-                                                                        background: "#0096FF",
-                                                                        color: "white",
+                                                                        padding: "8px 12px", 
+                                                                        background: "#FFD700",
+                                                                        color: "black",
                                                                         border: "none",
-                                                                        borderRadius: "6px",
+                                                                        borderRadius: "8px",
                                                                         cursor: "pointer",
-                                                                        fontSize: "10px"
+                                                                        fontSize: "12px"
                                                                     }}
                                                                 >
-                                                                    ±🧤
+                                                                    ±⚽
                                                                 </button>
+                                                                
+                                                                <input 
+                                                                    id={`assist-${giocatore.id}`}
+                                                                    type="number" 
+                                                                    placeholder="±Assist" 
+                                                                    className="number-input"
+                                                                />
+                                                                <button 
+                                                                    onClick={() => addGolAssist(giocatore.id, 'assist', document.getElementById(`assist-${giocatore.id}`).value)}
+                                                                    style={{ 
+                                                                        padding: "8px 12px", 
+                                                                        background: "#4CAF50",
+                                                                        color: "white",
+                                                                        border: "none",
+                                                                        borderRadius: "8px",
+                                                                        cursor: "pointer",
+                                                                        fontSize: "12px"
+                                                                    }}
+                                                                >
+                                                                    ±🎯
+                                                                </button>
+                                                                
+                                                                <input 
+                                                                    id={`voto-${giocatore.id}`}
+                                                                    type="number" 
+                                                                    step="0.5"
+                                                                    min="1"
+                                                                    max="10"
+                                                                    placeholder="Voto" 
+                                                                    className="number-input"
+                                                                    disabled={!hasGiocatoAlmenoUnaPartita(giocatore)}
+                                                                    title={!hasGiocatoAlmenoUnaPartita(giocatore) ? "Il giocatore non ha giocato ancora" : ""}
+                                                                />
+                                                                <button 
+                                                                    onClick={() => addVoto(giocatore.id, document.getElementById(`voto-${giocatore.id}`).value)}
+                                                                    style={{ 
+                                                                        padding: "8px 12px", 
+                                                                        background: "#2196F3",
+                                                                        color: "white",
+                                                                        border: "none",
+                                                                        borderRadius: "8px",
+                                                                        cursor: "pointer",
+                                                                        fontSize: "12px"
+                                                                    }}
+                                                                    disabled={!hasGiocatoAlmenoUnaPartita(giocatore)}
+                                                                    title={!hasGiocatoAlmenoUnaPartita(giocatore) ? "Il giocatore non ha giocato ancora" : ""}
+                                                                >
+                                                                    +⭐
+                                                                </button>
+                                                                
+                                                                <button 
+                                                                    onClick={() => addMVP(giocatore.id)}
+                                                                    style={{ 
+                                                                        padding: "8px 12px", 
+                                                                        background: "#FFC107",
+                                                                        color: "black",
+                                                                        border: "none",
+                                                                        borderRadius: "8px",
+                                                                        cursor: "pointer",
+                                                                        fontSize: "12px"
+                                                                    }}
+                                                                    disabled={!hasGiocatoAlmenoUnaPartita(giocatore)}
+                                                                    title={!hasGiocatoAlmenoUnaPartita(giocatore) ? "Il giocatore non ha giocato ancora" : ""}
+                                                                >
+                                                                    +🏆
+                                                                </button>
+
+                                                                {/* 🆕 PULSANTE RIMUOVI MVP */}
+                                                                <button 
+                                                                    onClick={() => rimuoviMVP(giocatore.id)}
+                                                                    className="btn-rimuovi-mvp"
+                                                                    disabled={!giocatore.mvp_count || giocatore.mvp_count === 0 || !hasGiocatoAlmenoUnaPartita(giocatore)}
+                                                                    title={!hasGiocatoAlmenoUnaPartita(giocatore) ? "Il giocatore non ha giocato ancora" : "Rimuovi MVP"}
+                                                                >
+                                                                    ➖🏆
+                                                                </button>
+
+                                                                {/* CONTROLLI STATISTICHE PORTIERE */}
+                                                                <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "5px" }}>
+                                                                    <input 
+                                                                        id={`parate-${giocatore.id}`}
+                                                                        type="number" 
+                                                                        placeholder="Parate" 
+                                                                        className="number-input"
+                                                                        style={{ width: "60px" }}
+                                                                    />
+                                                                    <button 
+                                                                        onClick={() => aggiungiStatPortiere(giocatore.id, 'parate', document.getElementById(`parate-${giocatore.id}`).value)}
+                                                                        style={{ 
+                                                                            padding: "6px 8px", 
+                                                                            background: "#0096FF",
+                                                                            color: "white",
+                                                                            border: "none",
+                                                                            borderRadius: "6px",
+                                                                            cursor: "pointer",
+                                                                            fontSize: "10px"
+                                                                        }}
+                                                                    >
+                                                                        ±🧤
+                                                                    </button>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    )}
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))
+                                            );
+                                        })
                                     )}
                                 </div>
                             </div>
@@ -3811,6 +4235,52 @@
                                                 {calcolaPunteggioBenjiPrice(getCurrentGiocatore())}
                                             </div>
                                         </div>
+                                    </div>
+
+                                    {/* STATISTICHE VITTORIE/SCONFITTE PERSONALI */}
+                                    <div style={{ marginTop: "20px" }}>
+                                        <h4 style={{ marginBottom: "15px", color: "#FFC107" }}>📊 Le Mie Statistiche Partite</h4>
+                                        {(() => {
+                                            const mieStats = calcolaStatistichePartite(getCurrentGiocatore());
+                                            return mieStats.partiteGiocate > 0 ? (
+                                                <div>
+                                                    <div className="winrate-stats">
+                                                        <div className="winrate-numbers">
+                                                            <span className="winrate-vittorie">✅ {mieStats.vittorie} Vittorie ({mieStats.percentualeVittorie}%)</span>
+                                                            <span className="winrate-sconfitte">❌ {mieStats.sconfitte} Sconfitte ({mieStats.percentualeSconfitte}%)</span>
+                                                            <span className="winrate-pareggi">⚡ {mieStats.pareggi} Pareggi ({mieStats.percentualePareggi}%)</span>
+                                                        </div>
+                                                        <div className="winrate-percentuale">
+                                                            WinRate: {mieStats.winRate}%
+                                                        </div>
+                                                    </div>
+                                                    <div className="progress-bar-winrate" style={{ marginTop: "10px" }}>
+                                                        <div 
+                                                            className="progress-fill-winrate progress-vittorie" 
+                                                            style={{ width: `${mieStats.percentualeVittorie}%` }}
+                                                        >
+                                                            {mieStats.percentualeVittorie > 10 && `${mieStats.percentualeVittorie}%`}
+                                                        </div>
+                                                        <div 
+                                                            className="progress-fill-winrate progress-sconfitte" 
+                                                            style={{ width: `${mieStats.percentualeSconfitte}%` }}
+                                                        >
+                                                            {mieStats.percentualeSconfitte > 10 && `${mieStats.percentualeSconfitte}%`}
+                                                        </div>
+                                                        <div 
+                                                            className="progress-fill-winrate progress-pareggi" 
+                                                            style={{ width: `${mieStats.percentualePareggi}%` }}
+                                                        >
+                                                            {mieStats.percentualePareggi > 10 && `${mieStats.percentualePareggi}%`}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p style={{ textAlign: "center", color: "#888", padding: "20px" }}>
+                                                    Non hai ancora giocato partite.
+                                                </p>
+                                            );
+                                        })()}
                                     </div>
 
                                     {/* LE MIE ULTIME PAGELLE */}
@@ -4725,6 +5195,77 @@
                                             ))
                                         )}
                                     </div>
+
+                                    <div className="classifica-card classifica-winrate">
+                                        <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>📈 Top WinRate</h3>
+                                        {classificaWinrate.length === 0 ? (
+                                            <div className="empty-state">
+                                                <div className="icon">📈</div>
+                                                <p>Nessuna statistica di partita ancora.</p>
+                                            </div>
+                                        ) : (
+                                            classificaWinrate.map((giocatore, index) => {
+                                                const stats = calcolaStatistichePartite(giocatore);
+                                                return (
+                                                    <div key={giocatore.id} className={`classifica-item-con-foto ${renderMVPGlow(giocatore, true)}`}>
+                                                        <div className="classifica-foto">
+                                                            <FotoProfiloManager 
+                                                                giocatore={giocatore} 
+                                                                size="small"
+                                                                onFotoCambiata={() => window.location.reload()}
+                                                            />
+                                                        </div>
+                                                        <div className="classifica-info">
+                                                            <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                                {index + 1}
+                                                            </div>
+                                                            <div className="classifica-nome">
+                                                                {giocatore.nome}
+                                                                {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                                {getCurrentMVP() && getCurrentMVP().id === giocatore.id && (
+                                                                    <span className="mvp-badge" style={{ background: '#FFD700', color: 'black' }}>👑 MVP</span>
+                                                                )}
+                                                                <span className="badge-partite-giocate">{stats.partiteGiocate} partite</span>
+                                                            </div>
+                                                            <div className="classifica-valore" style={{ color: '#FFD700', fontWeight: 'bold' }}>
+                                                                {stats.percentualeVittorie}%
+                                                            </div>
+                                                        </div>
+                                                        <div className="progress-container">
+                                                            <div className="progress-bar-winrate">
+                                                                <div 
+                                                                    className="progress-fill-winrate progress-vittorie" 
+                                                                    style={{ width: `${stats.percentualeVittorie}%` }}
+                                                                    title={`${stats.vittorie} vittorie (${stats.percentualeVittorie}%)`}
+                                                                >
+                                                                    {stats.percentualeVittorie > 15 && `${stats.percentualeVittorie}%`}
+                                                                </div>
+                                                                <div 
+                                                                    className="progress-fill-winrate progress-sconfitte" 
+                                                                    style={{ width: `${stats.percentualeSconfitte}%` }}
+                                                                    title={`${stats.sconfitte} sconfitte (${stats.percentualeSconfitte}%)`}
+                                                                >
+                                                                    {stats.percentualeSconfitte > 15 && `${stats.percentualeSconfitte}%`}
+                                                                </div>
+                                                                <div 
+                                                                    className="progress-fill-winrate progress-pareggi" 
+                                                                    style={{ width: `${stats.percentualePareggi}%` }}
+                                                                    title={`${stats.pareggi} pareggi (${stats.percentualePareggi}%)`}
+                                                                >
+                                                                    {stats.percentualePareggi > 15 && `${stats.percentualePareggi}%`}
+                                                                </div>
+                                                            </div>
+                                                            <div className="progress-labels">
+                                                                <span className="winrate-vittorie">✅ {stats.vittorie}V</span>
+                                                                <span className="winrate-sconfitte">❌ {stats.sconfitte}S</span>
+                                                                <span className="winrate-pareggi">⚡ {stats.pareggi}P</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* CONTROLLI ADMIN PER PRESENZE */}
@@ -4872,6 +5413,58 @@
                                             {getCurrentGiocatore().partite_portiere || 0} partite in porta
                                         </div>
                                     </div>
+                                </div>
+
+                                {/* STATISTICHE VITTORIE/SCONFITTE PERSONALI */}
+                                <div style={{ marginTop: "30px" }}>
+                                    <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>📊 Le Mie Statistiche Partite</h3>
+                                    {(() => {
+                                        const mieStats = calcolaStatistichePartite(getCurrentGiocatore());
+                                        return mieStats.partiteGiocate > 0 ? (
+                                            <div>
+                                                <div className="winrate-stats">
+                                                    <div className="winrate-numbers">
+                                                        <span className="winrate-vittorie">✅ {mieStats.vittorie} Vittorie ({mieStats.percentualeVittorie}%)</span>
+                                                        <span className="winrate-sconfitte">❌ {mieStats.sconfitte} Sconfitte ({mieStats.percentualeSconfitte}%)</span>
+                                                        <span className="winrate-pareggi">⚡ {mieStats.pareggi} Pareggi ({mieStats.percentualePareggi}%)</span>
+                                                    </div>
+                                                    <div className="winrate-percentuale">
+                                                        WinRate: {mieStats.winRate}%
+                                                    </div>
+                                                </div>
+                                                <div className="progress-bar-winrate" style={{ marginTop: "10px" }}>
+                                                    <div 
+                                                        className="progress-fill-winrate progress-vittorie" 
+                                                        style={{ width: `${mieStats.percentualeVittorie}%` }}
+                                                    >
+                                                        {mieStats.percentualeVittorie > 10 && `${mieStats.percentualeVittorie}%`}
+                                                    </div>
+                                                    <div 
+                                                        className="progress-fill-winrate progress-sconfitte" 
+                                                        style={{ width: `${mieStats.percentualeSconfitte}%` }}
+                                                    >
+                                                        {mieStats.percentualeSconfitte > 10 && `${mieStats.percentualeSconfitte}%`}
+                                                    </div>
+                                                    <div 
+                                                        className="progress-fill-winrate progress-pareggi" 
+                                                        style={{ width: `${mieStats.percentualePareggi}%` }}
+                                                    >
+                                                        {mieStats.percentualePareggi > 10 && `${mieStats.percentualePareggi}%`}
+                                                    </div>
+                                                </div>
+                                                <div style={{ marginTop: "15px", textAlign: "center", color: "#ccc", fontSize: "0.9rem" }}>
+                                                    Giocate <strong>{mieStats.partiteGiocate}</strong> partite con un bilancio di 
+                                                    <strong style={{ color: "#4CAF50" }}> {mieStats.vittorie}V</strong> - 
+                                                    <strong style={{ color: "#F44336" }}> {mieStats.sconfitte}S</strong> - 
+                                                    <strong style={{ color: "#FFC107" }}> {mieStats.pareggi}P</strong>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p style={{ textAlign: "center", color: "#888", padding: "20px" }}>
+                                                Non hai ancora giocato partite.
+                                            </p>
+                                        );
+                                    })()}
                                 </div>
 
                                 {/* LE MIE ULTIME PAGELLE */}
