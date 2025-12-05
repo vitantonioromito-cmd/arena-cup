@@ -931,21 +931,10 @@
             min-width: 120px;
         }
 
-        .btn-foto.scatta {
-            background: #2196F3;
-        }
-
-        .btn-foto.carica {
-            background: #4CAF50;
-        }
-
-        .btn-foto.annulla {
-            background: #F44336;
-        }
-
-        .btn-foto.rimuovi {
-            background: #FF9800;
-        }
+        .btn-foto.scatta { background: #2196F3; }
+        .btn-foto.carica { background: #4CAF50; }
+        .btn-foto.annulla { background: #F44336; }
+        .btn-foto.rimuovi { background: #FF9800; }
 
         .anteprima-foto {
             width: 200px;
@@ -1008,6 +997,26 @@
             justify-content: space-between;
         }
 
+        /* STILE PER GIOCATORI NON GIOCANTI */
+        .giocatore-non-giocante {
+            opacity: 0.6;
+            filter: grayscale(0.5);
+        }
+
+        .giocatore-non-giocante .classifica-nome {
+            color: #888 !important;
+        }
+
+        .badge-non-giocante {
+            background: #666;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+
         @media (min-width: 768px) {
             .desktop-nav {
                 display: flex;
@@ -1040,7 +1049,7 @@
                 height: 20px;
                 font-size: 0.7rem;
                 display: flex;
-                align-items: center;
+                        align-items: center;
                 justify-content: center;
                 position: absolute;
                 top: -5px;
@@ -1696,9 +1705,19 @@
                 return username === "admin" || username === "vitantonio" || username === "fabrizio";
             };
 
-            // 🎯 FUNZIONE SICURA PER OTTENERE LA MEDIA - VERSIONE CORRETTA
+            // 🎯 FUNZIONE PER CONTROLLARE SE UN GIOCATORE HA GIOCATO ALMENO UNA PARTITA
+            const hasGiocatoAlmenoUnaPartita = (giocatore) => {
+                return (giocatore.presenze || 0) > 0;
+            };
+
+            // 🎯 FUNZIONE SICURA PER OTTENERE LA MEDIA - ESCLUDE CHI NON HA MAI GIOCATO
             const getMediaSicura = (giocatore) => {
                 if (!giocatore) return "0.00";
+                
+                // 🔴 IMPORTANTE: Se il giocatore non ha mai giocato, restituisci 0
+                if (!hasGiocatoAlmenoUnaPartita(giocatore)) {
+                    return "0.00";
+                }
                 
                 const media = parseFloat(giocatore.media_calcolata);
                 
@@ -1712,16 +1731,25 @@
 
             // 📊 AGGIORNA MEDIA GIOCATORE - VERSIONE CORRETTA E COMPLETA
             const aggiornaMediaGiocatore = (nomeGiocatore) => {
+                const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
+                if (!giocatore) return;
+                
+                // 🔴 IMPORTANTE: Se il giocatore non ha mai giocato, imposta media a 0
+                if (!hasGiocatoAlmenoUnaPartita(giocatore)) {
+                    database.ref(`giocatori/${giocatore.id}`).update({
+                        media_calcolata: 0,
+                        voti: []
+                    });
+                    return;
+                }
+                
                 const pagelleGiocatore = pagelle.filter(p => p.giocatore === nomeGiocatore);
                 if (pagelleGiocatore.length === 0) {
                     // Se non ci sono pagelle, imposta media a 0
-                    const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
-                    if (giocatore) {
-                        database.ref(`giocatori/${giocatore.id}`).update({
-                            media_calcolata: 0,
-                            voti: []
-                        });
-                    }
+                    database.ref(`giocatori/${giocatore.id}`).update({
+                        media_calcolata: 0,
+                        voti: []
+                    });
                     return;
                 }
                 
@@ -1733,16 +1761,13 @@
                 
                 const media = sommaVoti / pagelleGiocatore.length;
                 
-                // Trova il giocatore e aggiorna la media
-                const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
-                if (giocatore) {
-                    database.ref(`giocatori/${giocatore.id}`).update({
-                        media_calcolata: media.toFixed(2),
-                        voti: pagelleGiocatore.map(p => parseFloat(p.voto))
-                    }).then(() => {
-                        console.log(`✅ Media aggiornata per ${nomeGiocatore}: ${media.toFixed(2)}`);
-                    });
-                }
+                // Aggiorna la media nel database
+                database.ref(`giocatori/${giocatore.id}`).update({
+                    media_calcolata: media.toFixed(2),
+                    voti: pagelleGiocatore.map(p => parseFloat(p.voto))
+                }).then(() => {
+                    console.log(`✅ Media aggiornata per ${nomeGiocatore}: ${media.toFixed(2)}`);
+                });
             };
 
             // 🧤 FUNZIONI PER STATISTICHE PORTIERE (SOLO ADMIN E FABRIZIO)
@@ -1794,7 +1819,12 @@
             const getCurrentMVP = () => {
                 if (giocatori.length === 0) return null;
                 
-                const mvp = giocatori.reduce((prev, current) => {
+                // Filtra solo i giocatori che hanno giocato almeno una partita
+                const giocatoriCheHannoGiocato = giocatori.filter(hasGiocatoAlmenoUnaPartita);
+                
+                if (giocatoriCheHannoGiocato.length === 0) return null;
+                
+                const mvp = giocatoriCheHannoGiocato.reduce((prev, current) => {
                     const prevMVPCount = prev.mvp_count || 0;
                     const currentMVPCount = current.mvp_count || 0;
                     return currentMVPCount > prevMVPCount ? current : prev;
@@ -1852,20 +1882,20 @@
                 });
             };
 
-            // 🎯 CLASSIFICA MEDIA VOTO - ESCLUDE CHI NON HA MAI GIOCATO
+            // 🎯 CLASSIFICA MEDIA VOTO - ESCLUDE COMPLETAMENTE CHI NON HA MAI GIOCATO
             const classificaMediaVoto = React.useMemo(() => {
                 console.log("📊 Ricalcolo media voto...", pagelle.length);
                 
                 return giocatori
                     .map(giocatore => {
-                        // Escludi giocatori che non hanno mai giocato (presenze = 0)
-                        if ((giocatore.presenze || 0) === 0) {
-                            return { ...giocatore, mediaReale: 0, escluso: true };
+                        // 🔴 IMPORTANTE: Escludi COMPLETAMENTE i giocatori che non hanno mai giocato
+                        if (!hasGiocatoAlmenoUnaPartita(giocatore)) {
+                            return null; // Non incluso nella classifica
                         }
                         
                         const pagelleGiocatore = pagelle.filter(p => p.giocatore === giocatore.nome);
                         if (pagelleGiocatore.length === 0) {
-                            return { ...giocatore, mediaReale: 0, escluso: true };
+                            return { ...giocatore, mediaReale: 0, partiteGiocate: 0 };
                         }
                         
                         const sommaVoti = pagelleGiocatore.reduce((sum, pagella) => {
@@ -1877,9 +1907,9 @@
                         const mediaReale = sommaVoti / pagelleGiocatore.length;
                         console.log(`🎯 ${giocatore.nome}: ${pagelleGiocatore.length} pagelle, media ${mediaReale.toFixed(2)}`);
                         
-                        return { ...giocatore, mediaReale };
+                        return { ...giocatore, mediaReale, partiteGiocate: pagelleGiocatore.length };
                     })
-                    .filter(g => g.mediaReale > 0 && !g.escluso)
+                    .filter(g => g !== null && g.mediaReale > 0) // Filtra null e medie 0
                     .sort((a, b) => b.mediaReale - a.mediaReale)
                     .slice(0, 10);
             }, [giocatori, pagelle]);
@@ -1966,7 +1996,8 @@
                         interventi_decisivi: data[key].interventi_decisivi || 0,
                         partite_portiere: data[key].partite_portiere || 0,
                         presenze: data[key].presenze || 0,
-                        foto_profilo: data[key].foto_profilo || null
+                        foto_profilo: data[key].foto_profilo || null,
+                        has_giocato: (data[key].presenze || 0) > 0 // Campo aggiuntivo per controllo rapido
                     })) : [];
                     setGiocatori(giocatoriArray);
                 });
@@ -2116,6 +2147,7 @@
                     errori: 0,
                     interventi_decisivi: 0,
                     foto_profilo: null,
+                    has_giocato: false,
                     created_at: new Date().toLocaleString('it-IT')
                 }).then(() => {
                     setNuovoGiocatore("");
@@ -2380,25 +2412,25 @@
                 return Math.max(0, punteggio);
             };
 
-            // 🏆 CALCOLA CLASSIFICHE
+            // 🏆 CALCOLA CLASSIFICHE - ESCLUDE CHI NON HA MAI GIOCATO
             const classificaMarcatori = [...giocatori]
-                .filter(g => (g.gol || 0) > 0)
+                .filter(g => hasGiocatoAlmenoUnaPartita(g) && (g.gol || 0) > 0)
                 .sort((a, b) => (b.gol || 0) - (a.gol || 0))
                 .slice(0, 10);
 
             const classificaAssist = [...giocatori]
-                .filter(g => (g.assist || 0) > 0)
+                .filter(g => hasGiocatoAlmenoUnaPartita(g) && (g.assist || 0) > 0)
                 .sort((a, b) => (b.assist || 0) - (a.assist || 0))
                 .slice(0, 10);
 
             const classificaMVP = [...giocatori]
-                .filter(g => (g.mvp_count || 0) > 0)
+                .filter(g => hasGiocatoAlmenoUnaPartita(g) && (g.mvp_count || 0) > 0)
                 .sort((a, b) => (b.mvp_count || 0) - (a.mvp_count || 0))
                 .slice(0, 10);
 
             // 🧤 CLASSIFICA BENJI PRICE
             const classificaBenjiPrice = [...giocatori]
-                .filter(g => calcolaPunteggioBenjiPrice(g) > 0)
+                .filter(g => hasGiocatoAlmenoUnaPartita(g) && calcolaPunteggioBenjiPrice(g) > 0)
                 .map(g => ({
                     ...g,
                     punteggio_benji: calcolaPunteggioBenjiPrice(g)
@@ -2408,7 +2440,7 @@
 
             // 🎯 CLASSIFICA PRESENZE/PARTITE GIOCATE - ESCLUDE CHI NON HA MAI GIOCATO
             const classificaPresenze = [...giocatori]
-                .filter(g => (g.presenze || 0) > 0)
+                .filter(g => hasGiocatoAlmenoUnaPartita(g))
                 .sort((a, b) => (b.presenze || 0) - (a.presenze || 0))
                 .slice(0, 10);
 
@@ -2636,11 +2668,17 @@
                 const nuovoValore = Math.max(0, (giocatore.presenze || 0) + quantita);
                 
                 database.ref(`giocatori/${id}`).update({
-                    presenze: nuovoValore
+                    presenze: nuovoValore,
+                    has_giocato: nuovoValore > 0
                 }).then(() => {
                     const azione = quantita >= 0 ? "aggiunte" : "rimosse";
                     alert(`📊 ${Math.abs(quantita)} presenze ${azione}!`);
                     document.getElementById(`presenze-${id}`).value = "";
+                    
+                    // 🔄 AGGIORNA MEDIA SE È IL PRIMO GIOCO
+                    if (quantita > 0 && giocatore.presenze === 0) {
+                        aggiornaMediaGiocatore(giocatore.nome);
+                    }
                 });
             };
 
@@ -2779,6 +2817,12 @@
                 const giocatore = giocatori.find(g => g.id === id);
                 if (!giocatore) return;
                 
+                // 🔴 IMPORTANTE: Solo se il giocatore ha giocato almeno una partita
+                if (!hasGiocatoAlmenoUnaPartita(giocatore)) {
+                    alert("❌ Questo giocatore non ha ancora giocato nessuna partita!");
+                    return;
+                }
+                
                 const nuoviVoti = [...(giocatore.voti || []), voto];
                 const nuovaMedia = nuoviVoti.reduce((a, b) => a + b, 0) / nuoviVoti.length;
                 
@@ -2797,6 +2841,12 @@
                 
                 const giocatore = giocatori.find(g => g.id === id);
                 if (!giocatore) return;
+                
+                // 🔴 IMPORTANTE: Solo se il giocatore ha giocato almeno una partita
+                if (!hasGiocatoAlmenoUnaPartita(giocatore)) {
+                    alert("❌ Questo giocatore non ha ancora giocato nessuna partita!");
+                    return;
+                }
                 
                 const nuovoCount = (giocatore.mvp_count || 0) + 1;
                 
@@ -2847,17 +2897,19 @@
 
             // 🎯 MEDIA GENERALE - SOLO CHI HA VOTI E HA GIOCATO ALMENO UNA PARTITA
             const giocatoriConVoti = giocatori.filter(g => 
-                g.voti && g.voti.length > 0 && (g.presenze || 0) > 0
+                g.voti && g.voti.length > 0 && hasGiocatoAlmenoUnaPartita(g)
             );
+            
+            // 🎯 STATISTICHE CORRETTE - ESCLUDI CHI NON HA MAI GIOCATO
             const stats = {
-                totaleGol: giocatoriConMedia.reduce((sum, g) => sum + (g.gol || 0), 0),
-                totaleAssist: giocatoriConMedia.reduce((sum, g) => sum + (g.assist || 0), 0),
-                totaleGiocatori: giocatoriConMedia.length,
+                totaleGol: giocatori.filter(hasGiocatoAlmenoUnaPartita).reduce((sum, g) => sum + (g.gol || 0), 0),
+                totaleAssist: giocatori.filter(hasGiocatoAlmenoUnaPartita).reduce((sum, g) => sum + (g.assist || 0), 0),
+                totaleGiocatori: giocatori.filter(hasGiocatoAlmenoUnaPartita).length,
                 mediaGenerale: giocatoriConVoti.length > 0 ? 
                     giocatoriConVoti.reduce((sum, g) => sum + (parseFloat(g.media_calcolata) || 0), 0) / giocatoriConVoti.length : 0,
-                totaleMVP: giocatoriConMedia.reduce((sum, g) => sum + (g.mvp_count || 0), 0),
-                totalePortieri: giocatori.filter(g => g.partite_portiere > 0).length,
-                totalePresenze: giocatoriConMedia.reduce((sum, g) => sum + (g.presenze || 0), 0)
+                totaleMVP: giocatori.filter(hasGiocatoAlmenoUnaPartita).reduce((sum, g) => sum + (g.mvp_count || 0), 0),
+                totalePortieri: giocatori.filter(g => g.partite_portiere > 0 && hasGiocatoAlmenoUnaPartita(g)).length,
+                totalePresenze: giocatori.filter(hasGiocatoAlmenoUnaPartita).reduce((sum, g) => sum + (g.presenze || 0), 0)
             };
 
             const formattaData = (dataString) => {
@@ -2975,7 +3027,7 @@
                                      activeTab === "chat" ? "Chat" : 
                                      activeTab === "pagelle" ? "Pagelle" : 
                                      activeTab === "backup" ? "Backup" : "Impostazioni"} | 
-                                    {stats.totaleGiocatori} giocatori
+                                    {stats.totaleGiocatori} giocatori attivi
                                 </p>
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
@@ -3093,6 +3145,9 @@
                                     <div className="stat-card">
                                         <h3 style={{ color: "#FFD700", margin: "0 0 10px 0", fontSize: "1rem" }}>⚽ Gol Totali</h3>
                                         <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "bold" }}>{stats.totaleGol}</p>
+                                        <p style={{ margin: "5px 0 0 0", fontSize: "0.7rem", color: "#ccc" }}>
+                                            ({giocatori.filter(hasGiocatoAlmenoUnaPartita).length} giocatori attivi)
+                                        </p>
                                     </div>
                                     <div className="stat-card">
                                         <h3 style={{ color: "#4CAF50", margin: "0 0 10px 0", fontSize: "1rem" }}>🎯 Assist Totali</h3>
@@ -3145,10 +3200,13 @@
                                                 </p>
                                             ) : (
                                                 giocatori.map(giocatore => (
-                                                    <div key={giocatore.id} className="giocatore-admin-item">
+                                                    <div key={giocatore.id} className={`giocatore-admin-item ${!hasGiocatoAlmenoUnaPartita(giocatore) ? 'giocatore-non-giocante' : ''}`}>
                                                         <div className="giocatore-admin-nome">
                                                             {giocatore.nome}
                                                             {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
+                                                            {!hasGiocatoAlmenoUnaPartita(giocatore) && (
+                                                                <span className="badge-non-giocante">NON HA GIOCATO</span>
+                                                            )}
                                                         </div>
                                                         <div className="giocatore-admin-stats">
                                                             <span>⚽ {giocatore.gol || 0}</span>
@@ -3190,6 +3248,9 @@
                                                         />
                                                     </div>
                                                     <div className="classifica-info">
+                                                        <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                            {index + 1}
+                                                        </div>
                                                         <div className="classifica-nome">
                                                             {giocatore.nome}
                                                             {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
@@ -3224,6 +3285,9 @@
                                                         />
                                                     </div>
                                                     <div className="classifica-info">
+                                                        <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                            {index + 1}
+                                                        </div>
                                                         <div className="classifica-nome">
                                                             {giocatore.nome}
                                                             {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
@@ -3258,6 +3322,9 @@
                                                         />
                                                     </div>
                                                     <div className="classifica-info">
+                                                        <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                            {index + 1}
+                                                        </div>
                                                         <div className="classifica-nome">
                                                             {giocatore.nome}
                                                             {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
@@ -3292,6 +3359,9 @@
                                                         />
                                                     </div>
                                                     <div className="classifica-info">
+                                                        <div className={`classifica-pos ${index === 0 ? 'oro' : index === 1 ? 'argento' : index === 2 ? 'bronzo' : ''}`}>
+                                                            {index + 1}
+                                                        </div>
                                                         <div className="classifica-nome">
                                                             {giocatore.nome}
                                                             {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
@@ -3301,6 +3371,9 @@
                                                         </div>
                                                         <div className="classifica-valore">
                                                             {giocatore.mediaReale.toFixed(2)}
+                                                            <span style={{ fontSize: "0.7rem", color: "#ccc", marginLeft: "5px" }}>
+                                                                ({giocatore.partiteGiocate || 0} partite)
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -3312,13 +3385,16 @@
                                 {/* LISTA COMPLETA GIOCATORI CON TUTTE LE STATISTICHE E FOTO PROFILO */}
                                 <div style={{ marginTop: "40px" }}>
                                     <h3>👥 Lista Completa Giocatori</h3>
+                                    <p style={{ color: "#ccc", fontSize: "0.9rem", marginBottom: "15px" }}>
+                                        <strong>Nota:</strong> I giocatori che non hanno mai giocato non influenzano le medie
+                                    </p>
                                     {giocatori.length === 0 ? (
                                         <p style={{ textAlign: "center", color: "#888", padding: "20px" }}>
                                             Nessun giocatore ancora.
                                         </p>
                                     ) : (
                                         giocatori.map(giocatore => (
-                                            <div key={giocatore.id} className={`player-card ${isCurrentUser(giocatore.nome) ? 'current-user' : ''} ${renderMVPGlow(giocatore)}`}>
+                                            <div key={giocatore.id} className={`player-card ${isCurrentUser(giocatore.nome) ? 'current-user' : ''} ${renderMVPGlow(giocatore)} ${!hasGiocatoAlmenoUnaPartita(giocatore) ? 'giocatore-non-giocante' : ''}`}>
                                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
                                                     <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', gap: '15px' }}>
                                                         {/* FOTO PROFILO */}
@@ -3332,7 +3408,10 @@
                                                             <h4 style={{ margin: "0 0 10px 0", fontSize: "1.2rem" }}>
                                                                 {giocatore.nome}
                                                                 {isCurrentUser(giocatore.nome) && <span className="current-user-badge">TU</span>}
-                                                                {(giocatore.mvp_count || 0) > 0 && (
+                                                                {!hasGiocatoAlmenoUnaPartita(giocatore) && (
+                                                                    <span className="badge-non-giocante">NON HA GIOCATO</span>
+                                                                )}
+                                                                {(giocatore.mvp_count || 0) > 0 && hasGiocatoAlmenoUnaPartita(giocatore) && (
                                                                     <span className="mvp-badge">{giocatore.mvp_count} MVP</span>
                                                                 )}
                                                                 {(giocatore.presenze || 0) > 0 && (
@@ -3369,14 +3448,19 @@
                                                                 </div>
                                                                 <div style={{ textAlign: "center" }}>
                                                                     <div style={{ fontSize: "0.8rem", color: "#ccc" }}>⭐ Media</div>
-                                                                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#2196F3" }}>
+                                                                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: hasGiocatoAlmenoUnaPartita(giocatore) ? "#2196F3" : "#666" }}>
                                                                         {getMediaSicura(giocatore)}
+                                                                        {!hasGiocatoAlmenoUnaPartita(giocatore) && (
+                                                                            <div style={{ fontSize: "0.6rem", color: "#888", marginTop: "2px" }}>
+                                                                                (non ha giocato)
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             </div>
 
                                                             {/* STATISTICHE PORTA (se presenti) */}
-                                                            {(giocatore.parate > 0 || giocatore.partite_portiere > 0) && (
+                                                            {(giocatore.parate > 0 || giocatore.partite_portiere > 0) && hasGiocatoAlmenoUnaPartita(giocatore) && (
                                                                 <div style={{ marginTop: "10px", padding: "10px", background: "rgba(0, 150, 255, 0.1)", borderRadius: "8px" }}>
                                                                     <h5 style={{ margin: "0 0 8px 0", color: "#0096FF", fontSize: "0.9rem" }}>🧤 Statistiche Portiere</h5>
                                                                     <div className="mvp-stats">
@@ -3443,6 +3527,8 @@
                                                                 max="10"
                                                                 placeholder="Voto" 
                                                                 className="number-input"
+                                                                disabled={!hasGiocatoAlmenoUnaPartita(giocatore)}
+                                                                title={!hasGiocatoAlmenoUnaPartita(giocatore) ? "Il giocatore non ha giocato ancora" : ""}
                                                             />
                                                             <button 
                                                                 onClick={() => addVoto(giocatore.id, document.getElementById(`voto-${giocatore.id}`).value)}
@@ -3455,6 +3541,8 @@
                                                                     cursor: "pointer",
                                                                     fontSize: "12px"
                                                                 }}
+                                                                disabled={!hasGiocatoAlmenoUnaPartita(giocatore)}
+                                                                title={!hasGiocatoAlmenoUnaPartita(giocatore) ? "Il giocatore non ha giocato ancora" : ""}
                                                             >
                                                                 +⭐
                                                             </button>
@@ -3470,6 +3558,8 @@
                                                                     cursor: "pointer",
                                                                     fontSize: "12px"
                                                                 }}
+                                                                disabled={!hasGiocatoAlmenoUnaPartita(giocatore)}
+                                                                title={!hasGiocatoAlmenoUnaPartita(giocatore) ? "Il giocatore non ha giocato ancora" : ""}
                                                             >
                                                                 +🏆
                                                             </button>
@@ -3478,8 +3568,8 @@
                                                             <button 
                                                                 onClick={() => rimuoviMVP(giocatore.id)}
                                                                 className="btn-rimuovi-mvp"
-                                                                disabled={!giocatore.mvp_count || giocatore.mvp_count === 0}
-                                                                title="Rimuovi MVP"
+                                                                disabled={!giocatore.mvp_count || giocatore.mvp_count === 0 || !hasGiocatoAlmenoUnaPartita(giocatore)}
+                                                                title={!hasGiocatoAlmenoUnaPartita(giocatore) ? "Il giocatore non ha giocato ancora" : "Rimuovi MVP"}
                                                             >
                                                                 ➖🏆
                                                             </button>
@@ -4626,6 +4716,9 @@
                                                         </div>
                                                         <div className="classifica-valore">
                                                             {giocatore.mediaReale.toFixed(2)}
+                                                            <span style={{ fontSize: "0.7rem", color: "#ccc", marginLeft: "5px" }}>
+                                                                ({giocatore.partiteGiocate || 0} partite)
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
