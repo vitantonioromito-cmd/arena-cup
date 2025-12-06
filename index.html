@@ -1797,29 +1797,28 @@
                 return username === "admin" || username === "vitantonio" || username === "fabrizio";
             };
 
-            // 🎯 FUNZIONE PER CONTROLLARE SE UN GIOCATORE HA GIOCATO ALMENO UNA PARTITA
+            // 🎯 FUNZIONE PER CONTROLLARE SE UN GIOCATORE HA GIOCATO ALMENO UNA PARTITA - VERSIONE CORRETTA
             const hasGiocatoAlmenoUnaPartita = (giocatore) => {
                 if (!giocatore) return false;
                 
-                // Metodo 1: Controlla le presenze nel database
+                // 1. Ha presenze? (partite giocate)
                 if ((giocatore.presenze || 0) > 0) {
                     return true;
                 }
                 
-                // Metodo 2: Controlla le pagelle del giocatore
+                // 2. Ha pagelle? (ha giocato ed è stato valutato)
                 const pagelleGiocatore = pagelle.filter(p => p.giocatore === giocatore.nome);
                 if (pagelleGiocatore.length > 0) {
                     return true;
                 }
                 
-                // Metodo 3: Controlla le partite confermate
-                const partiteGiocate = partite.filter(p => {
-                    const confermati = p.confermati || [];
-                    return confermati.includes(giocatore.nome);
-                });
-                if (partiteGiocate.length > 0) {
+                // 3. Ha statistiche portiere? (ha giocato in porta)
+                if ((giocatore.parate || 0) > 0 || (giocatore.partite_portiere || 0) > 0) {
                     return true;
                 }
+                
+                // 4. ESCLUDI LE PARTITE CONFERMATE! Un giocatore confermato NON significa che abbia giocato
+                //    Deve avere almeno una delle condizioni sopra
                 
                 return false;
             };
@@ -2085,14 +2084,8 @@
                 return null;
             };
 
-            // 🆕 CALCOLA STATISTICHE VITTORIE/SCONFITTE PER GIOCATORE - VERSIONE RISOLTA
+            // 🆕 CALCOLA STATISTICHE VITTORIE/SCONFITTE PER GIOCATORE - VERSIONE SEMPLIFICATA
             const calcolaStatistichePartite = (giocatore) => {
-                const nomeGiocatore = giocatore.nome;
-                let vittorie = 0;
-                let sconfitte = 0;
-                let pareggi = 0;
-                let partiteGiocate = 0;
-                
                 if (!hasGiocatoAlmenoUnaPartita(giocatore)) {
                     return {
                         vittorie: 0,
@@ -2106,75 +2099,13 @@
                     };
                 }
                 
-                // 1. Conta attraverso le pagelle (metodo più accurato)
-                const pagelleGiocatore = pagelle.filter(p => p.giocatore === nomeGiocatore);
+                // SEMPLICE: Usa SOLO le statistiche memorizzate nel database
+                const vittorie = giocatore.vittorie || 0;
+                const sconfitte = giocatore.sconfitte || 0;
+                const pareggi = giocatore.pareggi || 0;
+                const partiteGiocate = vittorie + sconfitte + pareggi;
                 
-                const partitePerData = {};
-                pagelleGiocatore.forEach(pagella => {
-                    if (!partitePerData[pagella.data]) {
-                        partitePerData[pagella.data] = [];
-                    }
-                    partitePerData[pagella.data].push(pagella);
-                });
-                
-                Object.keys(partitePerData).forEach(dataPartita => {
-                    const partita = partite.find(p => p.data === dataPartita);
-                    if (partita && partita.risultato) {
-                        partiteGiocate++;
-                        
-                        const pagellaGiocatore = partitePerData[dataPartita][0];
-                        const fazioneGiocatore = pagellaGiocatore.fazione;
-                        
-                        if (partita.risultato === 'Vittoria') {
-                            if (fazioneGiocatore === partita.fazione_vincente) {
-                                vittorie++;
-                            } else {
-                                sconfitte++;
-                            }
-                        } else if (partita.risultato === 'Sconfitta') {
-                            if (fazioneGiocatore === partita.fazione_perdente) {
-                                sconfitte++;
-                            } else {
-                                vittorie++;
-                            }
-                        } else if (partita.risultato === 'Pareggio') {
-                            pareggi++;
-                        }
-                    }
-                });
-                
-                // 2. Se non ci sono pagelle, usa le partite confermate
                 if (partiteGiocate === 0) {
-                    const partiteConfermate = partite.filter(p => {
-                        const confermati = p.confermati || [];
-                        return confermati.includes(nomeGiocatore);
-                    });
-                    
-                    partiteConfermate.forEach(partita => {
-                        if (partita.risultato) {
-                            partiteGiocate++;
-                            
-                            if (partita.risultato === 'Vittoria') {
-                                vittorie++;
-                            } else if (partita.risultato === 'Sconfitta') {
-                                sconfitte++;
-                            } else if (partita.risultato === 'Pareggio') {
-                                pareggi++;
-                            }
-                        }
-                    });
-                }
-                
-                // 3. AGGIUNGI LE STATISTICHE MEMORIZZATE NEL DATABASE
-                // Questo è il FIX principale: includi le statistiche aggiunte manualmente
-                vittorie += giocatore.vittorie || 0;
-                sconfitte += giocatore.sconfitte || 0;
-                pareggi += giocatore.pareggi || 0;
-                
-                // Calcola il totale delle partite giocate
-                const totalePartiteGiocate = partiteGiocate + (giocatore.vittorie || 0) + (giocatore.sconfitte || 0) + (giocatore.pareggi || 0);
-                
-                if (totalePartiteGiocate === 0) {
                     return {
                         vittorie: 0,
                         sconfitte: 0,
@@ -2187,15 +2118,15 @@
                     };
                 }
                 
-                const percentualeVittorie = totalePartiteGiocate > 0 ? (vittorie / totalePartiteGiocate) * 100 : 0;
-                const percentualeSconfitte = totalePartiteGiocate > 0 ? (sconfitte / totalePartiteGiocate) * 100 : 0;
-                const percentualePareggi = totalePartiteGiocate > 0 ? (pareggi / totalePartiteGiocate) * 100 : 0;
+                const percentualeVittorie = (vittorie / partiteGiocate) * 100;
+                const percentualeSconfitte = (sconfitte / partiteGiocate) * 100;
+                const percentualePareggi = (pareggi / partiteGiocate) * 100;
                 
                 return {
                     vittorie,
                     sconfitte,
                     pareggi,
-                    partiteGiocate: totalePartiteGiocate,
+                    partiteGiocate,
                     percentualeVittorie: percentualeVittorie.toFixed(1),
                     percentualeSconfitte: percentualeSconfitte.toFixed(1),
                     percentualePareggi: percentualePareggi.toFixed(1),
@@ -2203,7 +2134,7 @@
                 };
             };
 
-            // 🆕 FUNZIONE PER AGGIUNGERE/RIMUOVERE VITTORIE/SCONFITTE/PAREGGI
+            // 🆕 FUNZIONE PER AGGIUNGERE/RIMUOVERE VITTORIE/SCONFITTE/PAREGGI - VERSIONE CON NUMERI NEGATIVI
             const aggiungiStatPartita = (id, tipo, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le statistiche partite!");
                 
@@ -2213,7 +2144,16 @@
                 const quantita = parseInt(quantitaInput);
                 if (isNaN(quantita)) return alert("Inserisci un numero valido!");
                 
-                const nuovoValore = Math.max(0, (giocatore[tipo] || 0) + quantita);
+                // Calcola il nuovo valore, permette numeri negativi
+                const valoreAttuale = giocatore[tipo] || 0;
+                const nuovoValore = valoreAttuale + quantita;
+                
+                // Se il valore diventa negativo, chiedi conferma
+                if (nuovoValore < 0) {
+                    if (!confirm(`⚠️ ATTENZIONE!\n\nStai per impostare ${tipo} a ${nuovoValore} (negativo!).\n\nSei sicuro?`)) {
+                        return;
+                    }
+                }
                 
                 database.ref(`giocatori/${id}`).update({
                     [tipo]: nuovoValore
@@ -2229,7 +2169,7 @@
                         tipo === 'sconfitte' ? 'sconfitte' :
                         tipo === 'pareggi' ? 'pareggi' : 'statistiche';
                     
-                    alert(`${emoji} ${Math.abs(quantita)} ${nomeStat} ${azione}!`);
+                    alert(`${emoji} ${Math.abs(quantita)} ${nomeStat} ${azione}! Nuovo totale: ${nuovoValore}`);
                     document.getElementById(`${tipo}-${id}`).value = "";
                 });
             };
