@@ -1449,8 +1449,8 @@
                 if (token) {
                     fcmToken = token;
                     console.log('Token FCM:', token);
-                    // Qui salverai il token nel database per ogni utente
-                    // Esempio: database.ref('users/' + userId + '/fcmToken').set(token);
+                    // Salva il token nel database per ogni utente
+                    window.fcmToken = token;
                 }
             } catch (error) {
                 console.log('Errore ottenimento token FCM:', error);
@@ -1461,10 +1461,12 @@
         function saveUserToken(username, token) {
             if (!username || !token) return;
             
-            // Crea un ID utente basato sul nome (puoi migliorare questo)
+            // Crea un ID utente basato sul nome
             const userId = username.toLowerCase().replace(/\s+/g, '_');
-            database.ref(`users/${userId}/fcmToken`).set(token);
-            console.log('Token salvato per utente:', username);
+            if (window.database) {
+                window.database.ref(`users/${userId}/fcmToken`).set(token);
+                console.log('Token salvato per utente:', username);
+            }
         }
 
         // Richiedi permesso notifiche
@@ -1571,7 +1573,7 @@
     </script>
     
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useCallback } = React;
 
         // DEFINIZIONE DELLE COSTANTI
         const ADMIN_PASSWORD = "giulia85";
@@ -1592,11 +1594,13 @@
         const storage = firebase.storage();
 
         // COMPONENTE GESTIONE FOTO PROFILO MIGLIORATO
-        const FotoProfiloManager = ({ giocatore, onFotoCambiata, size = "medium" }) => {
+        const FotoProfiloManager = ({ giocatore, onFotoCambiata, size = "medium", disabled = false }) => {
             const [showModal, setShowModal] = useState(false);
             const [fotoSelezionata, setFotoSelezionata] = useState(null);
             const [anteprimaFoto, setAnteprimaFoto] = useState(null);
             const [modalitaCamera, setModalitaCamera] = useState(false);
+            const [fotoUrl, setFotoUrl] = useState(null);
+            const [loading, setLoading] = useState(false);
             
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
@@ -1611,20 +1615,26 @@
 
             const classeDimensione = dimensioni[size] || dimensioni.medium;
 
-            const caricaFotoProfilo = async () => {
+            const caricaFotoProfilo = useCallback(async () => {
                 try {
+                    if (!giocatore || !giocatore.id) {
+                        return null;
+                    }
                     const fotoUrl = await storage.ref(`profili/${giocatore.id}.jpg`).getDownloadURL();
                     return fotoUrl;
                 } catch (error) {
+                    console.log("Nessuna foto profilo per:", giocatore?.nome);
                     return null;
                 }
-            };
-
-            const [fotoUrl, setFotoUrl] = useState(null);
+            }, [giocatore, storage]);
 
             useEffect(() => {
-                caricaFotoProfilo().then(url => setFotoUrl(url));
-            }, [giocatore.id]);
+                if (giocatore && giocatore.id) {
+                    caricaFotoProfilo().then(url => {
+                        setFotoUrl(url);
+                    });
+                }
+            }, [giocatore, caricaFotoProfilo]);
 
             const inizializzaCamera = async () => {
                 try {
@@ -1638,8 +1648,10 @@
                     
                     const stream = await navigator.mediaDevices.getUserMedia(constraints);
                     streamRef.current = stream;
-                    videoRef.current.srcObject = stream;
-                    videoRef.current.style.display = 'block';
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = stream;
+                        videoRef.current.style.display = 'block';
+                    }
                     setModalitaCamera(true);
                 } catch (error) {
                     console.error("Errore accesso camera:", error);
@@ -1688,8 +1700,9 @@
             };
 
             const salvaFoto = async () => {
-                if (!fotoSelezionata) return;
+                if (!fotoSelezionata || !giocatore || !giocatore.id) return;
                 
+                setLoading(true);
                 try {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
@@ -1721,6 +1734,7 @@
                                 (error) => {
                                     console.error("Errore upload:", error);
                                     alert("Errore nel salvataggio della foto");
+                                    setLoading(false);
                                 },
                                 async () => {
                                     const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
@@ -1728,6 +1742,7 @@
                                     setShowModal(false);
                                     setFotoSelezionata(null);
                                     setAnteprimaFoto(null);
+                                    setLoading(false);
                                     
                                     await database.ref(`giocatori/${giocatore.id}`).update({
                                         foto_profilo: downloadURL
@@ -1748,10 +1763,14 @@
                 } catch (error) {
                     console.error("Errore salvataggio foto:", error);
                     alert("Errore nel salvataggio della foto");
+                    setLoading(false);
                 }
             };
 
             const rimuoviFoto = async () => {
+                if (!giocatore || !giocatore.id) return;
+                
+                setLoading(true);
                 try {
                     await storage.ref(`profili/${giocatore.id}.jpg`).delete();
                     await database.ref(`giocatori/${giocatore.id}`).update({
@@ -1760,6 +1779,7 @@
                     
                     setFotoUrl(null);
                     setShowModal(false);
+                    setLoading(false);
                     
                     if (onFotoCambiata) {
                         onFotoCambiata(null);
@@ -1769,6 +1789,7 @@
                 } catch (error) {
                     console.error("Errore rimozione foto:", error);
                     alert("Errore nella rimozione della foto");
+                    setLoading(false);
                 }
             };
 
@@ -1783,12 +1804,34 @@
                 }
             };
 
+            if (disabled) {
+                return (
+                    <div className="foto-profilo-container">
+                        {fotoUrl ? (
+                            <img 
+                                src={fotoUrl} 
+                                alt={`Foto di ${giocatore?.nome || ''}`}
+                                className={`${classeDimensione} foto-profilo`}
+                                style={{ cursor: 'default' }}
+                            />
+                        ) : (
+                            <div 
+                                className={`${classeDimensione} foto-profilo foto-profilo-placeholder`}
+                                style={{ cursor: 'default' }}
+                            >
+                                {giocatore?.nome?.charAt(0)?.toUpperCase() || '?'}
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
             return (
                 <div className="foto-profilo-container">
                     {fotoUrl ? (
                         <img 
                             src={fotoUrl} 
-                            alt={`Foto di ${giocatore.nome}`}
+                            alt={`Foto di ${giocatore?.nome || ''}`}
                             className={`${classeDimensione} foto-profilo`}
                             onClick={() => setShowModal(true)}
                             style={{ cursor: 'pointer' }}
@@ -1799,7 +1842,7 @@
                             onClick={() => setShowModal(true)}
                             style={{ cursor: 'pointer' }}
                         >
-                            {giocatore.nome.charAt(0).toUpperCase()}
+                            {giocatore?.nome?.charAt(0)?.toUpperCase() || '?'}
                         </div>
                     )}
                     
@@ -1807,14 +1850,15 @@
                         className="aggiungi-foto-btn"
                         onClick={() => setShowModal(true)}
                         title="Cambia foto profilo"
+                        disabled={loading}
                     >
-                        📷
+                        {loading ? '⏳' : '📷'}
                     </button>
 
                     {showModal && (
                         <div className="modal-foto">
                             <div className="modal-foto-content">
-                                <h3>📷 Foto Profilo di {giocatore.nome}</h3>
+                                <h3>📷 Foto Profilo di {giocatore?.nome || 'Giocatore'}</h3>
                                 
                                 {fotoUrl && !anteprimaFoto && (
                                     <div style={{ textAlign: 'center', margin: '15px 0' }}>
@@ -1841,12 +1885,14 @@
                                             <button 
                                                 className="btn-foto scatta"
                                                 onClick={scattaFoto}
+                                                disabled={loading}
                                             >
                                                 Scatta Foto
                                             </button>
                                             <button 
                                                 className="btn-foto annulla"
                                                 onClick={() => setModalitaCamera(false)}
+                                                disabled={loading}
                                             >
                                                 Annulla
                                             </button>
@@ -1872,6 +1918,7 @@
                                     capture="environment"
                                     onChange={gestisciCaricamentoFoto}
                                     style={{ display: 'none' }}
+                                    disabled={loading}
                                 />
                                 
                                 <div className="modal-foto-actions">
@@ -1880,12 +1927,14 @@
                                             <button 
                                                 className="btn-foto scatta"
                                                 onClick={inizializzaCamera}
+                                                disabled={loading}
                                             >
                                                 📸 Scatta Foto
                                             </button>
                                             <button 
                                                 className="btn-foto carica"
                                                 onClick={() => fileInputRef.current?.click()}
+                                                disabled={loading}
                                             >
                                                 📁 Carica da Device
                                             </button>
@@ -1897,8 +1946,9 @@
                                             <button 
                                                 className="btn-foto carica"
                                                 onClick={salvaFoto}
+                                                disabled={loading}
                                             >
-                                                💾 Salva Foto
+                                                {loading ? '⏳ Salvando...' : '💾 Salva Foto'}
                                             </button>
                                             <button 
                                                 className="btn-foto annulla"
@@ -1906,6 +1956,7 @@
                                                     setAnteprimaFoto(null);
                                                     setFotoSelezionata(null);
                                                 }}
+                                                disabled={loading}
                                             >
                                                 🔄 Riprova
                                             </button>
@@ -1916,6 +1967,7 @@
                                         <button 
                                             className="btn-foto rimuovi"
                                             onClick={rimuoviFoto}
+                                            disabled={loading}
                                         >
                                             🗑️ Rimuovi Foto
                                         </button>
@@ -1924,6 +1976,7 @@
                                     <button 
                                         className="btn-foto annulla"
                                         onClick={chiudiModal}
+                                        disabled={loading}
                                     >
                                         ❌ Annulla
                                     </button>
