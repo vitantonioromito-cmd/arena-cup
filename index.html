@@ -104,44 +104,202 @@
             font-size: 1.2rem;
         }
 
+        /* 🟢⚪🔴 TRICOLORE ITALIANO - SFONDO LOGIN */
         .login-container {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+            background: linear-gradient(90deg, 
+                #009246 0%, 
+                #009246 33.33%, 
+                #FFFFFF 33.33%, 
+                #FFFFFF 66.66%, 
+                #CE2B37 66.66%, 
+                #CE2B37 100%
+            );
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Aggiungiamo un overlay scuro per leggibilità */
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1;
+        }
+
+        /* Effetto bandiera che ondeggia */
+        .login-container::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            right: -50%;
+            bottom: -50%;
+            background: linear-gradient(90deg, 
+                rgba(0, 146, 70, 0.1) 0%, 
+                rgba(0, 146, 70, 0.1) 33.33%, 
+                rgba(255, 255, 255, 0.1) 33.33%, 
+                rgba(255, 255, 255, 0.1) 66.66%, 
+                rgba(206, 43, 55, 0.1) 66.66%, 
+                rgba(206, 43, 55, 0.1) 100%
+            );
+            animation: waveFlag 20s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes waveFlag {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+            25% {
+                transform: rotate(1deg) scale(1.05);
+            }
+            50% {
+                transform: rotate(0deg) scale(1.1);
+            }
+            75% {
+                transform: rotate(-1deg) scale(1.05);
+            }
+            100% {
+                transform: rotate(0deg) scale(1);
+            }
         }
 
         .login-form {
-            background: rgba(255,255,255,0.05);
-            padding: 30px;
+            background: rgba(26, 26, 46, 0.95);
+            padding: 40px 30px;
             border-radius: 15px;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             text-align: center;
+            position: relative;
+            z-index: 2;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Decorazione tricolore nel form */
+        .login-form::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, 
+                #009246 0%, 
+                #009246 33.33%, 
+                #FFFFFF 33.33%, 
+                #FFFFFF 66.66%, 
+                #CE2B37 66.66%, 
+                #CE2B37 100%
+            );
+            border-radius: 15px 15px 0 0;
+        }
+
+        /* Logo Arena Cup più grande */
+        .login-form h1 {
+            font-size: 2.8rem;
+            margin-bottom: 25px;
+            background: linear-gradient(90deg, #009246, #FFFFFF, #CE2B37);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        /* Bandierina italiana nell'header */
+        .italian-flag-icon {
+            display: inline-block;
+            width: 30px;
+            height: 20px;
+            background: linear-gradient(90deg, 
+                #009246 0%, 
+                #009246 33.33%, 
+                #FFFFFF 33.33%, 
+                #FFFFFF 66.66%, 
+                #CE2B37 66.66%, 
+                #CE2B37 100%
+            );
+            border-radius: 3px;
+            margin-right: 10px;
+            vertical-align: middle;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .login-input {
             width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            background: rgba(255,255,255,0.1);
+            padding: 16px;
+            margin: 12px 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
             color: white;
             font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
         }
 
         .login-button {
             width: 100%;
-            padding: 15px;
-            background: #4CAF50;
+            padding: 16px;
+            background: linear-gradient(90deg, #009246, #4CAF50);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .login-button:hover {
+            background: linear-gradient(90deg, #008a40, #45a049);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 146, 70, 0.4);
+        }
+
+        /* Scritta in piccolo "creata da VitLollo, sviluppata da DeepSeek" */
+        .credits {
+            margin-top: 25px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            line-height: 1.4;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+        }
+
+        .credits strong {
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: normal;
+        }
+
+        .credits .vitlollo {
+            color: #4CAF50;
+        }
+
+        .credits .deepseek {
+            color: #2196F3;
         }
 
         .player-card {
@@ -1220,6 +1378,16 @@
                 font-size: 1.1rem;
                 padding: 15px 20px;
             }
+
+            /* LOGIN DESKTOP */
+            .login-form {
+                padding: 50px 40px;
+                max-width: 500px;
+            }
+
+            .login-form h1 {
+                font-size: 3.2rem;
+            }
         }
     </style>
 </head>
@@ -1944,7 +2112,7 @@
                         tipo === 'parate_difficili' ? 'parate difficili' :
                         tipo === 'rinvii_buoni' ? 'rinvii buoni' :
                         tipo === 'errori' ? 'errori' :
-                        tipo === 'interventi_decisivi' ? 'interventi decisivi' :
+                        tipo === 'interventi_decisivi' ? 'interventi decisifs' :
                         tipo === 'partite_portiere' ? 'partite da portiere' : 'statistiche';
                     
                     alert(`${emoji} ${Math.abs(quantita)} ${nomeStat} ${azione}!`);
@@ -3254,13 +3422,20 @@
                 return pagelle.filter(p => p.giocatore === loginForm.username);
             };
 
-            // 🔧 SEZIONE LOGIN CORRETTA
+            // 🔧 SEZIONE LOGIN CORRETTA CON TRICOLORE ITALIANO
             if (!isLogged) {
                 return (
                     <div className="app-container">
                         <div className="login-container">
                             <form onSubmit={handleLogin} className="login-form">
-                                <h1 style={{ fontSize: "2.5rem", marginBottom: "30px" }}>🏆 Arena Cup</h1>
+                                <h1>
+                                    <span className="italian-flag-icon"></span>
+                                    🏆 Arena Cup
+                                </h1>
+                                
+                                <p style={{ color: "#ccc", marginBottom: "25px", fontSize: "0.9rem" }}>
+                                    Il torneo di calcetto più appassionante d'Italia
+                                </p>
                                 
                                 <input 
                                     type="text"
@@ -3287,7 +3462,7 @@
                                             autoComplete="current-password"
                                         />
                                         <p className="password-hint">
-                                            Inserisci la password corretta
+                                            Inserisci la password corretta per accedere come admin
                                         </p>
                                     </>
                                 )}
@@ -3302,6 +3477,14 @@
                                         ? "🔐 Accedi come Admin" 
                                         : "🚀 Accedi"}
                                 </button>
+                                
+                                {/* SCRITTA IN PICCOLO "creata da VitLollo, sviluppata da DeepSeek" */}
+                                <div className="credits">
+                                    <div>creata da <strong className="vitlollo">VitLollo</strong>, sviluppata da <strong className="deepseek">DeepSeek</strong></div>
+                                    <div style={{ fontSize: "0.65rem", marginTop: "5px", opacity: 0.7 }}>
+                                        © {new Date().getFullYear()} Arena Cup - Tutti i diritti riservati
+                                    </div>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -3314,7 +3497,10 @@
                     <div className="app-header">
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
                             <div>
-                                <h1 style={{ margin: 0, fontSize: "1.5rem" }}>🏆 Arena Cup</h1>
+                                <h1 style={{ margin: 0, fontSize: "1.5rem" }}>
+                                    <span className="italian-flag-icon"></span>
+                                    🏆 Arena Cup
+                                </h1>
                                 <p style={{ margin: "5px 0 0 0", color: "#ccc", fontSize: "0.8rem" }}>
                                     {activeTab === "classifica" ? "Classifica" : 
                                      activeTab === "calendario" ? "Calendario" : 
