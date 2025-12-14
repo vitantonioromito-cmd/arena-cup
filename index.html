@@ -1241,13 +1241,13 @@
         }
         
         // Mostra notifica push MIGLIORATO - SEMPRE VISIBILE
-        function showPushNotification(title, message, tag = 'arena-cup') {
-            console.log(`🔔 Tentativo notifica: ${title} - ${message}`);
-            
-            if (localStorage.getItem('notificationsEnabled') !== 'true') {
-                console.log("❌ Notifiche disabilitate nelle impostazioni");
-                return;
-            }
+       function showPushNotification(title, message, tag = 'arena-cup') {
+    console.log(`[Notifica Simulata]: ${title} - ${message}`);
+    // Vibrazione opzionale (solo se vuoi mantenerla)
+    if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100]);
+    }
+}
             
             if ("Notification" in window && Notification.permission === "granted") {
                 try {
