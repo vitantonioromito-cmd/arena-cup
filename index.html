@@ -13,11 +13,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ArenaCup">
     
-    <!-- WEB APP MANIFEST PER NOTIFICHE PUSH -->
-    <link rel="manifest" href="/manifest.json">
-    
     <!-- ICONE iOS -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' fill='%23121212'/><text x='50%' y='60%' font-size='100' text-anchor='middle' fill='%234CAF50'>⚽</text></svg>">
+    
+    <!-- NOTIFICHE PUSH MIGLIORATE -->
+    <script src="https://cdn.jsdelivr.net/npm/push.js@1.0.12/bin/push.min.js"></script>
     
     <!-- EXTERNAL LIBRARIES -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -26,7 +26,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
     
     <style>
         * { 
@@ -105,196 +104,44 @@
             font-size: 1.2rem;
         }
 
-        /* 🟢⚪🔴 TRICOLORE ITALIANO - SFONDO LOGIN */
         .login-container {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
-            background: linear-gradient(90deg, 
-                #009246 0%, 
-                #009246 33.33%, 
-                #FFFFFF 33.33%, 
-                #FFFFFF 66.66%, 
-                #CE2B37 66.66%, 
-                #CE2B37 100%
-            );
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1;
-        }
-
-        .login-container::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            right: -50%;
-            bottom: -50%;
-            background: linear-gradient(90deg, 
-                rgba(0, 146, 70, 0.1) 0%, 
-                rgba(0, 146, 70, 0.1) 33.33%, 
-                rgba(255, 255, 255, 0.1) 33.33%, 
-                rgba(255, 255, 255, 0.1) 66.66%, 
-                rgba(206, 43, 55, 0.1) 66.66%, 
-                rgba(206, 43, 55, 0.1) 100%
-            );
-            animation: waveFlag 20s linear infinite;
-            z-index: 0;
-        }
-
-        @keyframes waveFlag {
-            0% {
-                transform: rotate(0deg) scale(1);
-            }
-            25% {
-                transform: rotate(1deg) scale(1.05);
-            }
-            50% {
-                transform: rotate(0deg) scale(1.1);
-            }
-            75% {
-                transform: rotate(-1deg) scale(1.05);
-            }
-            100% {
-                transform: rotate(0deg) scale(1);
-            }
         }
 
         .login-form {
-            background: rgba(26, 26, 46, 0.95);
-            padding: 40px 30px;
+            background: rgba(255,255,255,0.05);
+            padding: 30px;
             border-radius: 15px;
             width: 100%;
-            max-width: 420px;
+            max-width: 400px;
             text-align: center;
-            position: relative;
-            z-index: 2;
-            border: 3px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-        }
-
-        .login-form::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, 
-                #009246 0%, 
-                #009246 33.33%, 
-                #FFFFFF 33.33%, 
-                #FFFFFF 66.66%, 
-                #CE2B37 66.66%, 
-                #CE2B37 100%
-            );
-            border-radius: 15px 15px 0 0;
-        }
-
-        .login-form h1 {
-            font-size: 2.8rem;
-            margin-bottom: 25px;
-            background: linear-gradient(90deg, #009246, #FFFFFF, #CE2B37);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
-
-        .italian-flag-icon {
-            display: inline-block;
-            width: 30px;
-            height: 20px;
-            background: linear-gradient(90deg, 
-                #009246 0%, 
-                #009246 33.33%, 
-                #FFFFFF 33.33%, 
-                #FFFFFF 66.66%, 
-                #CE2B37 66.66%, 
-                #CE2B37 100%
-            );
-            border-radius: 3px;
-            margin-right: 10px;
-            vertical-align: middle;
-            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .login-input {
             width: 100%;
-            padding: 16px;
-            margin: 12px 0;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
             color: white;
             font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .login-input:focus {
-            outline: none;
-            border-color: #4CAF50;
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
         }
 
         .login-button {
             width: 100%;
-            padding: 16px;
-            background: linear-gradient(90deg, #009246, #4CAF50);
+            padding: 15px;
+            background: #4CAF50;
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: bold;
+            border-radius: 8px;
+            font-size: 1rem;
             cursor: pointer;
-            margin-top: 15px;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .login-button:hover {
-            background: linear-gradient(90deg, #008a40, #45a049);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 146, 70, 0.4);
-        }
-
-        .credits {
-            margin-top: 25px;
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.6);
-            text-align: center;
-            line-height: 1.4;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 15px;
-        }
-
-        .credits strong {
-            color: rgba(255, 255, 255, 0.8);
-            font-weight: normal;
-        }
-
-        .credits .vitlollo {
-            color: #4CAF50;
-        }
-
-        .credits .deepseek {
-            color: #2196F3;
+            margin-top: 10px;
         }
 
         .player-card {
@@ -823,6 +670,7 @@
             text-align: left;
         }
 
+        /* NUOVO STILE PER TEXTAREA PIÙ GRANDE */
         .pagella-textarea {
             width: 100%;
             padding: 12px;
@@ -1338,14 +1186,17 @@
                 min-width: 150px;
             }
 
+            /* TEXTAREA PIÙ GRANDE SU DESKTOP */
             .pagella-textarea {
                 min-height: 120px;
             }
 
+            /* MVP GLOW DESKTOP */
             .mvp-glow {
                 animation: mvpPulse 2s ease-in-out infinite alternate;
             }
 
+            /* FOTO PROFILO DESKTOP */
             .foto-profilo {
                 width: 60px;
                 height: 60px;
@@ -1364,18 +1215,10 @@
                 font-size: 2.5rem;
             }
 
+            /* SEPARATORE PAGELLE DESKTOP */
             .pagella-group-header {
                 font-size: 1.1rem;
                 padding: 15px 20px;
-            }
-
-            .login-form {
-                padding: 50px 40px;
-                max-width: 500px;
-            }
-
-            .login-form h1 {
-                font-size: 3.2rem;
             }
         }
     </style>
@@ -1384,92 +1227,17 @@
     <div id="root"></div>
     
     <script>
-        // SERVICE WORKER MIGLIORATO CON PUSH SUPPORT
+        // SERVICE WORKER MIGLIORATO per notifiche push
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(registration => {
-                    console.log('SW registrato:', registration);
-                    return registration.pushManager.getSubscription()
-                        .then(subscription => {
-                            if (!subscription) {
-                                console.log('Nessuna subscription push, richiedendo permessi...');
-                                return requestNotificationPermission();
-                            }
-                            console.log('Subscription push già attiva:', subscription);
-                            return subscription;
-                        });
+                    console.log('SW registered');
+                    registration.update();
                 })
-                .catch(error => console.log('SW registration failed:', error));
+                .catch(error => console.log('SW registration failed'));
         }
-
-        // NOTIFICHE PUSH CON FIREBASE CLOUD MESSAGING
-        let messaging = null;
-        let fcmToken = null;
-
-        // INIZIALIZZA FIREBASE MESSAGING
-        function initFirebaseMessaging() {
-            try {
-                if (!firebase.messaging.isSupported()) {
-                    console.log('FCM non supportato su questo browser');
-                    return;
-                }
-                
-                messaging = firebase.messaging();
-                
-                // Richiedi permesso notifiche
-                Notification.requestPermission().then((permission) => {
-                    if (permission === 'granted') {
-                        console.log('Permesso notifiche garantito');
-                        getFCMToken();
-                    } else {
-                        console.log('Permesso notifiche negato');
-                    }
-                }).catch((err) => {
-                    console.log('Errore richiesta permesso:', err);
-                });
-
-                // Gestisci messaggi in background
-                messaging.onMessage((payload) => {
-                    console.log('Messaggio ricevuto in foreground:', payload);
-                    showPushNotification(payload.notification.title, payload.notification.body);
-                });
-
-            } catch (error) {
-                console.log('Errore inizializzazione FCM:', error);
-            }
-        }
-
-        // OTTIENI TOKEN FCM
-        async function getFCMToken() {
-            try {
-                const token = await messaging.getToken({
-                    vapidKey: 'BCk8_qSUQgl4RXvSlmG0y66opcyzD_Z3O7kzWukQ7dCHM7Byy7BPp0qV2rLmy0y7AqU2CjJv82K-PnXhYOPD5U0'
-                });
-                
-                if (token) {
-                    fcmToken = token;
-                    console.log('Token FCM:', token);
-                    // Salva il token nel database per ogni utente
-                    window.fcmToken = token;
-                }
-            } catch (error) {
-                console.log('Errore ottenimento token FCM:', error);
-            }
-        }
-
-        // SALVA TOKEN UTENTE NEL DATABASE
-        function saveUserToken(username, token) {
-            if (!username || !token) return;
-            
-            // Crea un ID utente basato sul nome
-            const userId = username.toLowerCase().replace(/\s+/g, '_');
-            if (window.database) {
-                window.database.ref(`users/${userId}/fcmToken`).set(token);
-                console.log('Token salvato per utente:', username);
-            }
-        }
-
-        // Richiedi permesso notifiche
+        
+        // Richiedi permesso notifiche MIGLIORATO
         function requestNotificationPermission() {
             if ("Notification" in window) {
                 Notification.requestPermission().then(permission => {
@@ -1477,14 +1245,12 @@
                         console.log("Notifiche abilitate!");
                         localStorage.setItem('notificationsEnabled', 'true');
                         
-                        // Inizializza FCM dopo aver ottenuto il permesso
-                        initFirebaseMessaging();
-                        
                         if (localStorage.getItem('notificationTestShown') !== 'true') {
-                            showPushNotification(
-                                "Arena Cup - Notifiche Attive", 
-                                "Ora riceverai notifiche per nuovi messaggi e partite!"
-                            );
+                            new Notification("Arena Cup - Notifiche Attive", {
+                                body: "Ora riceverai notifiche per nuovi messaggi e partite!",
+                                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
+                                tag: 'arena-cup-welcome'
+                            });
                             localStorage.setItem('notificationTestShown', 'true');
                         }
                     }
@@ -1492,7 +1258,7 @@
             }
         }
         
-        // Mostra notifica push
+        // Mostra notifica push MIGLIORATO - SEMPRE VISIBILE
         function showPushNotification(title, message, tag = 'arena-cup') {
             console.log(`🔔 Tentativo notifica: ${title} - ${message}`);
             
@@ -1524,6 +1290,26 @@
                 } catch (error) {
                     console.log("❌ Errore notifica browser:", error);
                 }
+            } else {
+                console.log("❌ Permesso notifiche non garantito");
+            }
+            
+            // FALLBACK CON PUSH.JS
+            if (typeof Push !== 'undefined') {
+                try {
+                    Push.create(title, {
+                        body: message,
+                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>',
+                        timeout: 8000,
+                        onClick: function () {
+                            window.focus();
+                            this.close();
+                        }
+                    });
+                    console.log("✅ Notifica Push.js creata con successo");
+                } catch (e) {
+                    console.log("❌ Errore Push.js:", e);
+                }
             }
             
             playNotificationSound();
@@ -1536,7 +1322,7 @@
             }
         }
         
-        // NOTIFICA SONORA
+        // 🎵 NOTIFICA SONORA MIGLIORATA
         function playNotificationSound() {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1560,22 +1346,20 @@
             }
         }
         
-        // INIZIALIZZA AL CARICAMENTO
+        // 🔔 FORZA RICHIESTA PERMESSI NOTIFICHE AL CARICAMENTO
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 if ("Notification" in window && Notification.permission === "default") {
                     requestNotificationPermission();
-                } else if (Notification.permission === "granted") {
-                    initFirebaseMessaging();
                 }
             }, 1000);
         });
     </script>
     
     <script type="text/babel">
-        const { useState, useEffect, useRef, useCallback } = React;
+        const { useState, useEffect, useRef } = React;
 
-        // DEFINIZIONE DELLE COSTANTI
+        // 🛠️ AGGIUNTA: DEFINIZIONE DELLE COSTANTI MANCANTI
         const ADMIN_PASSWORD = "giulia85";
         const FABRIZIO_PASSWORD = "manetta2025";
 
@@ -1593,14 +1377,12 @@
         const database = firebase.database();
         const storage = firebase.storage();
 
-        // COMPONENTE GESTIONE FOTO PROFILO MIGLIORATO
-        const FotoProfiloManager = ({ giocatore, onFotoCambiata, size = "medium", disabled = false }) => {
+        // 🆕 COMPONENTE GESTIONE FOTO PROFILO
+        const FotoProfiloManager = ({ giocatore, onFotoCambiata, size = "medium" }) => {
             const [showModal, setShowModal] = useState(false);
             const [fotoSelezionata, setFotoSelezionata] = useState(null);
             const [anteprimaFoto, setAnteprimaFoto] = useState(null);
             const [modalitaCamera, setModalitaCamera] = useState(false);
-            const [fotoUrl, setFotoUrl] = useState(null);
-            const [loading, setLoading] = useState(false);
             
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
@@ -1615,43 +1397,31 @@
 
             const classeDimensione = dimensioni[size] || dimensioni.medium;
 
-            const caricaFotoProfilo = useCallback(async () => {
+            // 🆕 CARICA FOTO PROFILO DA FIREBASE STORAGE
+            const caricaFotoProfilo = async () => {
                 try {
-                    if (!giocatore || !giocatore.id) {
-                        return null;
-                    }
                     const fotoUrl = await storage.ref(`profili/${giocatore.id}.jpg`).getDownloadURL();
                     return fotoUrl;
                 } catch (error) {
-                    console.log("Nessuna foto profilo per:", giocatore?.nome);
+                    // Se non esiste la foto, restituisci null
                     return null;
                 }
-            }, [giocatore, storage]);
+            };
+
+            const [fotoUrl, setFotoUrl] = useState(null);
 
             useEffect(() => {
-                if (giocatore && giocatore.id) {
-                    caricaFotoProfilo().then(url => {
-                        setFotoUrl(url);
-                    });
-                }
-            }, [giocatore, caricaFotoProfilo]);
+                caricaFotoProfilo().then(url => setFotoUrl(url));
+            }, [giocatore.id]);
 
+            // 🆕 INIZIALIZZA FOTOCAMERA
             const inizializzaCamera = async () => {
                 try {
-                    const constraints = { 
-                        video: { 
-                            facingMode: 'user',
-                            width: { ideal: 640 },
-                            height: { ideal: 480 }
-                        } 
-                    };
-                    
-                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'user' } 
+                    });
                     streamRef.current = stream;
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream;
-                        videoRef.current.style.display = 'block';
-                    }
+                    videoRef.current.srcObject = stream;
                     setModalitaCamera(true);
                 } catch (error) {
                     console.error("Errore accesso camera:", error);
@@ -1659,37 +1429,31 @@
                 }
             };
 
+            // 🆕 SCATTA FOTO
             const scattaFoto = () => {
                 const video = videoRef.current;
                 const canvas = canvasRef.current;
-                
-                if (!video || !canvas) return;
-                
                 const context = canvas.getContext('2d');
+                
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 context.drawImage(video, 0, 0);
                 
-                canvas.toBlob((blob) => {
-                    const fotoDataUrl = URL.createObjectURL(blob);
-                    setAnteprimaFoto(fotoDataUrl);
-                    setFotoSelezionata(fotoDataUrl);
-                    setModalitaCamera(false);
-                    
-                    if (streamRef.current) {
-                        streamRef.current.getTracks().forEach(track => track.stop());
-                    }
-                }, 'image/jpeg', 0.9);
+                const fotoDataUrl = canvas.toDataURL('image/jpeg');
+                setAnteprimaFoto(fotoDataUrl);
+                setFotoSelezionata(fotoDataUrl);
+                setModalitaCamera(false);
+                
+                // Ferma lo stream della camera
+                if (streamRef.current) {
+                    streamRef.current.getTracks().forEach(track => track.stop());
+                }
             };
 
+            // 🆕 CARICA FOTO DA DISPOSITIVO
             const gestisciCaricamentoFoto = (event) => {
                 const file = event.target.files[0];
                 if (file) {
-                    if (file.size > 5 * 1024 * 1024) {
-                        alert("L'immagine è troppo grande. Massimo 5MB.");
-                        return;
-                    }
-                    
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         setAnteprimaFoto(e.target.result);
@@ -1699,87 +1463,68 @@
                 }
             };
 
+            // 🆕 SALVA FOTO SU FIREBASE STORAGE
             const salvaFoto = async () => {
-                if (!fotoSelezionata || !giocatore || !giocatore.id) return;
+                if (!fotoSelezionata) return;
                 
-                setLoading(true);
                 try {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const img = new Image();
+                    // Converti base64 in blob
+                    const response = await fetch(fotoSelezionata);
+                    const blob = await response.blob();
                     
-                    img.onload = () => {
-                        // Crea immagine quadrata
-                        const size = Math.min(img.width, img.height);
-                        canvas.width = 400;
-                        canvas.height = 400;
-                        
-                        // Calcola posizione per crop centrale
-                        const sx = (img.width - size) / 2;
-                        const sy = (img.height - size) / 2;
-                        
-                        ctx.drawImage(img, sx, sy, size, size, 0, 0, 400, 400);
-                        
-                        canvas.toBlob(async (blob) => {
-                            const uploadTask = storage.ref(`profili/${giocatore.id}.jpg`).put(blob, {
-                                contentType: 'image/jpeg',
-                                customMetadata: {
-                                    uploadedBy: giocatore.nome,
-                                    timestamp: Date.now().toString()
-                                }
+                    // Upload su Firebase Storage
+                    const uploadTask = storage.ref(`profili/${giocatore.id}.jpg`).put(blob);
+                    
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            // Progresso upload
+                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            console.log(`Upload: ${progress}%`);
+                        },
+                        (error) => {
+                            console.error("Errore upload:", error);
+                            alert("Errore nel salvataggio della foto");
+                        },
+                        async () => {
+                            // Upload completato
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            setFotoUrl(downloadURL);
+                            setShowModal(false);
+                            setFotoSelezionata(null);
+                            setAnteprimaFoto(null);
+                            
+                            // Aggiorna URL foto nel database giocatore
+                            await database.ref(`giocatori/${giocatore.id}`).update({
+                                foto_profilo: downloadURL
                             });
                             
-                            uploadTask.on('state_changed',
-                                null,
-                                (error) => {
-                                    console.error("Errore upload:", error);
-                                    alert("Errore nel salvataggio della foto");
-                                    setLoading(false);
-                                },
-                                async () => {
-                                    const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                                    setFotoUrl(downloadURL);
-                                    setShowModal(false);
-                                    setFotoSelezionata(null);
-                                    setAnteprimaFoto(null);
-                                    setLoading(false);
-                                    
-                                    await database.ref(`giocatori/${giocatore.id}`).update({
-                                        foto_profilo: downloadURL
-                                    });
-                                    
-                                    if (onFotoCambiata) {
-                                        onFotoCambiata(downloadURL);
-                                    }
-                                    
-                                    alert("✅ Foto profilo aggiornata con successo!");
-                                }
-                            );
-                        }, 'image/jpeg', 0.85);
-                    };
-                    
-                    img.src = fotoSelezionata;
+                            if (onFotoCambiata) {
+                                onFotoCambiata(downloadURL);
+                            }
+                            
+                            alert("✅ Foto profilo aggiornata con successo!");
+                        }
+                    );
                     
                 } catch (error) {
                     console.error("Errore salvataggio foto:", error);
                     alert("Errore nel salvataggio della foto");
-                    setLoading(false);
                 }
             };
 
+            // 🆕 RIMUOVI FOTO
             const rimuoviFoto = async () => {
-                if (!giocatore || !giocatore.id) return;
-                
-                setLoading(true);
                 try {
+                    // Elimina da Storage
                     await storage.ref(`profili/${giocatore.id}.jpg`).delete();
+                    
+                    // Elimina riferimento dal database
                     await database.ref(`giocatori/${giocatore.id}`).update({
                         foto_profilo: null
                     });
                     
                     setFotoUrl(null);
                     setShowModal(false);
-                    setLoading(false);
                     
                     if (onFotoCambiata) {
                         onFotoCambiata(null);
@@ -1789,49 +1534,28 @@
                 } catch (error) {
                     console.error("Errore rimozione foto:", error);
                     alert("Errore nella rimozione della foto");
-                    setLoading(false);
                 }
             };
 
+            // 🆕 CHIUDI MODAL E PULISCI
             const chiudiModal = () => {
                 setShowModal(false);
                 setFotoSelezionata(null);
                 setAnteprimaFoto(null);
                 setModalitaCamera(false);
                 
+                // Ferma lo stream della camera se attivo
                 if (streamRef.current) {
                     streamRef.current.getTracks().forEach(track => track.stop());
                 }
             };
-
-            if (disabled) {
-                return (
-                    <div className="foto-profilo-container">
-                        {fotoUrl ? (
-                            <img 
-                                src={fotoUrl} 
-                                alt={`Foto di ${giocatore?.nome || ''}`}
-                                className={`${classeDimensione} foto-profilo`}
-                                style={{ cursor: 'default' }}
-                            />
-                        ) : (
-                            <div 
-                                className={`${classeDimensione} foto-profilo foto-profilo-placeholder`}
-                                style={{ cursor: 'default' }}
-                            >
-                                {giocatore?.nome?.charAt(0)?.toUpperCase() || '?'}
-                            </div>
-                        )}
-                    </div>
-                );
-            }
 
             return (
                 <div className="foto-profilo-container">
                     {fotoUrl ? (
                         <img 
                             src={fotoUrl} 
-                            alt={`Foto di ${giocatore?.nome || ''}`}
+                            alt={`Foto di ${giocatore.nome}`}
                             className={`${classeDimensione} foto-profilo`}
                             onClick={() => setShowModal(true)}
                             style={{ cursor: 'pointer' }}
@@ -1842,7 +1566,7 @@
                             onClick={() => setShowModal(true)}
                             style={{ cursor: 'pointer' }}
                         >
-                            {giocatore?.nome?.charAt(0)?.toUpperCase() || '?'}
+                            {giocatore.nome.charAt(0).toUpperCase()}
                         </div>
                     )}
                     
@@ -1850,16 +1574,17 @@
                         className="aggiungi-foto-btn"
                         onClick={() => setShowModal(true)}
                         title="Cambia foto profilo"
-                        disabled={loading}
                     >
-                        {loading ? '⏳' : '📷'}
+                        📷
                     </button>
 
+                    {/* MODAL GESTIONE FOTO */}
                     {showModal && (
                         <div className="modal-foto">
                             <div className="modal-foto-content">
-                                <h3>📷 Foto Profilo di {giocatore?.nome || 'Giocatore'}</h3>
+                                <h3>📷 Foto Profilo di {giocatore.nome}</h3>
                                 
+                                {/* ANTEPRIMA FOTO ESISTENTE */}
                                 {fotoUrl && !anteprimaFoto && (
                                     <div style={{ textAlign: 'center', margin: '15px 0' }}>
                                         <p>Foto attuale:</p>
@@ -1872,6 +1597,7 @@
                                     </div>
                                 )}
                                 
+                                {/* VIDEO CAMERA */}
                                 {modalitaCamera && (
                                     <>
                                         <video 
@@ -1885,14 +1611,12 @@
                                             <button 
                                                 className="btn-foto scatta"
                                                 onClick={scattaFoto}
-                                                disabled={loading}
                                             >
                                                 Scatta Foto
                                             </button>
                                             <button 
                                                 className="btn-foto annulla"
                                                 onClick={() => setModalitaCamera(false)}
-                                                disabled={loading}
                                             >
                                                 Annulla
                                             </button>
@@ -1900,6 +1624,7 @@
                                     </>
                                 )}
                                 
+                                {/* ANTEPRIMA NUOVA FOTO */}
                                 {anteprimaFoto && (
                                     <img 
                                         src={anteprimaFoto} 
@@ -1909,32 +1634,31 @@
                                     />
                                 )}
                                 
+                                {/* CANVAS NASCOSTO PER SCATTARE FOTO */}
                                 <canvas ref={canvasRef} style={{ display: 'none' }} />
                                 
+                                {/* INPUT FILE NASCOSTO */}
                                 <input 
                                     type="file"
                                     ref={fileInputRef}
                                     accept="image/*"
-                                    capture="environment"
                                     onChange={gestisciCaricamentoFoto}
                                     style={{ display: 'none' }}
-                                    disabled={loading}
                                 />
                                 
+                                {/* AZIONI */}
                                 <div className="modal-foto-actions">
                                     {!modalitaCamera && !anteprimaFoto && (
                                         <>
                                             <button 
                                                 className="btn-foto scatta"
                                                 onClick={inizializzaCamera}
-                                                disabled={loading}
                                             >
                                                 📸 Scatta Foto
                                             </button>
                                             <button 
                                                 className="btn-foto carica"
                                                 onClick={() => fileInputRef.current?.click()}
-                                                disabled={loading}
                                             >
                                                 📁 Carica da Device
                                             </button>
@@ -1946,9 +1670,8 @@
                                             <button 
                                                 className="btn-foto carica"
                                                 onClick={salvaFoto}
-                                                disabled={loading}
                                             >
-                                                {loading ? '⏳ Salvando...' : '💾 Salva Foto'}
+                                                💾 Salva Foto
                                             </button>
                                             <button 
                                                 className="btn-foto annulla"
@@ -1956,7 +1679,6 @@
                                                     setAnteprimaFoto(null);
                                                     setFotoSelezionata(null);
                                                 }}
-                                                disabled={loading}
                                             >
                                                 🔄 Riprova
                                             </button>
@@ -1967,7 +1689,6 @@
                                         <button 
                                             className="btn-foto rimuovi"
                                             onClick={rimuoviFoto}
-                                            disabled={loading}
                                         >
                                             🗑️ Rimuovi Foto
                                         </button>
@@ -1976,7 +1697,6 @@
                                     <button 
                                         className="btn-foto annulla"
                                         onClick={chiudiModal}
-                                        disabled={loading}
                                     >
                                         ❌ Annulla
                                     </button>
@@ -2006,7 +1726,7 @@
             const [haNuoviMessaggi, setHaNuoviMessaggi] = useState(false);
             const [statistiche, setStatistiche] = useState({ download: 0, utentiUnici: 0 });
             
-            // STATI NOTIFICHE
+            // 🔔 STATI NOTIFICHE MIGLIORATI
             const [notificheChat, setNotificheChat] = useState(0);
             const [notificheCalendario, setNotificheCalendario] = useState(0);
             const [notificationsEnabled, setNotificationsEnabled] = useState(
@@ -2019,7 +1739,7 @@
                 localStorage.getItem('calendarNotificationsEnabled') !== 'false'
             );
 
-            // STATI PAGELLE
+            // 📝 STATI PAGELLE MIGLIORATI
             const [nuovaPagella, setNuovaPagella] = useState({
                 giocatore: "",
                 voto: "",
@@ -2028,7 +1748,7 @@
                 fazione: "nessuna"
             });
 
-            // STATO PER MODIFICA PAGELLA
+            // 🎯 STATO PER MODIFICA PAGELLA
             const [pagellaInModifica, setPagellaInModifica] = useState(null);
             const [modificaPagella, setModificaPagella] = useState({
                 voto: "",
@@ -2036,10 +1756,10 @@
                 fazione: "nessuna"
             });
 
-            // STATO PER GESTIONE GIOCATORI
+            // 🆕 STATO PER GESTIONE GIOCATORI
             const [nuovoGiocatore, setNuovoGiocatore] = useState("");
 
-            // STATI PER BACKUP
+            // 🆕 STATI PER BACKUP
             const [backupData, setBackupData] = useState(null);
             const [backupStats, setBackupStats] = useState({
                 giocatori: 0,
@@ -2049,7 +1769,7 @@
                 statistiche: 0
             });
 
-            // STATO PER MVP
+            // 🏆 STATO PER MVP ATTUALE - RISOLTO
             const [currentMVP, setCurrentMVP] = useState(null);
             const [previousMVP, setPreviousMVP] = useState(null);
             const [lastMVPTimestamp, setLastMVPTimestamp] = useState({});
@@ -2057,7 +1777,7 @@
             const chatContainerRef = useRef(null);
             const fileInputRef = useRef(null);
 
-            // HANDLE LOGIN COMPLETO
+            // 🛠️ AGGIUNTA: FUNZIONE handleLogin COMPLETA E CORRETTA
             const handleLogin = (e) => {
                 e.preventDefault();
                 if (!loginForm.username.trim()) {
@@ -2065,7 +1785,7 @@
                     return;
                 }
 
-                // CONTROLLO PASSWORD
+                // 🔐 CONTROLLO PASSWORD PER ADMIN E FABRIZIO - VERSIONE CORRETTA
                 if (loginForm.username.toLowerCase() === "admin" || loginForm.username.toLowerCase() === "vitantonio") {
                     if (loginForm.password !== ADMIN_PASSWORD) {
                         alert("❌ Password admin errata!");
@@ -2083,11 +1803,6 @@
                 localStorage.setItem("username", loginForm.username);
                 setIsLogged(true);
                 
-                // Salva token FCM per l'utente
-                if (window.fcmToken) {
-                    saveUserToken(loginForm.username, window.fcmToken);
-                }
-                
                 setTimeout(() => {
                     if ("Notification" in window && Notification.permission === "default") {
                         requestNotificationPermission();
@@ -2095,30 +1810,39 @@
                 }, 500);
             };
 
+            // 🛠️ AGGIUNTA: FUNZIONE isAdminUser MANCANTE
             const isAdminUser = () => {
                 const username = loginForm.username.toLowerCase();
                 return username === "admin" || username === "vitantonio" || username === "fabrizio";
             };
 
+            // 🎯 FUNZIONE PER CONTROLLARE SE UN GIOCATORE HA GIOCATO ALMENO UNA PARTITA - VERSIONE CORRETTA
             const hasGiocatoAlmenoUnaPartita = (giocatore) => {
                 if (!giocatore) return false;
                 
+                // 1. Ha presenze? (partite giocate)
                 if ((giocatore.presenze || 0) > 0) {
                     return true;
                 }
                 
+                // 2. Ha pagelle? (ha giocato ed è stato valutato)
                 const pagelleGiocatore = pagelle.filter(p => p.giocatore === giocatore.nome);
                 if (pagelleGiocatore.length > 0) {
                     return true;
                 }
                 
+                // 3. Ha statistiche portiere? (ha giocato in porta)
                 if ((giocatore.parate || 0) > 0 || (giocatore.partite_portiere || 0) > 0) {
                     return true;
                 }
                 
+                // 4. ESCLUDI LE PARTITE CONFERMATE! Un giocatore confermato NON significa che abbia giocato
+                //    Deve avere almeno una delle condizioni sopra
+                
                 return false;
             };
 
+            // 🎯 FUNZIONE SICURA PER OTTENERE LA MEDIA
             const getMediaSicura = (giocatore) => {
                 if (!giocatore) return "0.00";
                 
@@ -2146,6 +1870,7 @@
                 return media.toFixed(2);
             };
 
+            // 📊 AGGIORNA MEDIA GIOCATORE
             const aggiornaMediaGiocatore = (nomeGiocatore) => {
                 const giocatore = giocatori.find(g => g.nome === nomeGiocatore);
                 if (!giocatore) return;
@@ -2182,6 +1907,7 @@
                 });
             };
 
+            // 🧤 FUNZIONI PER STATISTICHE PORTIERE
             const aggiungiStatPortiere = (id, tipo, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le statistiche portiere!");
                 
@@ -2218,7 +1944,7 @@
                         tipo === 'parate_difficili' ? 'parate difficili' :
                         tipo === 'rinvii_buoni' ? 'rinvii buoni' :
                         tipo === 'errori' ? 'errori' :
-                        tipo === 'interventi_decisivi' ? 'interventi decisifs' :
+                        tipo === 'interventi_decisivi' ? 'interventi decisivi' :
                         tipo === 'partite_portiere' ? 'partite da portiere' : 'statistiche';
                     
                     alert(`${emoji} ${Math.abs(quantita)} ${nomeStat} ${azione}!`);
@@ -2226,6 +1952,7 @@
                 });
             };
 
+            // 🏆 FUNZIONE PER TROVARE IL MVP ATTUALE
             const getCurrentMVP = () => {
                 if (giocatori.length === 0) return null;
                 
@@ -2266,6 +1993,7 @@
                 return ultimoMVP;
             };
 
+            // 🏆 FUNZIONE PER VERIFICARE SE C'È STATO UN CAMBIO MVP
             const verificaCambioMVP = (nuovoMVP) => {
                 const vecchioMVP = currentMVP;
                 
@@ -2284,6 +2012,7 @@
                 return { cambiato: false, vecchio: vecchioMVP, nuovo: nuovoMVP };
             };
 
+            // 🏆 FUNZIONE PER RENDERIZZARE IL MVP CON EFFETTI SPECIALI
             const renderMVPGlow = (giocatore, isListItem = false) => {
                 const mvp = getCurrentMVP();
                 const isMVP = mvp && mvp.id === giocatore.id;
@@ -2294,6 +2023,7 @@
                 return '';
             };
 
+            // 🆕 FUNZIONE RIMUOVI MVP (SOLO ADMIN)
             const rimuoviMVP = (id) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono rimuovere MVP!");
                 
@@ -2329,6 +2059,7 @@
                 });
             };
 
+            // 🎯 CLASSIFICA MEDIA VOTO
             const classificaMediaVoto = React.useMemo(() => {
                 return giocatori
                     .map(giocatore => {
@@ -2355,6 +2086,7 @@
                     .slice(0, 10);
             }, [giocatori, pagelle]);
 
+            // 🏆 FUNZIONE PER OTTENERE BADGE COPPA PER GIOCATORI VINCENTI
             const getBadgeCoppa = (pagella) => {
                 if (!pagella.fazione || !pagella.data) return null;
                 
@@ -2371,6 +2103,7 @@
                 return null;
             };
 
+            // 🆕 CALCOLA STATISTICHE VITTORIE/SCONFITTE PER GIOCATORE - VERSIONE SEMPLIFICATA
             const calcolaStatistichePartite = (giocatore) => {
                 if (!hasGiocatoAlmenoUnaPartita(giocatore)) {
                     return {
@@ -2385,6 +2118,7 @@
                     };
                 }
                 
+                // SEMPLICE: Usa SOLO le statistiche memorizzate nel database
                 const vittorie = giocatore.vittorie || 0;
                 const sconfitte = giocatore.sconfitte || 0;
                 const pareggi = giocatore.pareggi || 0;
@@ -2419,6 +2153,7 @@
                 };
             };
 
+            // 🆕 FUNZIONE PER AGGIUNGERE/RIMUOVERE VITTORIE/SCONFITTE/PAREGGI - VERSIONE CON NUMERI NEGATIVI
             const aggiungiStatPartita = (id, tipo, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le statistiche partite!");
                 
@@ -2428,9 +2163,11 @@
                 const quantita = parseInt(quantitaInput);
                 if (isNaN(quantita)) return alert("Inserisci un numero valido!");
                 
+                // Calcola il nuovo valore, permette numeri negativi
                 const valoreAttuale = giocatore[tipo] || 0;
                 const nuovoValore = valoreAttuale + quantita;
                 
+                // Se il valore diventa negativo, chiedi conferma
                 if (nuovoValore < 0) {
                     if (!confirm(`⚠️ ATTENZIONE!\n\nStai per impostare ${tipo} a ${nuovoValore} (negativo!).\n\nSei sicuro?`)) {
                         return;
@@ -2456,6 +2193,7 @@
                 });
             };
 
+            // 🆕 CLASSIFICA WINRATE (VITTORIE/SCONFITTE)
             const classificaWinrate = React.useMemo(() => {
                 return giocatori
                     .filter(hasGiocatoAlmenoUnaPartita)
@@ -2476,6 +2214,7 @@
                     .slice(0, 10);
             }, [giocatori, partite, pagelle]);
 
+            // 🔧 GESTIONE INPUT MIGLIORATA
             const handleInputChange = (field, value) => {
                 setLoginForm(prev => ({
                     ...prev,
@@ -2483,6 +2222,7 @@
                 }));
             };
 
+            // 🔧 GESTIONE ENTER KEY
             const handleKeyPress = (e) => {
                 if (e.key === 'Enter') {
                     handleLogin(e);
@@ -2491,12 +2231,6 @@
 
             useEffect(() => {
                 if (!isLogged) return;
-
-                // Inizializza Firebase Messaging per notifiche push
-                if (!window.messagingInitialized) {
-                    initFirebaseMessaging();
-                    window.messagingInitialized = true;
-                }
 
                 if (localStorage.getItem('notificationPermissionAsked') !== 'true') {
                     setTimeout(() => {
@@ -2518,7 +2252,6 @@
                     }, 1500);
                 }
 
-                // LISTENER PER DATABASE
                 database.ref('statistiche').on('value', (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
@@ -2686,7 +2419,7 @@
                 }
             }, [messaggi, activeTab]);
 
-            // FUNZIONE PER AGGIUNGERE GIOCATORE
+            // 🆕 FUNZIONE PER AGGIUNGERE GIOCATORE
             const aggiungiGiocatore = () => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiungere giocatori!");
                 if (!nuovoGiocatore.trim()) return alert("Inserisci un nome per il giocatore!");
@@ -2739,6 +2472,7 @@
                 });
             };
 
+            // 🆕 FUNZIONE PER ELIMINARE GIOCATORE
             const eliminaGiocatore = (id, nome) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono eliminare giocatori!");
                 if (!confirm(`Sei sicuro di voler eliminare ${nome}? Questa azione è irreversibile!`)) return;
@@ -2767,6 +2501,7 @@
                     });
             };
 
+            // 🆕 FUNZIONI BACKUP COMPLETE
             const esportaBackup = () => {
                 if (!isAdminUser()) return alert("Solo gli admin possono esportare backup!");
                 
@@ -2844,6 +2579,7 @@
                 });
             };
 
+            // 📤 IMPORT BACKUP
             const importaBackup = (event) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono importare backup!");
                 
@@ -2894,6 +2630,7 @@
                 reader.readAsText(file);
             };
 
+            // 🔄 RIPRISTINA DATI
             const ripristinaDati = () => {
                 if (!isAdminUser()) return alert("Solo gli admin possono ripristinare i dati!");
                 if (!backupData) return alert("Nessun backup caricato!");
@@ -2923,6 +2660,7 @@
                 });
             };
 
+            // 🗑️ PULIZIA DATI
             const puliziaDati = () => {
                 if (!isAdminUser()) return alert("Solo gli admin possono pulire i dati!");
                 
@@ -2955,6 +2693,7 @@
                 });
             };
 
+            // 🧤 CALCOLO PUNTEGGIO BENJI PRICE
             const calcolaPunteggioBenjiPrice = (portiere) => {
                 let punteggio = 0;
                 punteggio += (portiere.parate || 0) * 3;
@@ -2969,6 +2708,7 @@
                 return Math.max(0, punteggio);
             };
 
+            // 🏆 CALCOLA CLASSIFICHE
             const classificaMarcatori = [...giocatori]
                 .filter(g => hasGiocatoAlmenoUnaPartita(g) && (g.gol || 0) > 0)
                 .sort((a, b) => (b.gol || 0) - (a.gol || 0))
@@ -2984,6 +2724,7 @@
                 .sort((a, b) => (b.mvp_count || 0) - (a.mvp_count || 0))
                 .slice(0, 10);
 
+            // 🧤 CLASSIFICA BENJI PRICE
             const classificaBenjiPrice = [...giocatori]
                 .filter(g => hasGiocatoAlmenoUnaPartita(g) && calcolaPunteggioBenjiPrice(g) > 0)
                 .map(g => ({
@@ -2993,6 +2734,7 @@
                 .sort((a, b) => b.punteggio_benji - a.punteggio_benji)
                 .slice(0, 10);
 
+            // 🎯 CLASSIFICA PRESENZE/PARTITE GIOCATE
             const classificaPresenze = [...giocatori]
                 .filter(g => hasGiocatoAlmenoUnaPartita(g))
                 .sort((a, b) => (b.presenze || 0) - (a.presenze || 0))
@@ -3004,6 +2746,7 @@
                 setLoginForm({ username: "", password: "" });
             };
 
+            // 🔔 GESTIONE IMPOSTAZIONI NOTIFICHE
             const toggleNotifications = () => {
                 const newState = !notificationsEnabled;
                 setNotificationsEnabled(newState);
@@ -3026,6 +2769,7 @@
                 localStorage.setItem('calendarNotificationsEnabled', newState.toString());
             };
 
+            // 📝 FUNZIONI PAGELLE MIGLIORATE
             const aggiungiPagella = () => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiungere pagelle!");
                 if (!nuovaPagella.giocatore.trim()) return alert("Seleziona un giocatore!");
@@ -3067,6 +2811,7 @@
                 });
             };
 
+            // 🎯 MODIFICA PAGELLA
             const avviaModificaPagella = (pagella) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono modificare pagelle!");
                 setPagellaInModifica(pagella.id);
@@ -3118,6 +2863,7 @@
                 });
             };
 
+            // 🎯 FUNZIONE PER OTTENERE CLASSE FAZIONE
             const getClasseFazione = (fazione) => {
                 switch(fazione) {
                     case 'bianca': return 'fazione-bianca';
@@ -3127,6 +2873,7 @@
                 }
             };
 
+            // 🎯 FUNZIONE PER OTTENERE BADGE FAZIONE
             const getBadgeFazione = (fazione) => {
                 switch(fazione) {
                     case 'bianca': return <span className="badge-fazione badge-bianca">ARMATA BIANCA</span>;
@@ -3136,6 +2883,7 @@
                 }
             };
 
+            // 🏆 FUNZIONE PER RENDERIZZARE IL RISULTATO DELLA PARTITA
             const renderRisultatoPartita = (partita) => {
                 if (!partita.risultato) return null;
 
@@ -3200,6 +2948,7 @@
                 );
             };
 
+            // ⚽ AGGIUNGI/RIMUOVI PRESENZA
             const aggiungiPresenza = (id, quantitaInput) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono aggiornare le presenze!");
                 
@@ -3224,6 +2973,7 @@
                 });
             };
 
+            // 🗓️ TOGGLE PRENOTAZIONE
             const togglePrenotazionePartita = (partitaId) => {
                 const partita = partite.find(p => p.id === partitaId);
                 if (!partita) return;
@@ -3246,6 +2996,14 @@
                     nuoviConfermati = [...confermati, nomeVisualizzato];
                 }
 
+                console.log("🔧 Aggiornamento partita:", {
+                    partitaId,
+                    nomeVisualizzato,
+                    giaConfermato,
+                    confermatiPrecedenti: confermati,
+                    nuoviConfermati
+                });
+
                 database.ref(`partite/${partitaId}`).update({
                     confermati: nuoviConfermati
                 }).then(() => {
@@ -3265,6 +3023,7 @@
                 });
             };
 
+            // 🎯 IMPOSTA VINCITORE/PERDENTE PARTITA CON FAZIONI
             const impostaRisultatoPartita = (partitaId, risultato) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono impostare i risultati!");
                 
@@ -3302,6 +3061,7 @@
                 }
             };
 
+            // 🎯 IMPOSTA PARTITA TRIANGOLARE
             const impostaTriangolare = (partitaId, triangolare) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono modificare il formato partita!");
                 
@@ -3359,6 +3119,7 @@
                 });
             };
 
+            // 🏆 FUNZIONE MVP
             const addMVP = (id) => {
                 if (!isAdminUser()) return alert("Solo gli admin possono assegnare MVP!");
                 
@@ -3430,10 +3191,12 @@
                 media_calcolata: calcolaMedia(g.voti)
             }));
 
+            // 🎯 MEDIA GENERALE
             const giocatoriConVoti = giocatori.filter(g => 
                 g.voti && g.voti.length > 0 && hasGiocatoAlmenoUnaPartita(g)
             );
             
+            // 🎯 STATISTICHE CORRETTE
             const stats = {
                 totaleGol: giocatori.filter(hasGiocatoAlmenoUnaPartita).reduce((sum, g) => sum + (g.gol || 0), 0),
                 totaleAssist: giocatori.filter(hasGiocatoAlmenoUnaPartita).reduce((sum, g) => sum + (g.assist || 0), 0),
@@ -3481,27 +3244,23 @@
                 return loginForm.username;
             };
 
+            // 🆕 TROVA GIOCATORE CORRENTE
             const getCurrentGiocatore = () => {
                 return giocatori.find(g => g.nome === loginForm.username) || {};
             };
 
+            // 🆕 PAGINE PERSONALI DEL GIOCATORE
             const getMiePagelle = () => {
                 return pagelle.filter(p => p.giocatore === loginForm.username);
             };
 
+            // 🔧 SEZIONE LOGIN CORRETTA
             if (!isLogged) {
                 return (
                     <div className="app-container">
                         <div className="login-container">
                             <form onSubmit={handleLogin} className="login-form">
-                                <h1>
-                                    <span className="italian-flag-icon"></span>
-                                    🏆 Arena Cup
-                                </h1>
-                                
-                                <p style={{ color: "#ccc", marginBottom: "25px", fontSize: "0.9rem" }}>
-                                    Il torneo di calcetto più appassionante d'Italia
-                                </p>
+                                <h1 style={{ fontSize: "2.5rem", marginBottom: "30px" }}>🏆 Arena Cup</h1>
                                 
                                 <input 
                                     type="text"
@@ -3528,7 +3287,7 @@
                                             autoComplete="current-password"
                                         />
                                         <p className="password-hint">
-                                            Inserisci la password corretta per accedere come admin
+                                            Inserisci la password corretta
                                         </p>
                                     </>
                                 )}
@@ -3543,28 +3302,19 @@
                                         ? "🔐 Accedi come Admin" 
                                         : "🚀 Accedi"}
                                 </button>
-                                
-                                <div className="credits">
-                                    <div>creata da <strong className="vitlollo">VitLollo</strong>, sviluppata da <strong className="deepseek">DeepSeek</strong></div>
-                                    <div style={{ fontSize: "0.65rem", marginTop: "5px", opacity: 0.7 }}>
-                                        © {new Date().getFullYear()} Arena Cup - Tutti i diritti riservati
-                                    </div>
-                                </div>
                             </form>
                         </div>
                     </div>
                 );
             }
 
+            // 🛠️ AGGIUNTA: RENDER PRINCIPALE COMPLETO
             return (
                 <div className="app-container">
                     <div className="app-header">
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
                             <div>
-                                <h1 style={{ margin: 0, fontSize: "1.5rem" }}>
-                                    <span className="italian-flag-icon"></span>
-                                    🏆 Arena Cup
-                                </h1>
+                                <h1 style={{ margin: 0, fontSize: "1.5rem" }}>🏆 Arena Cup</h1>
                                 <p style={{ margin: "5px 0 0 0", color: "#ccc", fontSize: "0.8rem" }}>
                                     {activeTab === "classifica" ? "Classifica" : 
                                      activeTab === "calendario" ? "Calendario" : 
@@ -3595,6 +3345,7 @@
                             </div>
                         </div>
 
+                        {/* DESKTOP NAVIGATION MIGLIORATA */}
                         <div className="desktop-nav">
                             <button
                                 className={`desktop-nav-button ${activeTab === "classifica" ? "active" : ""}`}
@@ -3646,6 +3397,7 @@
                             >
                                 📝 Pagelle
                             </button>
+                            {/* BACKUP VISIBILE SOLO PER ADMIN E FABRIZIO */}
                             {isAdminUser() && (
                                 <button
                                     className={`desktop-nav-button ${activeTab === "backup" ? "active" : ""}`}
@@ -3662,6 +3414,7 @@
                             <div>
                                 <h2>🏆 Classifiche</h2>
                                 
+                                {/* 🏆 MVP ATTUALE CON EFFETTO SPECIALE */}
                                 {getCurrentMVP() && (
                                     <div className={`player-card mvp-glow`} style={{ position: 'relative' }}>
                                         <div className="mvp-crown">👑</div>
@@ -3709,6 +3462,7 @@
                                     </div>
                                 </div>
 
+                                {/* 🆕 CLASSIFICA WINRATE (VITTORIE/SCONFITTE) */}
                                 <div className="classifica-grid">
                                     <div className="classifica-card classifica-winrate">
                                         <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>📈 Top WinRate (Vittorie/Partite)</h3>
@@ -3970,6 +3724,7 @@
                                     </div>
                                 </div>
 
+                                {/* 🆕 SEZIONE GESTIONE GIOCATORI (SOLO ADMIN) */}
                                 {isAdminUser() && (
                                     <div className="gestione-giocatori">
                                         <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>👥 Gestione Giocatori</h3>
@@ -4032,6 +3787,7 @@
                                     </div>
                                 )}
 
+                                {/* LISTA COMPLETA GIOCATORI CON TUTTE LE STATISTICHE E FOTO PROFILO */}
                                 <div style={{ marginTop: "40px" }}>
                                     <h3>👥 Lista Completa Giocatori</h3>
                                     <p style={{ color: "#ccc", fontSize: "0.9rem", marginBottom: "15px" }}>
@@ -4048,6 +3804,7 @@
                                                 <div key={giocatore.id} className={`player-card ${isCurrentUser(giocatore.nome) ? 'current-user' : ''} ${renderMVPGlow(giocatore)} ${!hasGiocatoAlmenoUnaPartita(giocatore) ? 'giocatore-non-giocante' : ''}`}>
                                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap" }}>
                                                         <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', gap: '15px' }}>
+                                                            {/* FOTO PROFILO */}
                                                             <FotoProfiloManager 
                                                                 giocatore={giocatore}
                                                                 size="medium"
@@ -4109,6 +3866,7 @@
                                                                     </div>
                                                                 </div>
 
+                                                                {/* STATISTICHE VITTORIE/SCONFITTE */}
                                                                 {hasGiocatoAlmenoUnaPartita(giocatore) && statsPartite.partiteGiocate > 0 && (
                                                                     <div style={{ marginTop: "10px", padding: "10px", background: "rgba(255, 255, 255, 0.05)", borderRadius: "8px" }}>
                                                                         <h5 style={{ margin: "0 0 8px 0", color: "#FFD700", fontSize: "0.9rem" }}>📊 Statistiche Partite</h5>
@@ -4145,6 +3903,7 @@
                                                                     </div>
                                                                 )}
 
+                                                                {/* STATISTICHE PORTA (se presenti) */}
                                                                 {(giocatore.parate > 0 || giocatore.partite_portiere > 0) && hasGiocatoAlmenoUnaPartita(giocatore) && (
                                                                     <div style={{ marginTop: "10px", padding: "10px", background: "rgba(0, 150, 255, 0.1)", borderRadius: "8px" }}>
                                                                         <h5 style={{ margin: "0 0 8px 0", color: "#0096FF", fontSize: "0.9rem" }}>🧤 Statistiche Portiere</h5>
@@ -4159,8 +3918,10 @@
                                                             </div>
                                                         </div>
                                                         
+                                                        {/* CONTROLLI ADMIN */}
                                                         {isAdminUser() && (
                                                             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+                                                                {/* GOL */}
                                                                 <input 
                                                                     id={`gol-${giocatore.id}`}
                                                                     type="number" 
@@ -4182,6 +3943,7 @@
                                                                     ±⚽
                                                                 </button>
                                                                 
+                                                                {/* ASSIST */}
                                                                 <input 
                                                                     id={`assist-${giocatore.id}`}
                                                                     type="number" 
@@ -4203,6 +3965,7 @@
                                                                     ±🎯
                                                                 </button>
                                                                 
+                                                                {/* VOTO */}
                                                                 <input 
                                                                     id={`voto-${giocatore.id}`}
                                                                     type="number" 
@@ -4231,6 +3994,7 @@
                                                                     +⭐
                                                                 </button>
                                                                 
+                                                                {/* MVP */}
                                                                 <button 
                                                                     onClick={() => addMVP(giocatore.id)}
                                                                     style={{ 
@@ -4248,6 +4012,7 @@
                                                                     +🏆
                                                                 </button>
 
+                                                                {/* RIMUOVI MVP */}
                                                                 <button 
                                                                     onClick={() => rimuoviMVP(giocatore.id)}
                                                                     className="btn-rimuovi-mvp"
@@ -4257,6 +4022,7 @@
                                                                     ➖🏆
                                                                 </button>
 
+                                                                {/* VITTORIE */}
                                                                 <input 
                                                                     id={`vittorie-${giocatore.id}`}
                                                                     type="number" 
@@ -4279,6 +4045,7 @@
                                                                     ±✅
                                                                 </button>
 
+                                                                {/* SCONFITTE */}
                                                                 <input 
                                                                     id={`sconfitte-${giocatore.id}`}
                                                                     type="number" 
@@ -4301,6 +4068,7 @@
                                                                     ±❌
                                                                 </button>
 
+                                                                {/* PAREGGI */}
                                                                 <input 
                                                                     id={`pareggi-${giocatore.id}`}
                                                                     type="number" 
@@ -4323,6 +4091,7 @@
                                                                     ±⚡
                                                                 </button>
 
+                                                                {/* CONTROLLI STATISTICHE PORTIERE */}
                                                                 <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "5px" }}>
                                                                     <input 
                                                                         id={`parate-${giocatore.id}`}
@@ -4357,10 +4126,12 @@
                             </div>
                         )}
 
+                        {/* 🆕 TAB BACKUP - SISTEMA COMPLETO DI BACKUP - SOLO PER ADMIN */}
                         {activeTab === "backup" && isAdminUser() && (
                             <div>
                                 <h2>💾 Sistema di Backup</h2>
                                 
+                                {/* INFORMAZIONI BACKUP */}
                                 <div className="backup-info">
                                     <h3 style={{ color: "#FFC107", marginBottom: "10px" }}>ℹ️ Informazioni Backup</h3>
                                     <p>Il sistema di backup ti permette di:</p>
@@ -4375,6 +4146,7 @@
                                     </p>
                                 </div>
 
+                                {/* STATISTICHE DATI CORRENTI */}
                                 <div className="backup-section">
                                     <h3 style={{ marginBottom: "15px", color: "#4CAF50" }}>📊 Dati Correnti</h3>
                                     <div className="backup-stats">
@@ -4405,6 +4177,7 @@
                                     </div>
                                 </div>
 
+                                {/* AZIONI BACKUP */}
                                 <div className="backup-section">
                                     <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>🛠️ Azioni Backup</h3>
                                     
@@ -4445,6 +4218,7 @@
                                         </button>
                                     </div>
 
+                                    {/* PREVIEW BACKUP CARICATO */}
                                     {backupData && (
                                         <div className="backup-info" style={{ background: "rgba(76, 175, 80, 0.1)", borderLeftColor: "#4CAF50" }}>
                                             <h4 style={{ color: "#4CAF50", marginBottom: "10px" }}>✅ Backup Caricato</h4>
@@ -4481,6 +4255,7 @@
                                     )}
                                 </div>
 
+                                {/* ISTRUZIONI */}
                                 <div className="backup-section">
                                     <h3 style={{ marginBottom: "15px", color: "#FF9800" }}>📋 Istruzioni</h3>
                                     <div style={{ lineHeight: "1.6" }}>
@@ -4493,6 +4268,7 @@
                             </div>
                         )}
 
+                        {/* ALTRE TAB ESISTENTI... */}
                         {activeTab === "calendario" && (
                             <div>
                                 <h2>🗓️ Calendario Partite</h2>
@@ -4511,6 +4287,7 @@
                                         
                                         return (
                                             <div key={partita.id} className="match-card" style={{ position: 'relative' }}>
+                                                {/* BADGE RISULTATO */}
                                                 {partita.risultato && (
                                                     <div className={`badge-risultato ${
                                                         partita.risultato === 'Vittoria' ? 'badge-vittoria' :
@@ -4594,8 +4371,10 @@
                                                     </div>
                                                 </div>
                                                 
+                                                {/* 🏆 VISUALIZZAZIONE RISULTATO PARTITA */}
                                                 {renderRisultatoPartita(partita)}
                                                 
+                                                {/* LISTA CONFERMATI */}
                                                 <div className="confermato-list">
                                                     <h4 style={{ margin: "15px 0 10px 0", color: "#FFC107" }}>Giocatori Confermati:</h4>
                                                     {confermati.length === 0 ? (
@@ -4612,6 +4391,7 @@
                                                     )}
                                                 </div>
                                                 
+                                                {/* CONTROLLI ADMIN PER RISULTATO CON FAZIONI */}
                                                 {isAdminUser() && (
                                                     <div style={{ marginTop: "15px", paddingTop: "15px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
                                                         <h4 style={{ marginBottom: "10px", color: "#FFC107" }}>Controlli Admin:</h4>
@@ -4771,6 +4551,7 @@
                             <div>
                                 <h2>📝 Sistema Pagelle</h2>
                                 
+                                {/* FORM AGGIUNTA PAGELLA (SOLO ADMIN) */}
                                 {isAdminUser() && (
                                     <div className="pagella-form">
                                         <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>Aggiungi Nuova Pagella</h3>
@@ -4810,6 +4591,7 @@
                                             </select>
                                         </div>
                                         
+                                        {/* TEXTAREA PIÙ GRANDE PER COMMENTI */}
                                         <textarea 
                                             placeholder="Commento (opzionale)"
                                             value={nuovaPagella.commento}
@@ -4837,6 +4619,7 @@
                                     </div>
                                 )}
 
+                                {/* LISTA PAGELLE CON SEPARATORE OGNI 10 PAGELLE */}
                                 <h3 style={{ marginTop: "30px", marginBottom: "15px" }}>Ultime Pagelle</h3>
                                 {pagelle.length === 0 ? (
                                     <div className="empty-state">
@@ -4845,6 +4628,7 @@
                                     </div>
                                 ) : (
                                     pagelle.map((pagella, index) => {
+                                        // Calcola se dobbiamo mostrare il separatore (ogni 10 pagelle)
                                         const showSeparator = index % 10 === 0;
                                         const groupNumber = Math.floor(index / 10) + 1;
                                         const groupStartIndex = groupNumber * 10 - 9;
@@ -4852,6 +4636,7 @@
                                         
                                         return (
                                             <React.Fragment key={pagella.id}>
+                                                {/* SEPARATORE OGNI 10 PAGELLE */}
                                                 {showSeparator && (
                                                     <div className="pagella-group-header">
                                                         📊 Gruppo {groupNumber} - Pagelle {groupStartIndex} a {groupEndIndex}
@@ -4868,6 +4653,7 @@
                                                                 {pagella.giocatore}
                                                                 {isCurrentUser(pagella.giocatore) && <span className="current-user-badge">TU</span>}
                                                                 {getBadgeFazione(pagella.fazione)}
+                                                                {/* 🏆 BADGE VINCITORE SE LA PAGELLA CORRISPONDE A UNA VITTORIA */}
                                                                 {getBadgeCoppa(pagella)}
                                                             </div>
                                                             <div className="pagella-data">
@@ -4886,6 +4672,7 @@
                                                         </div>
                                                     )}
                                                     
+                                                    {/* MODIFICA PAGELLA (SOLO ADMIN) */}
                                                     {pagellaInModifica === pagella.id ? (
                                                         <div className="modifica-pagella-form">
                                                             <h4 style={{ marginBottom: "10px", color: "#FFC107" }}>Modifica Pagella</h4>
@@ -4913,6 +4700,7 @@
                                                                 </select>
                                                             </div>
                                                             
+                                                            {/* TEXTAREA PIÙ GRANDE PER MODIFICA */}
                                                             <textarea 
                                                                 placeholder="Commento"
                                                                 value={modificaPagella.commento}
@@ -4998,6 +4786,7 @@
                             <div>
                                 <h2>📊 Partite Giocate</h2>
                                 
+                                {/* TOP CLASSIFICHE PRESENZE, GOL E MEDIA */}
                                 <div className="classifica-grid">
                                     <div className="classifica-card">
                                         <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>📊 Top Presenze</h3>
@@ -5222,6 +5011,7 @@
                                     </div>
                                 </div>
 
+                                {/* CONTROLLI ADMIN PER PRESENZE */}
                                 {isAdminUser() && (
                                     <div style={{ marginTop: "40px" }}>
                                         <h3 style={{ marginBottom: "20px", color: "#FFC107" }}>👑 Controlli Admin - Gestione Partite</h3>
@@ -5293,6 +5083,7 @@
                                 <h2>⭐ Il Mio Score Personale</h2>
                                 
                                 <div className="score-header">
+                                    {/* FOTO PROFILO PERSONALE GRANDE */}
                                     {getCurrentGiocatore() && getCurrentGiocatore().id ? (
                                         <FotoProfiloManager 
                                             giocatore={getCurrentGiocatore()}
@@ -5367,6 +5158,7 @@
                                     </div>
                                 </div>
 
+                                {/* STATISTICHE VITTORIE/SCONFITTE PERSONALI */}
                                 <div style={{ marginTop: "30px" }}>
                                     <h3 style={{ marginBottom: "15px", color: "#FFC107" }}>📊 Le Mie Statistiche Partite</h3>
                                     {(() => {
@@ -5418,6 +5210,7 @@
                                     })()}
                                 </div>
 
+                                {/* LE MIE ULTIME PAGELLE */}
                                 <div style={{ marginTop: "40px" }}>
                                     <h3 style={{ marginBottom: "20px", color: "#FFC107" }}>📝 Le Mie Ultime Pagelle</h3>
                                     {getMiePagelle().length === 0 ? (
@@ -5455,6 +5248,7 @@
                                     )}
                                 </div>
 
+                                {/* STATISTICHE DETTAGLIATE */}
                                 <div style={{ marginTop: "40px" }}>
                                     <h3 style={{ marginBottom: "20px", color: "#2196F3" }}>📈 Statistiche Dettagliate</h3>
                                     <div className="stats-grid">
@@ -5543,6 +5337,7 @@
                             <span className="icon">📝</span>
                             <span>Pagelle</span>
                         </button>
+                        {/* BACKUP VISIBILE SOLO PER ADMIN E FABRIZIO */}
                         {isAdminUser() && (
                             <button 
                                 className={`nav-button ${activeTab === "backup" ? "active" : ""}`}
